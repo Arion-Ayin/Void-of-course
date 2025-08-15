@@ -120,8 +120,13 @@ class AstroState with ChangeNotifier {
       final moonPhase = _calculator.getMoonPhase(_selectedDate);
       final moonZodiac = _calculator.getMoonZodiacEmoji(_selectedDate);
       final moonInSign = _calculator.getMoonZodiacName(_selectedDate);
-      final vocTimes = _calculator.findVoidOfCoursePeriod(_selectedDate);
+      var vocTimes = _calculator.findVoidOfCoursePeriod(_selectedDate);
       final moonSignTimes = _calculator.getMoonSignTimes(_selectedDate);
+
+      // 만약 현재 보이드 기간이 아니라면, 다음 보이드 기간을 찾습니다.
+      if (vocTimes['start'] == null) {
+        vocTimes = _calculator.findNextVoidOfCoursePeriod(_selectedDate);
+      }
 
       // 가져온 모든 데이터를 하나의 지도(Map) 형태로 묶습니다.
       final Map<String, dynamic> result = {

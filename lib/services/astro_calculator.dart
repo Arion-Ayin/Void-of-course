@@ -391,4 +391,46 @@ class AstroCalculator {
     // 현재는 보이드 기간이 아닙니다.
     return {'start': null, 'end': null};
   }
+
+  // 다음 보이드 오브 코스 기간을 찾는 함수
+  Map<String, dynamic> findNextVoidOfCoursePeriod(DateTime date) {
+    // 현재 날짜의 달의 별자리 기간을 가져옵니다.
+    var moonSignTimes = getMoonSignTimes(date);
+    var nextSearchTime = moonSignTimes['end'];
+
+    // 다음 보이드 기간을 찾기 위해 최대 15번(약 한 달) 반복합니다.
+    for (int i = 0; i < 15; i++) {
+      // 다음 검색 시간이 없으면, 하루 뒤로 설정하고 계속합니다.
+      if (nextSearchTime == null) {
+        nextSearchTime = date.add(Duration(days: i + 1));
+      }
+
+      // 다음 검색 시간으로 달의 별자리 기간을 다시 계산합니다.
+      moonSignTimes = getMoonSignTimes(nextSearchTime);
+      final signStartTime = moonSignTimes['start'];
+      final signEndTime = moonSignTimes['end'];
+
+      // 별자리 기간을 못 찾으면, 다음 날로 넘어갑니다.
+      if (signStartTime == null || signEndTime == null) {
+        nextSearchTime = nextSearchTime.add(const Duration(days: 1));
+        continue;
+      }
+
+      // 이 별자리 기간 동안의 마지막 어스펙트 시간을 찾습니다.
+      final lastAspectTime = _findLastAspectTime(signStartTime, signEndTime);
+
+      // 마지막 어스펙트가 있고, 그것이 별자리 종료 시간 전이라면,
+      // 이것이 바로 다음 보이드의 시작입니다.
+      if (lastAspectTime != null && lastAspectTime.isBefore(signEndTime)) {
+        // 찾은 보이드 기간을 반환합니다.
+        return {'start': lastAspectTime.toLocal(), 'end': signEndTime.toLocal()};
+      }
+
+      // 보이드를 못 찾았으면, 현재 별자리 기간의 종료 시간부터 다시 검색을 시작합니다.
+      nextSearchTime = signEndTime;
+    }
+
+    // 한 달 내에 다음 보이드를 찾지 못하면 null을 반환합니다.
+    return {'start': null, 'end':null};
+  }
 }

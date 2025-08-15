@@ -27,7 +27,7 @@ class HomeScreen extends StatefulWidget {
 
 // _HomeScreenState는 HomeScreen의 상태를 실제로 관리하는 곳입니다.
 // 'with TickerProviderStateMixin'은 애니메이션을 만들 때 필요한 도구입니다.
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> {
   // 날짜를 입력하는 칸에 들어갈 글자를 관리하는 도구입니다.
   final TextEditingController _dateController = TextEditingController();
   // 키보드를 띄우거나 숨기는 것을 관리하는 도구입니다.
@@ -35,15 +35,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   // 데이터가 바뀌었을 때 알려주는 역할을 하는 함수를 준비합니다.
   late VoidCallback _listener;
-  // 아이콘의 회전 애니메이션을 조절하는 도구입니다.
-  late AnimationController _iconRotationController;
-  // 아이콘의 회전 각도를 계산하는 도구입니다.
-  late Animation<double> _iconRotationAnimation;
 
-  // 테마(화면의 색깔)가 바뀔 때 실행되는 함수입니다.
-  void _onThemeChanged() {
-    // 아이콘 회전 애니메이션을 처음부터 다시 시작합니다.
-    _iconRotationController.forward(from: 0.0);
+  @override
+  void initState() {
+    super.initState();
+    // 위젯이 빌드된 후 첫 프레임이 렌더링된 다음에 실행됩니다.
+    // initState에서 context를 안전하게 사용하기 위함입니다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // AstroState의 초기화 함수를 호출하여 데이터를 불러옵니다.
+      final provider = Provider.of<AstroState>(context, listen: false);
+      provider.initialize();
+      // 데이터가 바뀔 때마다 날짜 입력 칸을 업데이트하는 리스너를 추가합니다.
+      _listener = () => _updateDateController();
+      provider.addListener(_listener);
+    });
   }
 
   // 달력(날짜 선택기)을 보여주는 함수입니다.
@@ -192,7 +197,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     // 사용했던 도구들을 모두 정리합니다.
     _dateController.dispose();
     _focusNode.dispose();
-    _iconRotationController.dispose();
     // 부모 위젯의 dispose 함수도 꼭 불러줍니다.
     super.dispose();
   }
@@ -251,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const SizedBox(width: 8),
             // 앱 이름을 보여주는 텍스트입니다.
             Text(
-              'Lioluna',
+              'Home',
               // 텍스트의 디자인을 정합니다.
               style: TextStyle(
                 // 어두운 모드일 때 흰색, 밝은 모드일 때 검은색으로 글자 색을 정합니다.
@@ -267,63 +271,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         // AppBar 아래에 그림자를 살짝 넣어줍니다.
         elevation: Theme.of(context).appBarTheme.elevation,
         // actions는 AppBar의 오른쪽 부분에 들어가는 위젯들입니다.
-        actions: [
-          // ThemeSwitcher는 테마를 바꾸는 기능을 제공하는 위젯입니다.
-          ThemeSwitcher(
-            // ThemeSwitcher의 내용을 만들어주는 함수입니다.
-            builder: (context) {
-              // 버튼의 크기를 정해주는 컨테이너입니다.
-              return Container(
-                constraints: const BoxConstraints(
-                  // 버튼의 최소 가로 크기
-                  minWidth: 48,
-                  // 버튼의 최소 세로 크기
-                  minHeight: 48,
-                ),
-                // 애니메이션을 부드럽게 만들어주는 위젯입니다.
-                child: AnimatedBuilder(
-                  // 어떤 애니메이션을 사용할지 정합니다.
-                  animation: _iconRotationAnimation,
-                  // 애니메이션이 바뀔 때마다 실행되는 함수입니다.
-                  builder: (context, child) {
-                    // 아이콘을 회전시키는 효과를 줍니다.
-                    return Transform.rotate(
-                      // 회전하는 각도를 계산합니다.
-                      angle: _iconRotationAnimation.value * 2 * 3.14159,
-                      // 아이콘 버튼입니다.
-                      child: IconButton(
-                        // 아이콘 모양을 정합니다.
-                        icon: Icon(
-                          // 어두운 모드일 때 해 아이콘, 밝은 모드일 때 달 아이콘을 보여줍니다.
-                          Theme.of(context).brightness == Brightness.dark ? Icons.wb_sunny : Icons.nightlight_round,
-                          // 아이콘의 색깔을 정합니다.
-                          color: Theme.of(context).brightness == Brightness.dark ? Colors.orange : Colors.indigo,
-                        ),
-                        // 버튼을 눌렀을 때 실행되는 함수입니다.
-                        onPressed: () {
-                          // 테마 변경 애니메이션을 시작합니다.
-                          _onThemeChanged();
-                          // 테마를 바꾸는 도구를 가져옵니다.
-                          final switcher = ThemeSwitcher.of(context);
-                          // 현재 테마가 무엇인지 확인합니다.
-                          final currentTheme = Theme.of(context);
-                          // 현재 테마가 어두운 모드라면,
-                          if (currentTheme.brightness == Brightness.dark) {
-                            // 밝은 모드로 바꿔줍니다.
-                            switcher.changeTheme(theme: Themes.lightTheme);
-                          } else {
-                            // 밝은 모드라면, 어두운 모드로 바꿔줍니다.
-                            switcher.changeTheme(theme: Themes.darkTheme);
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-          ),
-        ],
+        
       ),
       // body는 화면의 주요 내용을 담는 부분입니다.
       body: Container(
@@ -372,28 +320,29 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   const SizedBox(height: 16),
                   // 달의 사인 정보를 보여주는 카드 위젯입니다.
                   _buildInfoCard(
-                    // 카드 왼쪽에 들어갈 아이콘
-                    icon: Icons.star,
-                    // 카드 제목
-                    title: 'Moon in ${provider.moonInSign} ${provider.moonZodiac}',
-                    // 카드 부제목
+                    leadingWidget: CircleAvatar(
+                      radius: 25,
+                      backgroundColor: Colors.blue.withOpacity(0.1),
+                      child: Text(
+                        provider.moonZodiac,
+                        style: const TextStyle(fontSize: 28),
+                      ),
+                    ),
+                    title: 'Moon in ${provider.moonInSign}',
                     subtitle: nextSignTimeText,
-                    // 아이콘의 색깔
-                    iconColor: Colors.blue,
                   ),
                   // 카드 아래에 16만큼의 공간을 줍니다.
                   const SizedBox(height: 16),
                   // 보이드 오브 코스 정보를 보여주는 카드 위젯입니다.
                   _buildInfoCard(
-                    // 카드 왼쪽에 들어갈 아이콘
-                    icon: Icons.timelapse,
-                    // 카드 제목
+                    leadingWidget: CircleAvatar(
+                      radius: 25,
+                      backgroundColor: Colors.teal.withOpacity(0.1),
+                      child: const Icon(Icons.timelapse, color: Colors.teal, size: 28),
+                    ),
                     title: 'Void of Course',
-                    // 카드 부제목
                     subtitle: '시작: ${_formatDateTime(provider.vocStart)}\n'
                         '종료: ${_formatDateTime(provider.vocEnd)}',
-                    // 아이콘의 색깔
-                    iconColor: Colors.teal,
                   ),
                   // 카드 아래에 20만큼의 공간을 줍니다.
                   const SizedBox(height: 20),
@@ -561,10 +510,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   // 일반적인 정보 카드를 만드는 함수입니다.
   Widget _buildInfoCard({
-    required IconData icon,
+    required Widget leadingWidget,
     required String title,
     required String subtitle,
-    required Color iconColor,
   }) {
     // 카드의 배경이 될 컨테이너입니다.
     return Container(
@@ -595,14 +543,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         // 리스트의 여백을 정합니다.
         contentPadding: const EdgeInsets.all(20),
         // 리스트 왼쪽에 들어갈 위젯입니다.
-        leading: CircleAvatar(
-          // 원의 반지름을 25로 정합니다.
-          radius: 25,
-          // 배경색은 아이콘 색깔을 흐리게 만듭니다.
-          backgroundColor: iconColor.withOpacity(0.1),
-          // 아이콘을 원 안에 넣어줍니다.
-          child: Icon(icon, color: iconColor, size: 28),
-        ),
+        leading: leadingWidget,
         // 리스트의 제목 텍스트입니다.
         title: Text(
           title,

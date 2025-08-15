@@ -78,252 +78,245 @@ class _InfoScreenState extends State<InfoScreen> with TickerProviderStateMixin {
   // 화면에 무엇을 보여줄지 결정하는 중요한 함수입니다.
   @override
   Widget build(BuildContext context) {
-    // ThemeSwitchingArea는 테마 변경 애니메이션을 감싸는 위젯입니다.
-    // 하지만, 이 코드에서는 동그란 변형 애니메이션을 사용하지 않으므로,
-    // 이 위젯이 없어도 됩니다. (하지만 있어도 동작에는 문제 없습니다.)
-    return ThemeSwitchingArea(
-      // Builder는 context를 다시 가져와서 위젯을 만들어주는 위젯입니다.
-      child: Builder(
-        builder: (context) {
-          // 'Scaffold'는 앱 화면의 기본 틀(바탕)입니다.
-          return Scaffold(
-            // AppBar는 화면의 맨 위에 있는 막대입니다.
-            appBar: AppBar(
-              // title은 AppBar의 제목 부분입니다.
-              title: Row(
-                // 아이콘과 텍스트를 나란히 놓습니다.
-                children: [
-                  // 정보 아이콘을 보여줍니다.
-                  Icon(
-                      // 정보 아이콘
-                      Icons.info_outline,
-                      // 어두운 모드일 때 파란색, 밝은 모드일 때 짙은 파란색으로 색을 정합니다.
-                      color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : Colors.blue[600],
-                      // 아이콘 크기
-                      size: 24
+    // Builder는 context를 다시 가져와서 위젯을 만들어주는 위젯입니다.
+    return Builder(
+      builder: (context) {
+        // 'Scaffold'는 앱 화면의 기본 틀(바탕)입니다.
+        return Scaffold(
+          // AppBar는 화면의 맨 위에 있는 막대입니다.
+          appBar: AppBar(
+            // title은 AppBar의 제목 부분입니다.
+            title: Row(
+              // 아이콘과 텍스트를 나란히 놓습니다.
+              children: [
+                // 정보 아이콘을 보여줍니다.
+                Icon(
+                    // 정보 아이콘
+                    Icons.info_outline,
+                    // 어두운 모드일 때 파란색, 밝은 모드일 때 짙은 파란색으로 색을 정합니다.
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.blue[300] : Colors.blue[600],
+                    // 아이콘 크기
+                    size: 24
+                ),
+                // 아이콘과 텍스트 사이에 작은 공간을 둡니다.
+                const SizedBox(width: 8),
+                // '앱 정보'라는 텍스트를 보여줍니다.
+                Text(
+                  '앱 정보',
+                  // 텍스트의 디자인을 정합니다.
+                  style: TextStyle(
+                    // 어두운 모드일 때 흰색, 밝은 모드일 때 검은색으로 글자 색을 정합니다.
+                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
                   ),
-                  // 아이콘과 텍스트 사이에 작은 공간을 둡니다.
-                  const SizedBox(width: 8),
-                  // '앱 정보'라는 텍스트를 보여줍니다.
-                  Text(
-                    '앱 정보',
-                    // 텍스트의 디자인을 정합니다.
-                    style: TextStyle(
-                      // 어두운 모드일 때 흰색, 밝은 모드일 때 검은색으로 글자 색을 정합니다.
-                      color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              // AppBar의 배경색을 테마에 맞춰 정합니다.
-              backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-              // AppBar의 글자색을 테마에 맞춰 정합니다.
-              foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
-              // AppBar 아래에 그림자를 살짝 넣어줍니다.
-              elevation: Theme.of(context).appBarTheme.elevation,
-              // actions는 AppBar의 오른쪽 부분에 들어가는 위젯들입니다.
-              actions: [
-                // ThemeSwitcher는 테마를 바꾸는 기능을 제공하는 위젯입니다.
-                ThemeSwitcher(
-                  // 'clipper' 매개변수는 동그란 애니메이션을 만들 때 사용합니다.
-                  // 이 코드에서는 사용하지 않아도 됩니다. (이전 오류 해결을 위해 제거됨)
-                  builder: (context) {
-                    // 버튼의 크기를 정해주는 컨테이너입니다.
-                    return Container(
-                      constraints: const BoxConstraints(
-                        // 버튼의 최소 가로 크기
-                        minWidth: 48,
-                        // 버튼의 최소 세로 크기
-                        minHeight: 48,
-                      ),
-                      // 애니메이션을 부드럽게 만들어주는 위젯입니다.
-                      child: AnimatedBuilder(
-                        // 어떤 애니메이션을 사용할지 정합니다.
-                        animation: _iconRotationAnimation,
-                        // 애니메이션이 바뀔 때마다 실행되는 함수입니다.
-                        builder: (context, child) {
-                          // 아이콘을 회전시키는 효과를 줍니다.
-                          return Transform.rotate(
-                            // 회전하는 각도를 계산합니다.
-                            angle: _iconRotationAnimation.value * 2 * 3.14159,
-                            // 아이콘 버튼입니다.
-                            child: IconButton(
-                              // 아이콘 모양을 정합니다.
-                              icon: Icon(
-                                // 어두운 모드일 때 해 아이콘, 밝은 모드일 때 달 아이콘을 보여줍니다.
-                                Theme.of(context).brightness == Brightness.dark ? Icons.wb_sunny : Icons.nightlight_round,
-                                // 아이콘의 색깔을 정합니다.
-                                color: Theme.of(context).brightness == Brightness.dark ? Colors.orange : Colors.indigo,
-                              ),
-                              // 버튼을 눌렀을 때 실행되는 함수입니다.
-                              onPressed: () {
-                                // 테마 변경 애니메이션을 시작합니다.
-                                _onThemeChanged();
-                                // 테마를 바꾸는 도구를 가져옵니다.
-                                final switcher = ThemeSwitcher.of(context);
-                                // 현재 테마가 무엇인지 확인합니다.
-                                final currentTheme = Theme.of(context);
-                                // 현재 테마가 어두운 모드라면,
-                                if (currentTheme.brightness == Brightness.dark) {
-                                  // 밝은 모드로 바꿔줍니다.
-                                  switcher.changeTheme(theme: Themes.lightTheme);
-                                } else {
-                                  // 밝은 모드라면, 어두운 모드로 바꿔줍니다.
-                                  switcher.changeTheme(theme: Themes.darkTheme);
-                                }
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
                 ),
               ],
             ),
-            // body는 화면의 주요 내용을 담는 부분입니다.
-            body: Container(
-              // 컨테이너의 가로 길이를 화면 전체로 설정합니다.
-              width: double.infinity,
-              // 컨테이너의 세로 길이를 화면 전체로 설정합니다.
-              height: double.infinity,
-              // 컨테이너가 화면 전체를 채우도록 합니다.
-              constraints: const BoxConstraints.expand(),
-              // 컨테이너의 배경을 그라데이션으로 만듭니다.
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  // 그라데이션이 시작되는 위치
-                  begin: Alignment.topCenter,
-                  // 그라데이션이 끝나는 위치
-                  end: Alignment.bottomCenter,
-                  // 현재 테마에 따라 그라데이션 색깔을 다르게 정합니다.
-                  colors: Theme.of(context).brightness == Brightness.dark
-                    ? [Colors.grey[900]!, Colors.grey[800]!]
-                    : [Colors.blue[50]!, Colors.white],
-                ),
-              ),
-              // SafeArea는 화면의 상단 노치(notch)나 하단 바를 피해서 내용을 보여주는 위젯입니다.
-              child: SafeArea(
-                // 화면의 내용이 많아도 스크롤할 수 있게 해주는 위젯입니다.
-                child: SingleChildScrollView(
-                  // 스크롤이 끝에 도달했을 때 튕기는 효과를 없앱니다.
-                  physics: const ClampingScrollPhysics(),
-                  // 모든 방향에 20.0만큼의 여백을 줍니다.
-                  padding: const EdgeInsets.all(20.0),
-                  // 컨테이너의 크기에 제약을 줍니다.
-                  child: ConstrainedBox(
-                    // 최소 높이를 800으로 설정합니다.
+            // AppBar의 배경색을 테마에 맞춰 정합니다.
+            backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+            // AppBar의 글자색을 테마에 맞춰 정합니다.
+            foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+            // AppBar 아래에 그림자를 살짝 넣어줍니다.
+            elevation: Theme.of(context).appBarTheme.elevation,
+            // actions는 AppBar의 오른쪽 부분에 들어가는 위젯들입니다.
+            actions: [
+              // ThemeSwitcher는 테마를 바꾸는 기능을 제공하는 위젯입니다.
+              ThemeSwitcher(
+                // 'clipper' 매개변수는 동그란 애니메이션을 만들 때 사용합니다.
+                // 이 코드에서는 사용하지 않아도 됩니다. (이전 오류 해결을 위해 제거됨)
+                builder: (context) {
+                  // 버튼의 크기를 정해주는 컨테이너입니다.
+                  return Container(
                     constraints: const BoxConstraints(
-                      minHeight: 800,
+                      // 버튼의 최소 가로 크기
+                      minWidth: 48,
+                      // 버튼의 최소 세로 크기
+                      minHeight: 48,
                     ),
-                    // 자식 위젯들을 세로로 나열하는 위젯입니다.
-                    child: Column(
-                      // 세로 길이를 자식 위젯의 크기만큼만 사용합니다.
-                      mainAxisSize: MainAxisSize.min,
-                      // 자식 위젯들을 여기에 넣어줍니다.
-                      children: [
-                        // 앱의 헤더(로고, 제목) 부분을 만드는 위젯입니다.
-                        _buildAppHeader(context),
-                        // 헤더 아래에 30만큼의 공간을 줍니다.
-                        const SizedBox(height: 30),
-                        // 앱의 기본 정보를 보여주는 카드입니다.
-                        _buildInfoCard(
-                          icon: Icons.star,
-                          title: 'Studio Saan ',
-                          subtitle: 'is fathom the world \nwith the eyes of a lion. \n사자의 눈으로 나의 세상을 헤아린다.',
-                          iconColor: Colors.amber,
-                        ),
-                        // 카드 아래에 20만큼의 공간을 줍니다.
-                        const SizedBox(height: 20),
-                        // 버전 정보를 보여주는 카드입니다.
-                        _buildInfoCard(
-                          icon: Icons.update,
-                          title: '버전 정보',
-                          subtitle: '현재 버전: 1.0.0\n\n'
-                              '• 달 위상 계산\n'
-                              '• 보이드 오브 코스\n'
-                              '• 다크/라이트 모드\n'
-                              '• 실시간 업데이트',
-                          iconColor: Colors.green,
-                        ),
-                        // 카드 아래에 20만큼의 공간을 줍니다.
-                        const SizedBox(height: 20),
-                        // 개발자 정보를 보여주는 카드입니다.
-                        _buildInfoCard(
-                          icon: Icons.person,
-                          title: '개발자 ',
-                          subtitle: '• Lio\n'
-                              '점성학에 관심이 있는 개발자입니다.',
-                          iconColor: Colors.blue,
-                        ),
-                        // 카드 아래에 20만큼의 공간을 줍니다.
-                        const SizedBox(height: 20),
-                        // 기술 스택 정보를 보여주는 카드입니다.
-                        _buildInfoCard(
-                          icon: Icons.code,
-                          title: '기술 스택',
-                          subtitle: '• Flutter\n'
-                              '• Swiss Ephemeris\n'
-                              '• Provider 패턴\n'
-                              '• Material Design 3',
-                          iconColor: Colors.purple,
-                        ),
-                        // 카드 아래에 20만큼의 공간을 줍니다.
-                        const SizedBox(height: 20),
-                        // 업데이트 로그 정보를 보여주는 카드입니다.
-                        _buildInfoCard(
-                          icon: Icons.history,
-                          title: '업데이트 로그',
-                          subtitle: 'v1.0.0 (2025-08-14)\n'
-                              '• 초기 릴리즈\n'
-                              '• 달 위상 계산 기능\n'
-                              '• 보이드 오브 코스 계산\n'
-                              '• 다크/라이트 모드 지원\n'
-                              '• 한국어 지원',
-                          iconColor: Colors.orange,
-                        ),
-                        // 카드 아래에 30만큼의 공간을 줍니다.
-                        const SizedBox(height: 30),
-                        // 저작권 정보를 보여주는 컨테이너입니다.
-                        Container(
-                          // 컨테이너 안쪽에 여백을 줍니다.
-                          padding: const EdgeInsets.all(16),
-                          // 컨테이너의 디자인을 정합니다.
-                          decoration: BoxDecoration(
-                            // 배경색은 테마에 맞춥니다.
-                            color: Theme.of(context).cardColor,
-                            // 모서리를 둥글게 만듭니다.
-                            borderRadius: BorderRadius.circular(16),
-                            // 그림자 효과를 줍니다.
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context).shadowColor.withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          // 저작권 텍스트입니다.
-                          child: Text(
-                            '© 2025 Studio_Saan. All rights reserved.',
-                            style: TextStyle(
-                              // 글자 색은 테마 색깔을 약간 흐리게 만듭니다.
-                              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
+                    // 애니메이션을 부드럽게 만들어주는 위젯입니다.
+                    child: AnimatedBuilder(
+                      // 어떤 애니메이션을 사용할지 정합니다.
+                      animation: _iconRotationAnimation,
+                      // 애니메이션이 바뀔 때마다 실행되는 함수입니다.
+                      builder: (context, child) {
+                        // 아이콘을 회전시키는 효과를 줍니다.
+                        return Transform.rotate(
+                          // 회전하는 각도를 계산합니다.
+                          angle: _iconRotationAnimation.value * 2 * 3.14159,
+                          // 아이콘 버튼입니다.
+                          child: IconButton(
+                            // 아이콘 모양을 정합니다.
+                            icon: Icon(
+                              // 어두운 모드일 때 해 아이콘, 밝은 모드일 때 달 아이콘을 보여줍니다.
+                              Theme.of(context).brightness == Brightness.dark ? Icons.wb_sunny : Icons.nightlight_round,
+                              // 아이콘의 색깔을 정합니다.
+                              color: Theme.of(context).brightness == Brightness.dark ? Colors.orange : Colors.indigo,
                             ),
-                            textAlign: TextAlign.center,
+                            // 버튼을 눌렀을 때 실행되는 함수입니다.
+                            onPressed: () {
+                              // 테마 변경 애니메이션을 시작합니다.
+                              _onThemeChanged();
+                              // 테마를 바꾸는 도구를 가져옵니다.
+                              final switcher = ThemeSwitcher.of(context);
+                              // 현재 테마가 무엇인지 확인합니다.
+                              final currentTheme = Theme.of(context);
+                              // 현재 테마가 어두운 모드라면,
+                              if (currentTheme.brightness == Brightness.dark) {
+                                // 밝은 모드로 바꿔줍니다.
+                                switcher.changeTheme(theme: Themes.lightTheme);
+                              } else {
+                                // 밝은 모드라면, 어두운 모드로 바꿔줍니다.
+                                switcher.changeTheme(theme: Themes.darkTheme);
+                              }
+                            },
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
+                  );
+                },
+              ),
+            ],
+          ),
+          // body는 화면의 주요 내용을 담는 부분입니다.
+          body: Container(
+            // 컨테이너의 가로 길이를 화면 전체로 설정합니다.
+            width: double.infinity,
+            // 컨테이너의 세로 길이를 화면 전체로 설정합니다.
+            height: double.infinity,
+            // 컨테이너가 화면 전체를 채우도록 합니다.
+            constraints: const BoxConstraints.expand(),
+            // 컨테이너의 배경을 그라데이션으로 만듭니다.
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                // 그라데이션이 시작되는 위치
+                begin: Alignment.topCenter,
+                // 그라데이션이 끝나는 위치
+                end: Alignment.bottomCenter,
+                // 현재 테마에 따라 그라데이션 색깔을 다르게 정합니다.
+                colors: Theme.of(context).brightness == Brightness.dark
+                  ? [Colors.grey[900]!, Colors.grey[800]!]
+                  : [Colors.blue[50]!, Colors.white],
+              ),
+            ),
+            // SafeArea는 화면의 상단 노치(notch)나 하단 바를 피해서 내용을 보여주는 위젯입니다.
+            child: SafeArea(
+              // 화면의 내용이 많아도 스크롤할 수 있게 해주는 위젯입니다.
+              child: SingleChildScrollView(
+                // 스크롤이 끝에 도달했을 때 튕기는 효과를 없앱니다.
+                physics: const ClampingScrollPhysics(),
+                // 모든 방향에 20.0만큼의 여백을 줍니다.
+                padding: const EdgeInsets.all(20.0),
+                // 컨테이너의 크기에 제약을 줍니다.
+                child: ConstrainedBox(
+                  // 최소 높이를 800으로 설정합니다.
+                  constraints: const BoxConstraints(
+                    minHeight: 800,
+                  ),
+                  // 자식 위젯들을 세로로 나열하는 위젯입니다.
+                  child: Column(
+                    // 세로 길이를 자식 위젯의 크기만큼만 사용합니다.
+                    mainAxisSize: MainAxisSize.min,
+                    // 자식 위젯들을 여기에 넣어줍니다.
+                    children: [
+                      // 앱의 헤더(로고, 제목) 부분을 만드는 위젯입니다.
+                      _buildAppHeader(context),
+                      // 헤더 아래에 30만큼의 공간을 줍니다.
+                      const SizedBox(height: 30),
+                      // 앱의 기본 정보를 보여주는 카드입니다.
+                      _buildInfoCard(
+                        icon: Icons.star,
+                        title: 'Who we are',
+                        subtitle: '사자의 눈으로 세상을 헤아립니다.',
+                        iconColor: Colors.amber,
+                      ),
+                      // 카드 아래에 20만큼의 공간을 줍니다.
+                      const SizedBox(height: 20),
+                      // 버전 정보를 보여주는 카드입니다.
+                      _buildInfoCard(
+                        icon: Icons.update,
+                        title: '버전 정보',
+                        subtitle: '현재 버전: 1.0.0' 
+                            '• 달 위상 계산'
+                            '• 보이드 오브 코스'
+                            '• 다크/라이트 모드'
+                            '• 실시간 업데이트',
+                        iconColor: Colors.green,
+                      ),
+                      // 카드 아래에 20만큼의 공간을 줍니다.
+                      const SizedBox(height: 20),
+                      // 개발자 정보를 보여주는 카드입니다.
+                      _buildInfoCard(
+                        icon: Icons.person,
+                        title: '개발자 Lio',
+                        subtitle: '점성학을 좋아하는 개발자.',
+                        iconColor: Colors.blue,
+                      ),
+                      // 카드 아래에 20만큼의 공간을 줍니다.
+                      const SizedBox(height: 20),
+                      // 기술 스택 정보를 보여주는 카드입니다.
+                      _buildInfoCard(
+                        icon: Icons.code,
+                        title: '기술 스택',
+                        subtitle: '• Flutter' 
+                            '• Swiss Ephemeris' 
+                            '• Provider 패턴'
+                            '• Material Design 3',
+                        iconColor: Colors.purple,
+                      ),
+                      // 카드 아래에 20만큼의 공간을 줍니다.
+                      const SizedBox(height: 20),
+                      // 업데이트 로그 정보를 보여주는 카드입니다.
+                      _buildInfoCard(
+                        icon: Icons.history,
+                        title: '업데이트 로그',
+                        subtitle: 'v1.0.0 (2025-08-14)'
+                            '• 달 위상 계산 기능'
+                            '• 보이드 오브 코스 계산'
+                            '• 다크/라이트 모드 지원'
+                            '• 한국어 지원',
+                        iconColor: Colors.orange,
+                      ),
+                      // 카드 아래에 30만큼의 공간을 줍니다.
+                      const SizedBox(height: 30),
+                      // 저작권 정보를 보여주는 컨테이너입니다.
+                      Container(
+                        // 컨테이너 안쪽에 여백을 줍니다.
+                        padding: const EdgeInsets.all(16),
+                        // 컨테이너의 디자인을 정합니다.
+                        decoration: BoxDecoration(
+                          // 배경색은 테마에 맞춥니다.
+                          color: Theme.of(context).cardColor,
+                          // 모서리를 둥글게 만듭니다.
+                          borderRadius: BorderRadius.circular(16),
+                          // 그림자 효과를 줍니다.
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).shadowColor.withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        // 저작권 텍스트입니다.
+                        child: Text(
+                          '© 2025 Studio_Saan. All rights reserved.',
+                          style: TextStyle(
+                            // 글자 색은 테마 색깔을 약간 흐리게 만듭니다.
+                            color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
