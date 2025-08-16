@@ -34,7 +34,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
     );
 
-    _iconRotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_iconRotationController);
+    _iconRotationAnimation = 
+        Tween<double>(begin: 0.0, end: 1.0).animate(_iconRotationController);
   }
 
   void _onThemeChanged() {
@@ -51,8 +52,14 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         return Theme(
           data: Theme.of(context).copyWith(
             colorScheme: Theme.of(context).brightness == Brightness.dark
-                ? ColorScheme.dark(primary: Colors.blue[300]!, onPrimary: Colors.white)
-                : ColorScheme.light(primary: Colors.blue[600]!, onPrimary: Colors.white),
+                ? ColorScheme.dark(
+                    primary: Colors.blue[300]!,
+                    onPrimary: Colors.white,
+                  )
+                : ColorScheme.light(
+                    primary: Colors.blue[600]!,
+                    onPrimary: Colors.white,
+                  ),
           ),
           child: child!,
         );
@@ -96,6 +103,37 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _focusNode.dispose();
     _iconRotationController.dispose();
     super.dispose();
+  }
+
+  String getZodiacEmoji(String sign) {
+    switch (sign) {
+      case 'Aries':
+        return '♈';
+      case 'Taurus':
+        return '♉';
+      case 'Gemini':
+        return '♊';
+      case 'Cancer':
+        return '♋';
+      case 'Leo':
+        return '♌';
+      case 'Virgo':
+        return '♍';
+      case 'Libra':
+        return '♎';
+      case 'Scorpio':
+        return '♏';
+      case 'Sagittarius':
+        return '♐';
+      case 'Capricorn':
+        return '♑';
+      case 'Aquarius':
+        return '♒';
+      case 'Pisces':
+        return '♓';
+      default:
+        return '❔';
+    }
   }
 
   @override
@@ -204,12 +242,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 children: [
                   _buildMoonPhaseCard(provider),
                   const SizedBox(height: 16),
-                  _buildInfoCard(
-                    icon: Icons.star,
-                    title: 'Moon in ${provider.moonInSign} ${provider.moonZodiac}',
-                    subtitle: nextSignTimeText,
-                    iconColor: Colors.blue,
-                  ),
+                  _buildMoonSignCard(provider, nextSignTimeText),
                   const SizedBox(height: 16),
                   _buildInfoCard(
                     icon: Icons.timelapse,
@@ -220,11 +253,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                   const SizedBox(height: 20),
                   Container(
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12, horizontal: 16),
                     decoration: BoxDecoration(
                       color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
+                      boxShadow:
+                          const [BoxShadow(color: Colors.black12, blurRadius: 10)],
                     ),
                     child: Row(
                       children: [
@@ -241,11 +276,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               border: InputBorder.none,
                               hintText: 'YYYY-MM-DD',
                               hintStyle: TextStyle(
-                                color: Theme.of(context).textTheme.bodyMedium!.color!.withOpacity(0.5),
+                                color: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium!
+                                    .color!
+                                    .withOpacity(0.5),
                               ),
                             ),
                             style: TextStyle(
-                              color: Theme.of(context).textTheme.bodyMedium!.color,
+                              color:
+                                  Theme.of(context).textTheme.bodyMedium!.color,
                             ),
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.center,
@@ -326,6 +366,64 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 fontSize: 18,
               ),
               textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMoonSignCard(AstroState provider, String nextSignTimeText) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Theme.of(context).cardColor,
+            Theme.of(context).cardColor.withOpacity(0.8),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Theme.of(context).shadowColor.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Row(
+          children: [
+            Text(
+              getZodiacEmoji(provider.moonInSign),
+              style: const TextStyle(fontSize: 30),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Moon in ${provider.moonInSign}',
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.titleLarge?.color,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    nextSignTimeText,
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
