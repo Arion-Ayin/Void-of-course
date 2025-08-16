@@ -125,7 +125,7 @@ class _InfoScreenState extends State<InfoScreen> with TickerProviderStateMixin {
           Icon(Icons.brightness_3, color: Colors.white, size: 48),
           const SizedBox(height: 16),
           Text(
-            'Lioluna',
+            'Void of Course',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 32,
@@ -134,7 +134,7 @@ class _InfoScreenState extends State<InfoScreen> with TickerProviderStateMixin {
           ),
           const SizedBox(height: 8),
           Text(
-            'Void of Course Calculator',
+            '보이드 오브 코스 계산기',
             style: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
         ],
@@ -157,7 +157,7 @@ class _InfoScreenState extends State<InfoScreen> with TickerProviderStateMixin {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Info',
+                  '정보',
                   style: TextStyle(
                     color:
                         Theme.of(context).brightness == Brightness.dark
@@ -235,37 +235,34 @@ class _InfoScreenState extends State<InfoScreen> with TickerProviderStateMixin {
                       _buildAppHeader(context),
                       const SizedBox(height: 30),
                       _buildInfoCard(
-                        icon: Icons.star,
-                        title: 'Who we are',
+                        icon: Icons.people,
+                        title: '우리는 누구인가요?',
                         subtitle:
-                            'Studio Saan Misson : \nFathoming the world \nwith the eyes of a lion \n사자의 눈으로 세상을 헤아린다.',
+                            '• 스튜디오 사안의 사명 : \n사자의 눈으로 세상을 헤아립니다.\n',
                         iconColor: Colors.amber,
                       ),
                       const SizedBox(height: 20),
                       _buildInfoCard(
-                        icon: Icons.update,
-                        title: '버전 정보',
+                        icon: Icons.timer_sharp,
+                        title: '누구에게 유용한가요?',
                         subtitle:
-                            '현재 버전: 1.0.0\n\n'
-                            '• 달 위상 계산\n'
-                            '• 보이드 오브 코스\n'
-                            '• 다크/라이트 모드\n'
-                            '• 실시간 업데이트',
+                            '• 간단한 택일이 필요하신 분들\n'
+                            '• 보이드 오브 코스 계산이 필요한 분들\n'
+                            '• 행동의 지표성이 필요한 분들\n',
                         iconColor: Colors.green,
                       ),
                       const SizedBox(height: 20),
                       _buildInfoCard(
-                        icon: Icons.code,
-                        title: '기술 스택',
+                        icon: Icons.app_shortcut,
+                        title: '왜 이 앱을 만들었나요?',
                         subtitle:
-                            '• Swiss Ephemeris\n'
-                            '• Provider 패턴\n'
-                            '• Material Design 3',
+                            '• 간단하게 택일하고 싶었기에\n'
+                            '• 누구나 손쉽게 이 정보들에 \n접근 가능하면 좋겠다는 마음에\n',
                         iconColor: Colors.purple,
                       ),
                       const SizedBox(height: 20),
                       _buildInfoCard(
-                        icon: Icons.history,
+                        icon: Icons.login,
                         title: '업데이트 로그',
                         subtitle:
                             'v1.0.0 (2025-08-14)\n'
@@ -276,7 +273,7 @@ class _InfoScreenState extends State<InfoScreen> with TickerProviderStateMixin {
                       ),
                       const SizedBox(height: 30),
                       Container(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
                           color: Theme.of(context).cardColor,
                           borderRadius: BorderRadius.circular(16),

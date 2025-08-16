@@ -154,8 +154,8 @@ class _MainAppScreenState extends State<MainAppScreen> {
               : Colors.grey[600],
           type: BottomNavigationBarType.fixed,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.info), label: 'Info'),
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: '홈'),
+            BottomNavigationBarItem(icon: Icon(Icons.info), label: '정보'),
           ],
         ),
       ),

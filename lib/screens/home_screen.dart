@@ -168,7 +168,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             ),
             const SizedBox(width: 8),
             Text(
-              'Lioluna',
+              'Void of Course',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
               ),
