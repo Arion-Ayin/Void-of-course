@@ -257,7 +257,7 @@ class _InfoScreenState extends State<InfoScreen> with TickerProviderStateMixin {
                         title: '왜 이 앱을 만들었나요?',
                         subtitle:
                             '• 간단하게 택일하고 싶었기에\n'
-                            '• 누구나 손쉽게 이 정보들에 \n접근 가능하면 좋겠다는 마음에\n',
+                            '• 누구나 손쉽게 이 정보들에 \n  접근 가능하면 좋겠다는 마음에\n',
                         iconColor: Colors.purple,
                       ),
                       const SizedBox(height: 20),
