@@ -1,5 +1,3 @@
-// InfoScreen.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/astro_state.dart';
@@ -44,176 +42,174 @@ class _InfoScreenState extends State<InfoScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return ThemeSwitchingArea(
-      child: Builder(
-        builder: (context) {
-          return Scaffold(
-            appBar: AppBar(
-              title: Row(
-                children: [
-                  Icon(
-                    Icons.info_outline,
-                    color: Theme.of(context).colorScheme.primary,
-                    size: 24,
+    return Builder(
+      builder: (context) {
+        return Scaffold(
+          appBar: AppBar(
+            title: Row(
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  color: Theme.of(context).colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Info',
+                  style: TextStyle(
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black87,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Info',
-                    style: TextStyle(
-                      color:
-                          Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black87,
-                    ),
-                  ),
-                ],
-              ),
-              backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-              foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
-              elevation: Theme.of(context).appBarTheme.elevation,
-              actions: [
-                ThemeSwitcher(
-                  builder: (context) {
-                    return Container(
-                      constraints: const BoxConstraints(
-                        minWidth: 48,
-                        minHeight: 48,
-                      ),
-                      child: AnimatedBuilder(
-                        animation: _iconRotationAnimation,
-                        builder: (context, child) {
-                          return Transform.rotate(
-                            angle: _iconRotationAnimation.value * 2 * 3.14159,
-                            child: IconButton(
-                              icon: Icon(
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Icons.wb_sunny
-                                    : Icons.nightlight_round,
-                                color: Theme.of(context).colorScheme.secondary,
-                              ),
-                              onPressed: () {
-                                _onThemeChanged();
-                                final switcher = ThemeSwitcher.of(context);
-                                final currentTheme = Theme.of(context);
-                                if (currentTheme.brightness == Brightness.dark) {
-                                  switcher.changeTheme(theme: Themes.lightTheme);
-                                } else {
-                                  switcher.changeTheme(theme: Themes.darkTheme);
-                                }
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
                 ),
               ],
             ),
-            body: Container(
-              width: double.infinity,
-              height: double.infinity,
-              constraints: const BoxConstraints.expand(),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Theme.of(context).colorScheme.background,
-                    Theme.of(context).colorScheme.surface,
-                  ],
-                ),
-              ),
-              child: SafeArea(
-                child: SingleChildScrollView(
-                  physics: const ClampingScrollPhysics(),
-                  padding: const EdgeInsets.all(20.0),
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(minHeight: 800),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildAppHeader(context),
-                        const SizedBox(height: 30),
-                        _buildInfoCard(
-                          icon: Icons.star,
-                          title: 'Who we are',
-                          subtitle:
-                              'Studio Saan Misson : \nFathoming the world \nwith the eyes of a lion \n사자의 눈으로 세상을 헤아린다.',
-                          iconColor: Colors.amber,
-                        ),
-                        const SizedBox(height: 20),
-                        _buildInfoCard(
-                          icon: Icons.update,
-                          title: '버전 정보',
-                          subtitle:
-                              '현재 버전: 1.0.0\n\n'
-                              '• 달 위상 계산\n'
-                              '• 보이드 오브 코스\n'
-                              '• 다크/라이트 모드\n'
-                              '• 실시간 업데이트',
-                          iconColor: Colors.green,
-                        ),
-                        const SizedBox(height: 20),
-                        _buildInfoCard(
-                          icon: Icons.code,
-                          title: '기술 스택',
-                          subtitle:
-                              '• Swiss Ephemeris\n'
-                              '• Provider 패턴\n'
-                              '• Material Design 3',
-                          iconColor: Colors.purple,
-                        ),
-                        const SizedBox(height: 20),
-                        _buildInfoCard(
-                          icon: Icons.history,
-                          title: '업데이트 로그',
-                          subtitle:
-                              'v1.0.0 (2025-08-14)\n'
-                              '• 초기 릴리즈\n'
-                              '• 달 위상 계산 기능\n'
-                              '• 보이드 오브 코스 계산\n',
-                          iconColor: Colors.orange,
-                        ),
-                        const SizedBox(height: 30),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).cardColor,
-                            borderRadius: BorderRadius.circular(16),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Theme.of(context)
-                                    .shadowColor
-                                    .withOpacity(0.1),
-                                blurRadius: 10,
-                                offset: const Offset(0, 5),
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            '© 2025 Studio_Saan. All rights reserved.',
-                            style: TextStyle(
-                              color: Theme.of(context)
-                                  .textTheme
-                                  .bodyMedium
-                                  ?.color
-                                  ?.withOpacity(0.7),
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ),
-                      ],
+            backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+            foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+            elevation: Theme.of(context).appBarTheme.elevation,
+            actions: [
+              ThemeSwitcher(
+                builder: (context) {
+                  return Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 48,
+                      minHeight: 48,
                     ),
+                    child: AnimatedBuilder(
+                      animation: _iconRotationAnimation,
+                      builder: (context, child) {
+                        return Transform.rotate(
+                          angle: _iconRotationAnimation.value * 2 * 3.14159,
+                          child: IconButton(
+                            icon: Icon(
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? Icons.wb_sunny
+                                  : Icons.nightlight_round,
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                            onPressed: () {
+                              _onThemeChanged();
+                              final switcher = ThemeSwitcher.of(context);
+                              final currentTheme = Theme.of(context);
+                              if (currentTheme.brightness == Brightness.dark) {
+                                switcher.changeTheme(theme: Themes.lightTheme);
+                              } else {
+                                switcher.changeTheme(theme: Themes.darkTheme);
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+          body: Container(
+            width: double.infinity,
+            height: double.infinity,
+            constraints: const BoxConstraints.expand(),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Theme.of(context).colorScheme.background,
+                  Theme.of(context).colorScheme.surface,
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: SingleChildScrollView(
+                physics: const ClampingScrollPhysics(),
+                padding: const EdgeInsets.all(20.0),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 800),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildAppHeader(context),
+                      const SizedBox(height: 30),
+                      _buildInfoCard(
+                        icon: Icons.star,
+                        title: 'Who we are',
+                        subtitle:
+                            'Studio Saan Misson : \nFathoming the world \nwith the eyes of a lion \n사자의 눈으로 세상을 헤아린다.',
+                        iconColor: Colors.amber,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildInfoCard(
+                        icon: Icons.update,
+                        title: '버전 정보',
+                        subtitle:
+                            '현재 버전: 1.0.0\n\n'
+                            '• 달 위상 계산\n'
+                            '• 보이드 오브 코스\n'
+                            '• 다크/라이트 모드\n'
+                            '• 실시간 업데이트',
+                        iconColor: Colors.green,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildInfoCard(
+                        icon: Icons.code,
+                        title: '기술 스택',
+                        subtitle:
+                            '• Swiss Ephemeris\n'
+                            '• Provider 패턴\n'
+                            '• Material Design 3',
+                        iconColor: Colors.purple,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildInfoCard(
+                        icon: Icons.history,
+                        title: '업데이트 로그',
+                        subtitle:
+                            'v1.0.0 (2025-08-14)\n'
+                            '• 초기 릴리즈\n'
+                            '• 달 위상 계산 기능\n'
+                            '• 보이드 오브 코스 계산\n',
+                        iconColor: Colors.orange,
+                      ),
+                      const SizedBox(height: 30),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context)
+                                  .shadowColor
+                                  .withOpacity(0.1),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          '© 2025 Studio_Saan. All rights reserved.',
+                          style: TextStyle(
+                            color: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.color
+                                ?.withOpacity(0.7),
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 

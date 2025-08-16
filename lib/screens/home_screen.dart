@@ -1,5 +1,3 @@
-// home_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:lioluna/utils/flushbar_helper.dart';
 import 'package:provider/provider.dart';
