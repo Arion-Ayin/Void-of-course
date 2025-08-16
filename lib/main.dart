@@ -95,7 +95,12 @@ class _MyAppState extends State<MyApp> {
     // ChangeNotifierProvider는 'AstroState'라는 데이터를 모든 위젯이 같이 쓰게 해주는 도구입니다.
     return ChangeNotifierProvider(
       // AstroState의 새 데이터를 만듭니다.
-      create: (_) => AstroState(),
+      create: (context) {
+        final astroState = AstroState();
+        // AstroState 초기화 함수를 호출합니다.
+        astroState.initialize();
+        return astroState;
+      },
       // Consumer는 AstroState의 데이터가 바뀔 때마다 화면을 새로고침해줍니다.
       child: Consumer<AstroState>(
         // AstroState의 데이터를 받아서 화면을 만드는 함수입니다.
@@ -109,7 +114,7 @@ class _MyAppState extends State<MyApp> {
               // MaterialApp은 앱의 가장 기본적인 틀을 제공합니다.
               return MaterialApp(
                 // 앱의 제목을 정합니다.
-                title: 'Lioluna',
+                title: 'Void of Course',
                 // 디버그 배너(오른쪽 위 빨간 띠)를 없앱니다.
                 debugShowCheckedModeBanner: false,
                 // 이 앱에서 사용할 테마(색깔)를 정해줍니다.
@@ -160,9 +165,9 @@ class _MyAppState extends State<MyApp> {
                       // 메뉴에 들어갈 아이템들을 만듭니다.
                       items: const [
                         // 첫 번째 아이템: 홈 버튼
-                        BottomNavigationBarItem(icon: Icon(Icons.home), label: '홈'),
+                        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
                         // 두 번째 아이템: 정보 버튼
-                        BottomNavigationBarItem(icon: Icon(Icons.info), label: '정보'),
+                        BottomNavigationBarItem(icon: Icon(Icons.info), label: 'in'),
                       ],
                     ),
                   ),
@@ -178,10 +183,8 @@ class _MyAppState extends State<MyApp> {
   // 앱의 화면들을 목록으로 만들어주는 함수입니다.
   List<Widget> _buildScreens() {
     return [
-      // HomeScreen 위젯을 만듭니다.
-      HomeScreen(),
-      // InfoScreen 위젯을 만듭니다.
-      const InfoScreen(),
+      HomeScreen(), // HomeScreen 위젯을 만듭니다.
+      InfoScreen(), // InfoScreen 위젯을 만듭니다.
     ];
   }
 }
