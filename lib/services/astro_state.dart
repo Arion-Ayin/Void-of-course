@@ -91,6 +91,13 @@ class AstroState with ChangeNotifier {
     await _updateData();
   }
 
+  Future<void> refreshData() async {
+    // 캐시를 비웁니다.
+    _cache.clear();
+    // 화면을 새로 고칩니다.
+    await _updateData();
+  }
+
   // 앱의 모든 별자리 데이터를 업데이트하는 핵심 함수입니다.
   Future<void> _updateData() async {
     // 계산 중이라고 표시합니다.

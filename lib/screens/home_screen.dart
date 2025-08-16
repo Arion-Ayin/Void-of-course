@@ -34,8 +34,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
     );
 
-    _iconRotationAnimation = 
-        Tween<double>(begin: 0.0, end: 1.0).animate(_iconRotationController);
+    _iconRotationAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_iconRotationController);
   }
 
   void _onThemeChanged() {
@@ -51,15 +53,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).brightness == Brightness.dark
-                ? ColorScheme.dark(
-                    primary: Colors.blue[300]!,
-                    onPrimary: Colors.white,
-                  )
-                : ColorScheme.light(
-                    primary: Colors.blue[600]!,
-                    onPrimary: Colors.white,
-                  ),
+            colorScheme:
+                Theme.of(context).brightness == Brightness.dark
+                    ? ColorScheme.dark(
+                      primary: Colors.blue[300]!,
+                      onPrimary: Colors.white,
+                    )
+                    : ColorScheme.light(
+                      primary: Colors.blue[600]!,
+                      onPrimary: Colors.white,
+                    ),
           ),
           child: child!,
         );
@@ -105,6 +108,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
+  void _resetDateToToday() {
+    if (mounted) {
+      final provider = Provider.of<AstroState>(context, listen: false);
+      provider.updateDate(DateTime.now());
+    }
+  }
+
   String getZodiacEmoji(String sign) {
     switch (sign) {
       case 'Aries':
@@ -139,7 +149,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<AstroState>(context);
-    _dateController.text = DateFormat('yyyy-MM-dd').format(provider.selectedDate);
+    _dateController.text = DateFormat(
+      'yyyy-MM-dd',
+    ).format(provider.selectedDate);
 
     if (!provider.isInitialized || provider.isLoading) {
       return const Center(child: CircularProgressIndicator());
@@ -153,9 +165,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
     }
 
-    final nextSignTimeText = provider.nextSignTime != null
-        ? '종료 : ${DateFormat('yyyy-MM-dd HH:mm').format(provider.nextSignTime!)}'
-        : '종료 : N/A';
+    final nextSignTimeText =
+        provider.nextSignTime != null
+            ? '종료 : ${DateFormat('yyyy-MM-dd HH:mm').format(provider.nextSignTime!)}'
+            : '종료 : N/A';
 
     return Scaffold(
       appBar: AppBar(
@@ -169,9 +182,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const SizedBox(width: 8),
             Text(
               'Void of Course',
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
           ],
         ),
@@ -182,10 +193,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ThemeSwitcher(
             builder: (context) {
               return Container(
-                constraints: const BoxConstraints(
-                  minWidth: 48,
-                  minHeight: 48,
-                ),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 child: AnimatedBuilder(
                   animation: _iconRotationAnimation,
                   builder: (context, child) {
@@ -247,19 +255,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   _buildInfoCard(
                     icon: Icons.timelapse,
                     title: 'Void of Course',
-                    subtitle: '시작: ${_formatDateTime(provider.vocStart)}\n'
+                    subtitle:
+                        '시작: ${_formatDateTime(provider.vocStart)}\n'
                         '종료: ${_formatDateTime(provider.vocEnd)}',
                     iconColor: Colors.teal,
                   ),
                   const SizedBox(height: 20),
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        vertical: 12, horizontal: 16),
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow:
-                          const [BoxShadow(color: Colors.black12, blurRadius: 10)],
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black12, blurRadius: 10),
+                      ],
                     ),
                     child: Row(
                       children: [
@@ -276,11 +288,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               border: InputBorder.none,
                               hintText: 'YYYY-MM-DD',
                               hintStyle: TextStyle(
-                                color: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium!
-                                    .color!
-                                    .withOpacity(0.5),
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.bodyMedium!.color!.withOpacity(0.5),
                               ),
                             ),
                             style: TextStyle(
@@ -304,6 +314,26 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           color: Theme.of(context).iconTheme.color,
                         ),
                       ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: SizedBox(
+                      width: 70, // 너비를 50으로 설정
+                      height: 70, // 높이를 50으로 설정
+                      child: ElevatedButton(
+                        onPressed: _resetDateToToday,
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.zero, // 내부 여백을 없앰
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              25,
+                            ), // 높이의 절반(50/2)으로 설정해 원형으로 만듦
+                          ),
+                        ),
+                        child: const Icon(Icons.refresh, size: 30), // 아이콘만 남김
+                      ),
                     ),
                   ),
                 ],
@@ -342,11 +372,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.brightness_3,
-                  color: Colors.white,
-                  size: 32,
-                ),
+                Icon(Icons.brightness_3, color: Colors.white, size: 32),
                 const SizedBox(width: 12),
                 Text(
                   'Moon Phase',
@@ -361,10 +387,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             const SizedBox(height: 16),
             Text(
               provider.moonPhase,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 18),
               textAlign: TextAlign.center,
             ),
           ],
