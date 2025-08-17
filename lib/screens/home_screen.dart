@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:lioluna/utils/flushbar_helper.dart';
 import 'package:provider/provider.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../services/astro_state.dart';
 import '../themes.dart';
 import 'package:intl/intl.dart';
@@ -44,34 +45,37 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _iconRotationController.forward(from: 0.0);
   }
 
-  void _showDatePicker() async {
-    final DateTime? picked = await showDatePicker(
+  void _showCalendar() {
+    final provider = Provider.of<AstroState>(context, listen: false);
+    showDialog(
       context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(1900),
-      lastDate: DateTime(2100),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme:
-                Theme.of(context).brightness == Brightness.dark
-                    ? ColorScheme.dark(
-                      primary: Colors.blue[300]!,
-                      onPrimary: Colors.white,
-                    )
-                    : ColorScheme.light(
-                      primary: Colors.blue[600]!,
-                      onPrimary: Colors.white,
-                    ),
+      builder: (context) => Dialog(
+        child: SizedBox(
+          width: 800,
+          height: 500,
+          child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: TableCalendar(
+            focusedDay: provider.selectedDate,
+            firstDay: DateTime(1900),
+            lastDay: DateTime(2100),
+            calendarFormat: CalendarFormat.month,
+            availableCalendarFormats: const {
+              CalendarFormat.month: 'Month',
+            },
+            headerStyle: const HeaderStyle(
+              titleCentered: true, // 헤더 제목을 가운데 정렬
+            ),
+            selectedDayPredicate: (day) => isSameDay(provider.selectedDate, day),
+            onDaySelected: (selectedDay, focusedDay) {
+              provider.updateDate(selectedDay);
+              Navigator.of(context).pop();
+            },
           ),
-          child: child!,
-        );
-      },
+        ),
+      ),
+     ),
     );
-    if (picked != null) {
-      _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
-      _handleDateInput(_dateController.text);
-    }
   }
 
   void _changeDate(int days) {
@@ -284,6 +288,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                           child: TextField(
                             controller: _dateController,
                             focusNode: _focusNode,
+                            readOnly: true,
                             decoration: InputDecoration(
                               border: InputBorder.none,
                               hintText: 'YYYY-MM-DD',
@@ -299,13 +304,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             ),
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.center,
-                            onTap: () {
-                              _dateController.selection = TextSelection(
-                                baseOffset: 0,
-                                extentOffset: _dateController.text.length,
-                              );
-                            },
-                            onSubmitted: _handleDateInput,
+                            onTap: _showCalendar,
                           ),
                         ),
                         IconButton(
