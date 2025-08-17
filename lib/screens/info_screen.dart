@@ -11,34 +11,7 @@ class InfoScreen extends StatefulWidget {
   State<InfoScreen> createState() => _InfoScreenState();
 }
 
-class _InfoScreenState extends State<InfoScreen> with TickerProviderStateMixin {
-  late AnimationController _iconRotationController;
-  late Animation<double> _iconRotationAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _iconRotationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-
-    _iconRotationAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(_iconRotationController);
-  }
-
-  @override
-  void dispose() {
-    _iconRotationController.dispose();
-    super.dispose();
-  }
-
-  void _onThemeChanged() {
-    _iconRotationController.forward(from: 0.0);
-  }
+class _InfoScreenState extends State<InfoScreen> {
 
   Widget _buildInfoCard({
     required IconData icon,
@@ -170,44 +143,7 @@ class _InfoScreenState extends State<InfoScreen> with TickerProviderStateMixin {
             backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
             foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
             elevation: Theme.of(context).appBarTheme.elevation,
-            actions: [
-              ThemeSwitcher(
-                builder: (context) {
-                  return Container(
-                    constraints: const BoxConstraints(
-                      minWidth: 48,
-                      minHeight: 48,
-                    ),
-                    child: AnimatedBuilder(
-                      animation: _iconRotationAnimation,
-                      builder: (context, child) {
-                        return Transform.rotate(
-                          angle: _iconRotationAnimation.value * 2 * 3.14159,
-                          child: IconButton(
-                            icon: Icon(
-                              Theme.of(context).brightness == Brightness.dark
-                                  ? Icons.wb_sunny
-                                  : Icons.nightlight_round,
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                            onPressed: () {
-                              _onThemeChanged();
-                              final switcher = ThemeSwitcher.of(context);
-                              final currentTheme = Theme.of(context);
-                              if (currentTheme.brightness == Brightness.dark) {
-                                switcher.changeTheme(theme: Themes.lightTheme);
-                              } else {
-                                switcher.changeTheme(theme: Themes.darkTheme);
-                              }
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
-            ],
+                        actions: [],
           ),
           body: Container(
             width: double.infinity,

@@ -5,7 +5,6 @@ import 'package:table_calendar/table_calendar.dart';
 import '../services/astro_state.dart';
 import '../themes.dart';
 import 'package:intl/intl.dart';
-import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,12 +13,8 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _dateController = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
-
-  late AnimationController _iconRotationController;
-  late Animation<double> _iconRotationAnimation;
 
   @override
   void initState() {
@@ -29,20 +24,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     if (!provider.isInitialized) {
       Future.microtask(() => provider.initialize());
     }
-
-    _iconRotationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
-    );
-
-    _iconRotationAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(_iconRotationController);
-  }
-
-  void _onThemeChanged() {
-    _iconRotationController.forward(from: 0.0);
   }
 
   void _showCalendar() {
@@ -51,8 +32,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       context: context,
       builder: (context) => Dialog(
         child: SizedBox(
-          width: 800,
-          height: 500,
+          width: 1000,
+          height: 450,
           child: Padding(
           padding: const EdgeInsets.all(16),
           child: TableCalendar(
@@ -86,29 +67,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  void _handleDateInput(String input) {
-    if (mounted) {
-      final newDate = DateTime.tryParse(input.trim().replaceAll('-', ''));
-      if (newDate != null) {
-        final provider = Provider.of<AstroState>(context, listen: false);
-        provider.updateDate(newDate);
-      } else {
-        showErrorSnackBar();
-      }
-    }
-  }
-
-  void showErrorSnackBar() {
-    if (mounted) {
-      FlushbarHelper.showError(context, "올바른 날짜를 입력해주세요.");
-    }
-  }
-
   @override
   void dispose() {
     _dateController.dispose();
-    _focusNode.dispose();
-    _iconRotationController.dispose();
     super.dispose();
   }
 
@@ -193,41 +154,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         elevation: Theme.of(context).appBarTheme.elevation,
-        actions: [
-          ThemeSwitcher(
-            builder: (context) {
-              return Container(
-                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
-                child: AnimatedBuilder(
-                  animation: _iconRotationAnimation,
-                  builder: (context, child) {
-                    return Transform.rotate(
-                      angle: _iconRotationAnimation.value * 2 * 3.14159,
-                      child: IconButton(
-                        icon: Icon(
-                          Theme.of(context).brightness == Brightness.dark
-                              ? Icons.wb_sunny
-                              : Icons.nightlight_round,
-                          color: Theme.of(context).colorScheme.secondary,
-                        ),
-                        onPressed: () {
-                          _onThemeChanged();
-                          final switcher = ThemeSwitcher.of(context);
-                          final currentTheme = Theme.of(context);
-                          if (currentTheme.brightness == Brightness.dark) {
-                            switcher.changeTheme(theme: Themes.lightTheme);
-                          } else {
-                            switcher.changeTheme(theme: Themes.darkTheme);
-                          }
-                        },
-                      ),
-                    );
-                  },
-                ),
-              );
-            },
-          ),
-        ],
+        actions: [],
       ),
       body: Container(
         width: double.infinity,
@@ -287,7 +214,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         Expanded(
                           child: TextField(
                             controller: _dateController,
-                            focusNode: _focusNode,
                             readOnly: true,
                             decoration: InputDecoration(
                               border: InputBorder.none,

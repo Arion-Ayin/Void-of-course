@@ -6,6 +6,7 @@ import 'package:sweph/sweph.dart';
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'screens/home_screen.dart';
 import 'screens/info_screen.dart';
+import 'screens/setting_screen.dart';
 import 'services/astro_state.dart';
 import 'themes.dart';
 
@@ -155,6 +156,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
           type: BottomNavigationBarType.fixed,
           items: const [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: '홈'),
+            BottomNavigationBarItem(icon: Icon(Icons.settings), label: '설정'),
             BottomNavigationBarItem(icon: Icon(Icons.info), label: '정보'),
           ],
         ),
@@ -165,6 +167,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
   List<Widget> _buildScreens() {
     return [
       HomeScreen(),
+      const SettingScreen(),
       const InfoScreen(),
     ];
   }
