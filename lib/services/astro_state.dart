@@ -124,7 +124,8 @@ class AstroState with ChangeNotifier {
     // 혹시 오류가 생길 수도 있으니, 일단 시도해봅니다.
     try {
       // 별자리 계산 함수들을 하나씩 호출하여 데이터를 가져옵니다.
-      final moonPhase = _calculator.getMoonPhase(_selectedDate);
+      final moonPhaseInfo = _calculator.getMoonPhaseInfo(_selectedDate);
+      final moonPhase = moonPhaseInfo['phaseName'];
       final moonZodiac = _calculator.getMoonZodiacEmoji(_selectedDate);
       final moonInSign = _calculator.getMoonZodiacName(_selectedDate);
       final vocTimes = _calculator.findVoidOfCoursePeriod(_selectedDate);

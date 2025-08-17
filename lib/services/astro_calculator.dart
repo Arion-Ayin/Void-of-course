@@ -99,42 +99,70 @@ class AstroCalculator {
   }
 
   // 달의 위상(모양)을 계산하는 함수입니다.
-  String getMoonPhase(DateTime date) {
-    // 태양과 달의 경도를 가져옵니다.
+  Map<String, dynamic> getMoonPhaseInfo(DateTime date) {
     final positions = getSunMoonLongitude(date);
     final sunLon = positions['sun']!;
     final moonLon = positions['moon']!;
-    // 태양과 달 사이의 각도를 계산합니다.
     final angle = Sweph.swe_degnorm(moonLon - sunLon);
 
-    // 각도에 따라 달의 위상을 결정합니다.
-    // 각도가 0에 가까우면 '신월'입니다.
+    String phaseName;
+    DateTime? phaseTime;
+
     if (angle < 6.6 || angle > 353.4) {
-      // 정확한 신월 시간을 찾습니다.
-      final newMoonTime = _findSpecificPhaseTime(date, 0.0);
-      if (newMoonTime != null) {
-        final formattedTime = DateFormat('MM/dd HH:mm').format(newMoonTime);
-        return '🌑 New Moon (At $formattedTime)';
-      }
-      return '🌑 New Moon';
+      phaseName = '🌑 New Moon';
+      phaseTime = _findSpecificPhaseTime(date, 0.0);
+    } else if (angle > 173.4 && angle < 186.6) {
+      phaseName = '🌕 Full Moon';
+      phaseTime = _findSpecificPhaseTime(date, 180.0);
+    } else if (angle < 73.4) {
+      phaseName = '🌒 Waxing Crescent';
+    } else if (angle < 106.6) {
+      phaseName = '🌓 First Quarter';
+    } else if (angle < 166.8) {
+      phaseName = '🌔 Waxing Gibbous';
+    } else if (angle < 233.4) {
+      phaseName = '🌖 Waning Gibbous';
+    } else if (angle < 266.6) {
+      phaseName = '🌗 Last Quarter';
+    } else {
+      phaseName = '🌘 Waning Crescent';
     }
-    // 각도가 180도에 가까우면 '만월'입니다.
-    if (angle > 173.4 && angle < 186.6) {
-      // 정확한 만월 시간을 찾습니다.
-      final fullMoonTime = _findSpecificPhaseTime(date, 180.0);
-      if (fullMoonTime != null) {
-        final formattedTime = DateFormat('MM/dd HH:mm').format(fullMoonTime);
-        return '🌕 Full Moon (At $formattedTime)';
+
+    final nextPhaseInfo = _findNextPrimaryPhase(date);
+
+    return {
+      'phaseName': phaseName,
+      'phaseTime': phaseTime,
+      'nextPhaseName': nextPhaseInfo['name'],
+      'nextPhaseTime': nextPhaseInfo['time'],
+    };
+  }
+
+  Map<String, dynamic> _findNextPrimaryPhase(DateTime date) {
+    final phases = {
+      0.0: '🌑 New Moon',
+      90.0: '🌓 First Quarter',
+      180.0: '🌕 Full Moon',
+      270.0: '🌗 Last Quarter',
+    };
+
+    DateTime? nextPhaseTime;
+    String? nextPhaseName;
+
+    for (var entry in phases.entries) {
+      final angle = entry.key;
+      final name = entry.value;
+      DateTime? time = _findSpecificPhaseTime(date, angle, daysRange: 30);
+
+      if (time != null && time.isAfter(date)) {
+        if (nextPhaseTime == null || time.isBefore(nextPhaseTime)) {
+          nextPhaseTime = time;
+          nextPhaseName = name;
+        }
       }
-      return '🌕 Full Moon';
     }
-    // 그 외 각도에 따라 다양한 위상 이름을 반환합니다.
-    if (angle < 73.4) return '🌒 Waxing Crescent';
-    if (angle < 106.6) return '🌓 First Quarter';
-    if (angle < 166.8) return '🌔 Waxing Gibbous';
-    if (angle < 233.4) return '🌖 Waning Gibbous';
-    if (angle < 266.6) return '🌗 Last Quarter';
-    return '🌘 Waning Crescent';
+
+    return {'name': nextPhaseName, 'time': nextPhaseTime};
   }
 
   // 달이 현재 어느 별자리에 있는지 이모티콘으로 반환합니다.

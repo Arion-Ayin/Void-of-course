@@ -132,8 +132,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final nextSignTimeText =
         provider.nextSignTime != null
-            ? '종료 : ${DateFormat('yyyy-MM-dd HH:mm').format(provider.nextSignTime!)}'
-            : '종료 : N/A';
+            ? 'Next Sign : ${DateFormat('yyyy-MM-dd HH:mm').format(provider.nextSignTime!)}'
+            : 'Next Sign : N/A';
 
     return Scaffold(
       appBar: AppBar(
@@ -243,7 +243,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(height: 20),
                   Align(
-                    alignment: Alignment.centerRight,
+                    alignment: Alignment.center,
                     child: SizedBox(
                       width: 70, // 너비를 50으로 설정
                       height: 70, // 높이를 50으로 설정
@@ -313,6 +313,12 @@ class _HomeScreenState extends State<HomeScreen> {
             Text(
               provider.moonPhase,
               style: const TextStyle(color: Colors.white, fontSize: 18),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Next Phase : ${provider.nextSignTime != null ? DateFormat('MM-dd HH:mm').format(provider.nextSignTime!) : 'N/A'}',
+              style: const TextStyle(color: Colors.white, fontSize: 16),
               textAlign: TextAlign.center,
             ),
           ],
