@@ -40,7 +40,7 @@ class MoonPhaseCard extends StatelessWidget {
       ),
       // 상자 안쪽에 여백을 줘요.
       child: Padding(
-        padding: const EdgeInsets.all(20.0), // 모든 방향으로 20만큼 여백을 줘요.
+        padding: const EdgeInsets.all(13.0), // 모든 방향으로 13만큼 여백을 줘요.
         // 내용물들을 세로로 차곡차곡 쌓아요.
         child: Column(
           children: [
@@ -49,7 +49,7 @@ class MoonPhaseCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center, // 가운데 정렬해요.
               children: [
                 const Icon(Icons.brightness_3, color: Colors.white, size: 32), // 달 모양 아이콘을 넣어요.
-                const SizedBox(width: 12), // 아이콘과 글자 사이에 작은 공간을 만들어요.
+                const SizedBox(width: 8), // 아이콘과 글자 사이에 작은 공간을 만들어요.
                 const Text(
                   'Moon Phase', // '달의 위상'이라는 제목을 써요.
                   style: TextStyle(
@@ -60,7 +60,7 @@ class MoonPhaseCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 16), // 제목과 내용 사이에 공간을 만들어요.
+            const SizedBox(height: 8), // 제목과 내용 사이에 공간을 만들어요.
             // 달의 현재 상태를 보여주는 글자를 써요.
             Text(
               provider.moonPhase, // 별자리 정보에서 달의 현재 상태를 가져와요.
@@ -71,7 +71,7 @@ class MoonPhaseCard extends StatelessWidget {
             // 다음 달의 상태가 언제인지 보여주는 글자를 써요.
             Text(
               // '다음 상태: 08-18 15:30' 와 같은 형식으로 보여줘요.
-              'Next Phase : ${provider.nextSignTime != null ? DateFormat('MM-dd HH:mm').format(provider.nextSignTime!) : 'N/A'}',
+              '다음 상태 : ${provider.nextSignTime != null ? DateFormat('MM월 dd일 HH:mm').format(provider.nextSignTime!) : 'N/A'}',
               style: const TextStyle(color: Colors.white, fontSize: 16), // 하얀색, 크기 16
               textAlign: TextAlign.center, // 글자를 가운데 정렬해요.
             ),

@@ -1,5 +1,3 @@
-// main.dart
-
 import 'package:flutter/material.dart'; // 플러터의 기본 디자인 라이브러리를 가져와요.
 import 'package:provider/provider.dart'; // 앱의 상태(데이터)를 쉽게 관리하게 도와주는 라이브러리를 가져와요.
 import 'package:sweph/sweph.dart'; // 천문 계산을 위한 라이브러리를 가져와요.

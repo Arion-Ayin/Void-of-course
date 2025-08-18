@@ -31,7 +31,7 @@ class ResetDateButton extends StatelessWidget {
             ),
           ),
           // 버튼 안에 들어갈 내용물이에요.
-          child: const Icon(Icons.refresh, size: 30), // 새로고침 모양 아이콘을 넣고, 크기는 30으로 해요.
+          child: const Icon(Icons.refresh, size: 35), // 새로고침 모양 아이콘을 넣고, 크기는 30으로 해요.
         ),
       ),
     );

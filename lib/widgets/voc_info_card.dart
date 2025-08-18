@@ -46,24 +46,38 @@ class VocInfoCard extends StatelessWidget {
       ),
       // 카드 안에 들어갈 내용(아이콘, 글자 등)을 설정해요.
       child: ListTile(
-        contentPadding: const EdgeInsets.all(10), // 내용물 주변에 모든 방향으로 10만큼 여백을 줘요.
-        // 왼쪽에 동그란 배경을 가진 아이콘을 보여줘요.
-        leading: CircleAvatar(
-          radius: 25, // 동그라미의 반지름은 25
-          backgroundColor: iconColor.withOpacity(0.1), // 아이콘 색깔을 아주 연하게 해서 배경색으로 써요.
-          child: Icon(icon, color: iconColor, size: 28), // 아이콘을 보여주고, 정해진 색깔과 크기로 설정해요.
-        ),
-        // 아이콘 오른쪽에 제목을 보여줘요.
-        title: Text(
-          title, // 'Void of Course' 같은 제목을 보여줘요.
-          style: TextStyle(
-            color: Theme.of(context).textTheme.titleLarge?.color, // 앱의 큰 제목 글자 색상을 사용해요.
-            fontSize: 18, // 글자 크기는 18
-            fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요.
+        contentPadding: const EdgeInsets.all(15), // 내용물 주변에 모든 방향으로 20만큼 여백을 줘요.
+        // 왼쪽에 아이콘을 보여줄 공간을 만들어요.
+        leading: SizedBox(
+          width: 50,
+          height: 50,
+          child: Center(
+            child: CircleAvatar(
+              radius: 24, // 동그라미의 반지름은 24
+              backgroundColor: iconColor.withOpacity(0.1), // 아이콘 색깔을 아주 연하게 해서 배경색으로 써요.
+              child: Icon(icon, color: iconColor, size: 27), // 아이콘을 보여주고, 정해진 색깔과 크기로 설정해요.
+            ),
           ),
         ),
-        // 제목 아래에 부가적인 내용을 보여줘요.
-        subtitle: subtitleWidget, // VOC 시작 시간, 종료 시간 같은 정보가 들어있는 위젯을 보여줘요.
+        // 아이콘 오른쪽에 글자들을 세로로 쌓아서 보여줘요.
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, // 글자들을 왼쪽부터 시작하도록 정렬해요.
+          mainAxisSize: MainAxisSize.min, // 내용물 크기만큼만 공간을 차지하게 해요.
+          children: [
+            // 제목을 보여줘요.
+            Text(
+              title, // 'Void of Course' 같은 제목을 보여줘요.
+              style: TextStyle(
+                color: Theme.of(context).textTheme.titleLarge?.color, // 앱의 큰 제목 글자 색상을 사용해요.
+                fontSize: 18, // 글자 크기는 18
+                fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요.
+              ),
+            ),
+            const SizedBox(height: 3), // 제목과 부제목 사이에 작은 공간을 만들어요.
+            // 부제목 위젯을 보여줘요.
+            subtitleWidget,
+          ],
+        ),
       ),
     );
   }

@@ -74,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // 만약 날짜와 시간이 없다면 'N/A' (정보 없음) 라고 보여줘요.
     if (dateTime == null) return 'N/A';
     // 날짜와 시간이 있다면, 정해진 형식으로 만들어서 돌려줘요.
-    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
+    return DateFormat('MM월 dd일 HH:mm').format(dateTime);
   }
 
   @override
@@ -98,8 +98,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // 다음 별자리로 바뀌는 시간에 대한 글자를 만들어요.
     final nextSignTimeText = provider.nextSignTime != null
-        ? 'Next Sign : ${DateFormat('yyyy-MM-dd HH:mm').format(provider.nextSignTime!)}'
-        : 'Next Sign : N/A';
+        ? '다음 싸인 : ${DateFormat('MM월 dd일 HH:mm').format(provider.nextSignTime!)}'
+        : '다음 싸인 : N/A';
+        //---------------------------------------------------------------------------------------------
 
     // --- VOC (Void of Course) 관련 로직 ---
     final vocStart = provider.vocStart; // VOC 시작 시간을 가져와요.
@@ -113,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // isVocNow 값에 따라 다른 글자, 아이콘, 색깔을 정해요.
-    final String vocStatusText = isVocNow ? 'Is Void Now' : 'Is Not Void'; // 상태 글자
+    final String vocStatusText = isVocNow ? '보이드 입니다' : '보이드가 아닙니다'; // 상태 글자
     final IconData vocIcon = isVocNow ? Icons.warning : Icons.park; // 아이콘 모양
     final Color vocColor = isVocNow ? Colors.deepOrange : Colors.green; // 아이콘과 글자 색깔
     // --- 로직 끝 ---
@@ -187,10 +188,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // VOC 시작 시간과 종료 시간을 보여줘요.
                       Text(
-                        '시작: ${_formatDateTime(provider.vocStart)}\n종료: ${_formatDateTime(provider.vocEnd)}',
+                        '시작 : ${_formatDateTime(provider.vocStart)}\n종료 : ${_formatDateTime(provider.vocEnd)}',
                         style: TextStyle(
                           color: Theme.of(context).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
-                          fontSize: 14, // 글자 크기는 14
+                          fontSize: 15, // 글자 크기는 14
+                          fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요.
                         ),
                       ),
                       const SizedBox(height: 8), // 글자와 글자 사이에 작은 공간을 만들어요.
@@ -215,7 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onNextDay: () => _changeDate(1), // 오른쪽 화살표를 누르면 내일로 가요.
                   showCalendar: () => showCalendarDialog(context), // 날짜 부분을 누르면 달력을 보여줘요.
                 ),
-                const SizedBox(height: 20), // 날짜 선택기와 초기화 버튼 사이에 공간을 만들어요.
+                const SizedBox(height: 15), // 날짜 선택기와 초기화 버튼 사이에 공간을 만들어요.
 
                 // 5. 날짜를 오늘로 되돌리는 버튼을 넣어요.
                 ResetDateButton(onPressed: _resetDateToToday),

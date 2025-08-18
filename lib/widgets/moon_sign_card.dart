@@ -74,7 +74,7 @@ class MoonSignCard extends StatelessWidget {
       ),
       // 카드 안에 들어갈 내용(아이콘, 글자 등)을 설정해요.
       child: ListTile(
-        contentPadding: const EdgeInsets.all(20), // 내용물 주변에 모든 방향으로 20만큼 여백을 줘요.
+        contentPadding: const EdgeInsets.all(15), // 내용물 주변에 모든 방향으로 20만큼 여백을 줘요.
         // 왼쪽에 별자리 이모티콘을 보여줄 공간을 만들어요.
         leading: SizedBox(
           width: 50, // 너비 50
@@ -101,13 +101,13 @@ class MoonSignCard extends StatelessWidget {
                 fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요.
               ),
             ),
-            const SizedBox(height: 8), // 글자와 글자 사이에 작은 공간을 만들어요.
             // 다음 별자리로 바뀌는 시간을 보여줘요.
             Text(
               nextSignTimeText, // '다음 별자리: 08-18 15:30' 과 같은 글자를 보여줘요.
               style: TextStyle(
                 color: Theme.of(context).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
-                fontSize: 14, // 글자 크기는 14
+                fontSize: 15, // 글자 크기는 14
+                fontWeight: FontWeight.w900, // 글자를 매우 두껍게 만들어요.
               ),
             ),
           ],
