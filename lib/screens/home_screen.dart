@@ -1,467 +1,228 @@
-import 'package:flutter/material.dart';
-import 'package:lioluna/utils/flushbar_helper.dart';
-import 'package:provider/provider.dart';
-import 'package:table_calendar/table_calendar.dart';
-import '../services/astro_state.dart';
-import '../themes.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/material.dart'; // 플러터의 기본 디자인 라이브러리를 가져와요.
+import 'package:intl/intl.dart'; // 날짜와 시간을 예쁘게 보여주는 라이브러리를 가져와요.
+import 'package:provider/provider.dart'; // 앱의 상태(데이터)를 쉽게 관리하게 도와주는 라이브러리를 가져와요.
+import '../services/astro_state.dart'; // 별자리 계산과 관련된 우리 앱의 기능을 가져와요.
+import '../widgets/calendar_dialog.dart'; // 우리가 만든 달력 다이얼로그 위젯을 가져와요.
+import '../widgets/date_selector.dart'; // 우리가 만든 날짜 선택 위젯을 가져와요.
+import '../widgets/moon_phase_card.dart'; // 우리가 만든 달 위상 카드 위젯을 가져와요.
+import '../widgets/moon_sign_card.dart'; // 우리가 만든 달 별자리 카드 위젯을 가져와요.
+import '../widgets/reset_date_button.dart'; // 우리가 만든 날짜 초기화 버튼 위젯을 가져와요.
+import '../widgets/voc_info_card.dart'; // 우리가 만든 VOC 정보 카드 위젯을 가져와요.
 
+// 홈 화면을 보여주는 위젯이에요.
 class HomeScreen extends StatefulWidget {
+  // const는 이 위젯이 변하지 않는다는 뜻이에요.
   const HomeScreen({super.key});
 
   @override
+  // 홈 화면의 상태를 관리하는 클래스를 만들어요.
   _HomeScreenState createState() => _HomeScreenState();
 }
 
+// 홈 화면의 상태를 관리하는 클래스예요.
 class _HomeScreenState extends State<HomeScreen> {
+  // 날짜를 보여주는 입력창을 다루는 컨트롤러예요.
   final TextEditingController _dateController = TextEditingController();
 
   @override
+  // 이 위젯이 처음 만들어질 때 한 번만 실행되는 함수예요.
   void initState() {
-    super.initState();
+    super.initState(); // 부모 클래스의 initState 함수를 먼저 실행해요.
+    // 앱의 전체적인 상태(데이터)를 가져와요. 화면을 다시 그릴 필요는 없어요.
     final provider = Provider.of<AstroState>(context, listen: false);
 
+    // 만약 아직 별자리 정보가 준비되지 않았다면,
     if (!provider.isInitialized) {
+      // 아주 잠깐 뒤에 별자리 정보를 준비하는 함수를 실행해요.
       Future.microtask(() => provider.initialize());
     }
   }
 
-  void _showCalendar() {
-    final provider = Provider.of<AstroState>(context, listen: false);
-    showDialog(
-      context: context,
-      builder:
-          (context) => Dialog(
-            child: SizedBox(
-              width: 1000,
-              height: 450,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: TableCalendar(
-                  focusedDay: provider.selectedDate,
-                  firstDay: DateTime(1900),
-                  lastDay: DateTime(2100),
-                  calendarFormat: CalendarFormat.month,
-                  availableCalendarFormats: const {
-                    CalendarFormat.month: 'Month',
-                  },
-                  headerStyle: const HeaderStyle(
-                    titleCentered: true, // 헤더 제목을 가운데 정렬
-                  ),
-                  selectedDayPredicate:
-                      (day) => isSameDay(provider.selectedDate, day),
-                  onDaySelected: (selectedDay, focusedDay) {
-                    provider.updateDate(selectedDay);
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ),
-            ),
-          ),
-    );
+  @override
+  // 이 위젯이 화면에서 사라질 때 실행되는 함수예요.
+  void dispose() {
+    _dateController.dispose(); // 날짜 컨트롤러를 정리해서 메모리를 아껴요.
+    super.dispose(); // 부모 클래스의 dispose 함수를 실행해요.
   }
 
+  // 날짜를 바꾸는 함수예요. days 만큼 날짜를 더하거나 빼요.
   void _changeDate(int days) {
+    // 이 위젯이 화면에 잘 붙어있을 때만 실행해요.
     if (mounted) {
+      // 앱의 전체적인 상태(데이터)를 가져와요.
       final provider = Provider.of<AstroState>(context, listen: false);
+      // 현재 선택된 날짜에 days 만큼 더하거나 뺀 새로운 날짜를 만들어요.
       final newDate = provider.selectedDate.add(Duration(days: days));
+      // 앱의 날짜 정보를 새로운 날짜로 업데이트해요.
       provider.updateDate(newDate);
     }
   }
 
-  @override
-  void dispose() {
-    _dateController.dispose();
-    super.dispose();
-  }
-
+  // 날짜를 오늘로 되돌리는 함수예요.
   void _resetDateToToday() {
+    // 이 위젯이 화면에 잘 붙어있을 때만 실행해요.
     if (mounted) {
+      // 앱의 전체적인 상태(데이터)를 가져와요.
       final provider = Provider.of<AstroState>(context, listen: false);
+      // 앱의 날짜 정보를 지금 현재 시간으로 업데이트해요.
       provider.updateDate(DateTime.now());
     }
   }
 
-  String getZodiacEmoji(String sign) {
-    switch (sign) {
-      case 'Aries':
-        return '♈';
-      case 'Taurus':
-        return '♉';
-      case 'Gemini':
-        return '♊';
-      case 'Cancer':
-        return '♋';
-      case 'Leo':
-        return '♌';
-      case 'Virgo':
-        return '♍';
-      case 'Libra':
-        return '♎';
-      case 'Scorpio':
-        return '♏';
-      case 'Sagittarius':
-        return '♐';
-      case 'Capricorn':
-        return '♑';
-      case 'Aquarius':
-        return '♒';
-      case 'Pisces':
-        return '♓';
-      default:
-        return '❔';
-    }
+  // 날짜와 시간을 '년-월-일 시:분' 형식으로 예쁘게 만들어주는 함수예요.
+  String _formatDateTime(DateTime? dateTime) {
+    // 만약 날짜와 시간이 없다면 'N/A' (정보 없음) 라고 보여줘요.
+    if (dateTime == null) return 'N/A';
+    // 날짜와 시간이 있다면, 정해진 형식으로 만들어서 돌려줘요.
+    return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
   }
 
   @override
+  // 이 위젯이 화면에 어떻게 보일지 정하는 가장 중요한 부분이에요.
   Widget build(BuildContext context) {
+    // 앱의 전체적인 상태(데이터)를 가져와요. 데이터가 바뀌면 화면을 다시 그려요.
     final provider = Provider.of<AstroState>(context);
-    _dateController.text = DateFormat(
-      'yyyy-MM-dd',
-    ).format(provider.selectedDate);
+    // 날짜 컨트롤러에 현재 선택된 날짜를 '년-월-일' 형식으로 보여줘요.
+    _dateController.text = DateFormat('yyyy-MM-dd').format(provider.selectedDate);
 
+    // 만약 데이터가 아직 준비 중이라면,
     if (!provider.isInitialized || provider.isLoading) {
+      // 화면 가운데에 동그란 로딩 아이콘을 보여줘요.
       return const Center(child: CircularProgressIndicator());
     }
+    // 만약 에러가 발생했다면,
     if (provider.lastError != null) {
+      // 화면 가운데에 에러 메시지를 보여줘요.
       return Center(child: Text('Error: ${provider.lastError}'));
     }
 
-    String _formatDateTime(DateTime? dateTime) {
-      if (dateTime == null) return 'N/A';
-      return DateFormat('yyyy-MM-dd HH:mm').format(dateTime);
-    }
+    // 다음 별자리로 바뀌는 시간에 대한 글자를 만들어요.
+    final nextSignTimeText = provider.nextSignTime != null
+        ? 'Next Sign : ${DateFormat('yyyy-MM-dd HH:mm').format(provider.nextSignTime!)}'
+        : 'Next Sign : N/A';
 
-    final nextSignTimeText =
-        provider.nextSignTime != null
-            ? 'Next Sign : ${DateFormat('yyyy-MM-dd HH:mm').format(provider.nextSignTime!)}'
-            : 'Next Sign : N/A';
-
-    // --- New VOC Logic ---
-    final vocStart = provider.vocStart;
-    final vocEnd = provider.vocEnd;
-    final now = DateTime.now();
-    bool isVocNow = false;
+    // --- VOC (Void of Course) 관련 로직 ---
+    final vocStart = provider.vocStart; // VOC 시작 시간을 가져와요.
+    final vocEnd = provider.vocEnd; // VOC 종료 시간을 가져와요.
+    final now = DateTime.now(); // 지금 현재 시간을 가져와요.
+    bool isVocNow = false; // 지금이 VOC 시간인지 아닌지를 저장할 변수예요.
+    // 만약 VOC 시작 시간과 종료 시간이 모두 있다면,
     if (vocStart != null && vocEnd != null) {
+      // 지금 시간이 VOC 시작 시간보다 뒤이고, 종료 시간보다 앞인지 확인해요.
       isVocNow = now.isAfter(vocStart) && now.isBefore(vocEnd);
     }
 
-    final String vocStatusText = isVocNow ? 'Is Void Now' : 'Is Not Void';
-    final IconData vocIcon = isVocNow ? Icons.warning : Icons.park;
-    final Color vocColor = isVocNow ? Colors.deepOrange : Colors.green;
-    // --- End of New Logic ---
+    // isVocNow 값에 따라 다른 글자, 아이콘, 색깔을 정해요.
+    final String vocStatusText = isVocNow ? 'Is Void Now' : 'Is Not Void'; // 상태 글자
+    final IconData vocIcon = isVocNow ? Icons.warning : Icons.park; // 아이콘 모양
+    final Color vocColor = isVocNow ? Colors.deepOrange : Colors.green; // 아이콘과 글자 색깔
+    // --- 로직 끝 ---
 
+    // 화면의 전체적인 구조를 짜요.
     return Scaffold(
+      // 화면 상단의 앱 바(제목 바)예요.
       appBar: AppBar(
+        // 제목 부분에 아이콘과 글자를 가로로 나란히 놓아요.
         title: Row(
           children: [
+            // 별 모양 아이콘이에요.
             Icon(
               Icons.star,
-              color: Theme.of(context).colorScheme.secondary,
-              size: 24,
+              color: Theme.of(context).colorScheme.secondary, // 앱 테마에 맞는 두 번째 색깔을 사용해요.
+              size: 24, // 아이콘 크기는 24
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 8), // 아이콘과 글자 사이에 작은 공간을 만들어요.
+            // 앱 제목을 써요.
             Text(
               'Void of Course',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface), // 앱 테마에 맞는 글자 색깔을 사용해요.
             ),
           ],
         ),
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
-        elevation: Theme.of(context).appBarTheme.elevation,
-        actions: [],
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor, // 앱 바의 배경색을 테마에 맞게 설정해요.
+        foregroundColor: Theme.of(context).appBarTheme.foregroundColor, // 앱 바의 글자/아이콘 색을 테마에 맞게 설정해요.
+        elevation: Theme.of(context).appBarTheme.elevation, // 앱 바의 그림자 높이를 테마에 맞게 설정해요.
       ),
+      // 화면의 주요 내용이 들어가는 부분이에요.
       body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        constraints: const BoxConstraints.expand(),
+        width: double.infinity, // 너비를 화면 끝까지 채워요.
+        height: double.infinity, // 높이를 화면 끝까지 채워요.
+        // 화면 배경을 예쁘게 꾸며줘요.
         decoration: BoxDecoration(
+          // 배경색을 위에서 아래로 변하게 만들어요.
           gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+            begin: Alignment.topCenter, // 위쪽 가운데에서 시작해서
+            end: Alignment.bottomCenter, // 아래쪽 가운데로 색이 변해요.
             colors: [
-              Theme.of(context).colorScheme.background,
-              Theme.of(context).colorScheme.surface,
+              Theme.of(context).colorScheme.background, // 앱 테마의 배경색
+              Theme.of(context).colorScheme.surface, // 앱 테마의 표면색
             ],
           ),
         ),
+        // 휴대폰의 상태표시줄 같은 시스템 UI를 피해서 내용을 보여줘요.
         child: SafeArea(
+          // 내용이 길어지면 스크롤 할 수 있게 만들어요.
           child: SingleChildScrollView(
-            physics: const ClampingScrollPhysics(),
-            padding: const EdgeInsets.all(16.0),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: 600),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _buildMoonPhaseCard(provider),
-                  const SizedBox(height:8),
-                  _buildMoonSignCard(provider, nextSignTimeText),
-                  const SizedBox(height:8),
-                  _buildInfoCard(
-                    icon: vocIcon, // Use dynamic icon
-                    title: 'Void of Course',
-                    subtitleWidget: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '시작: ${_formatDateTime(provider.vocStart)}\n' // Corrected newline escape
-                          '종료: ${_formatDateTime(provider.vocEnd)}',
-                          style: TextStyle(
-                            color: Theme.of(context).textTheme.bodyMedium?.color,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          vocStatusText, // Use dynamic text
-                          style: TextStyle(
-                            color: vocColor, // Use dynamic color
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                    iconColor: vocColor, // Use dynamic color for icon
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 16,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(color: Colors.black12, blurRadius: 10),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back_ios),
-                          onPressed: () => _changeDate(-1),
-                          color: Theme.of(context).iconTheme.color,
-                        ),
-                        Expanded(
-                          child: TextField(
-                            controller: _dateController,
-                            readOnly: true,
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: 'YYYY-MM-DD',
-                              hintStyle: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).textTheme.bodyMedium!.color!.withOpacity(0.5),
-                              ),
-                            ),
-                            style: TextStyle(
-                              color:
-                                  Theme.of(context).textTheme.bodyMedium!.color,
-                            ),
-                            keyboardType: TextInputType.number,
-                            textAlign: TextAlign.center,
-                            onTap: _showCalendar,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.arrow_forward_ios),
-                          onPressed: () => _changeDate(1),
-                          color: Theme.of(context).iconTheme.color,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  Align(
-                    alignment: Alignment.center,
-                    child: SizedBox(
-                      width: 70, // 너비를 50으로 설정
-                      height: 70, // 높이를 50으로 설정
-                      child: ElevatedButton(
-                        onPressed: _resetDateToToday,
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.zero, // 내부 여백을 없앰
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              25,
-                            ), // 높이의 절반(50/2)으로 설정해 원형으로 만듦
-                          ),
-                        ),
-                        child: const Icon(Icons.refresh, size: 30), // 아이콘만 남김
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMoonPhaseCard(AstroState provider) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.purple.withOpacity(0.8),
-            Colors.indigo.withOpacity(0.6),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.purple.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            padding: const EdgeInsets.all(16.0), // 모든 방향으로 16만큼 여백을 줘요.
+            // 화면에 보이는 위젯들을 세로로 차곡차곡 쌓아요.
+            child: Column(
               children: [
-                Icon(Icons.brightness_3, color: Colors.white, size: 32),
-                const SizedBox(width: 12),
-                Text(
-                  'Moon Phase',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
+                // 1. 달의 위상 정보를 보여주는 카드를 넣어요.
+                MoonPhaseCard(provider: provider),
+                const SizedBox(height: 8), // 카드와 카드 사이에 작은 공간을 만들어요.
+
+                // 2. 달의 별자리 정보를 보여주는 카드를 넣어요.
+                MoonSignCard(provider: provider, nextSignTimeText: nextSignTimeText),
+                const SizedBox(height: 8), // 카드와 카드 사이에 작은 공간을 만들어요.
+
+                // 3. VOC(Void of Course) 정보를 보여주는 카드를 넣어요.
+                VocInfoCard(
+                  icon: vocIcon, // 위에서 정한 아이콘을 줘요.
+                  title: 'Void of Course', // 제목을 줘요.
+                  iconColor: vocColor, // 위에서 정한 아이콘 색깔을 줘요.
+                  // 카드 부제목에 들어갈 내용을 만들어요.
+                  subtitleWidget: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start, // 글자를 왼쪽부터 시작하도록 정렬해요.
+                    mainAxisSize: MainAxisSize.min, // 내용물 크기만큼만 공간을 차지하게 해요.
+                    children: [
+                      // VOC 시작 시간과 종료 시간을 보여줘요.
+                      Text(
+                        '시작: ${_formatDateTime(provider.vocStart)}\n종료: ${_formatDateTime(provider.vocEnd)}',
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
+                          fontSize: 14, // 글자 크기는 14
+                        ),
+                      ),
+                      const SizedBox(height: 8), // 글자와 글자 사이에 작은 공간을 만들어요.
+                      // 현재 VOC 상태를 보여줘요.
+                      Text(
+                        vocStatusText, // 위에서 정한 상태 글자를 보여줘요.
+                        style: TextStyle(
+                          color: vocColor, // 위에서 정한 색깔을 사용해요.
+                          fontSize: 16, // 글자 크기는 16
+                          fontWeight: FontWeight.w900, // 글자를 매우 두껍게 만들어요.
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(height: 8), // 카드와 날짜 선택기 사이에 작은 공간을 만들어요.
+
+                // 4. 날짜를 선택하는 위젯을 넣어요.
+                DateSelector(
+                  dateController: _dateController, // 날짜를 보여줄 컨트롤러를 줘요.
+                  onPreviousDay: () => _changeDate(-1), // 왼쪽 화살표를 누르면 어제로 가요.
+                  onNextDay: () => _changeDate(1), // 오른쪽 화살표를 누르면 내일로 가요.
+                  showCalendar: () => showCalendarDialog(context), // 날짜 부분을 누르면 달력을 보여줘요.
+                ),
+                const SizedBox(height: 20), // 날짜 선택기와 초기화 버튼 사이에 공간을 만들어요.
+
+                // 5. 날짜를 오늘로 되돌리는 버튼을 넣어요.
+                ResetDateButton(onPressed: _resetDateToToday),
               ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              provider.moonPhase,
-              style: const TextStyle(color: Colors.white, fontSize: 18),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Next Phase : ${provider.nextSignTime != null ? DateFormat('MM-dd HH:mm').format(provider.nextSignTime!) : 'N/A'}',
-              style: const TextStyle(color: Colors.white, fontSize: 16),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMoonSignCard(AstroState provider, String nextSignTimeText) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).cardColor,
-            Theme.of(context).cardColor.withOpacity(0.8),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Row(
-          children: [
-            Text(
-              getZodiacEmoji(provider.moonInSign),
-              style: const TextStyle(fontSize: 30),
-            ),
-            const SizedBox(width: 20),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Moon in ${provider.moonInSign}',
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.titleLarge?.color,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    nextSignTimeText,
-                    style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoCard({
-    required IconData icon,
-    required String title,
-    required Widget subtitleWidget,
-    required Color iconColor,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).cardColor,
-            Theme.of(context).cardColor.withOpacity(0.8),
-          ],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(20),
-        leading: CircleAvatar(
-          radius: 25,
-          backgroundColor: iconColor.withOpacity(0.1),
-          child: Icon(icon, color: iconColor, size: 28),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: Theme.of(context).textTheme.titleLarge?.color,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
           ),
         ),
-        subtitle: subtitleWidget,
       ),
     );
   }
