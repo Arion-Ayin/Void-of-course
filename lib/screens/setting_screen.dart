@@ -56,7 +56,6 @@ class SettingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark; // This line should be here
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -82,14 +81,14 @@ class SettingScreen extends StatelessWidget {
         elevation: Theme.of(context).appBarTheme.elevation,
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             _buildSettingCard(
               context: context,
-              icon: isDarkMode ? Icons.dark_mode : Icons.sunny, // This should be conditional
+              icon: Icons.palette,
               title: '다크 모드',
-              iconColor: isDarkMode ? Colors.white : Colors.yellow, // This should be conditional
+              iconColor: Colors.purple,
               trailing: ThemeSwitcher(
                 builder: (context) {
                   final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -145,7 +144,7 @@ class SettingScreen extends StatelessWidget {
               ),
             ),
           ],
-        ),
+        ),  
       ),
     );
   }
