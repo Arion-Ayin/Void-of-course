@@ -30,32 +30,34 @@ class _HomeScreenState extends State<HomeScreen> {
     final provider = Provider.of<AstroState>(context, listen: false);
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        child: SizedBox(
-          width: 1000,
-          height: 450,
-          child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: TableCalendar(
-            focusedDay: provider.selectedDate,
-            firstDay: DateTime(1900),
-            lastDay: DateTime(2100),
-            calendarFormat: CalendarFormat.month,
-            availableCalendarFormats: const {
-              CalendarFormat.month: 'Month',
-            },
-            headerStyle: const HeaderStyle(
-              titleCentered: true, // 헤더 제목을 가운데 정렬
+      builder:
+          (context) => Dialog(
+            child: SizedBox(
+              width: 1000,
+              height: 450,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: TableCalendar(
+                  focusedDay: provider.selectedDate,
+                  firstDay: DateTime(1900),
+                  lastDay: DateTime(2100),
+                  calendarFormat: CalendarFormat.month,
+                  availableCalendarFormats: const {
+                    CalendarFormat.month: 'Month',
+                  },
+                  headerStyle: const HeaderStyle(
+                    titleCentered: true, // 헤더 제목을 가운데 정렬
+                  ),
+                  selectedDayPredicate:
+                      (day) => isSameDay(provider.selectedDate, day),
+                  onDaySelected: (selectedDay, focusedDay) {
+                    provider.updateDate(selectedDay);
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
             ),
-            selectedDayPredicate: (day) => isSameDay(provider.selectedDate, day),
-            onDaySelected: (selectedDay, focusedDay) {
-              provider.updateDate(selectedDay);
-              Navigator.of(context).pop();
-            },
           ),
-        ),
-      ),
-     ),
     );
   }
 
@@ -417,13 +419,24 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: iconColor.withOpacity(0.1),
           child: Icon(icon, color: iconColor, size: 28),
         ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: Theme.of(context).textTheme.titleLarge?.color,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, // 텍스트를 왼쪽으로 정렬
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                color: Theme.of(context).textTheme.titleLarge?.color,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4), // 제목과 추가 텍스트 사이 간격
+            Text(
+              '새롭게 추가할 텍스트입니다.', // 여기에 원하는 텍스트를 넣으세요.
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            ),
+            // subtitle은 Column 아래에 자동으로 위치하므로 별도 조정이 필요 없습니다.
+          ],
         ),
         subtitle: Text(
           subtitle,

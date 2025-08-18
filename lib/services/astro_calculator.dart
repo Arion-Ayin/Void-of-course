@@ -103,41 +103,43 @@ class AstroCalculator {
     final positions = getSunMoonLongitude(date);
     final sunLon = positions['sun']!;
     final moonLon = positions['moon']!;
+    // 태양과 달의 각도 차이를 계산합니다.
     final angle = Sweph.swe_degnorm(moonLon - sunLon);
 
     String phaseName;
-    DateTime? phaseTime;
 
-    if (angle < 6.6 || angle > 353.4) {
+    // 각도에 따라 8개의 달 위상 중 하나를 결정합니다.
+    // 각 위상은 45도씩 차지하도록 대칭적으로 설정합니다.
+    if (angle >= 337.5 || angle < 22.5) {
       phaseName = '🌑 New Moon';
-      phaseTime = _findSpecificPhaseTime(date, 0.0);
-    } else if (angle > 173.4 && angle < 186.6) {
-      phaseName = '🌕 Full Moon';
-      phaseTime = _findSpecificPhaseTime(date, 180.0);
-    } else if (angle < 73.4) {
+    } else if (angle < 67.5) {
       phaseName = '🌒 Waxing Crescent';
-    } else if (angle < 106.6) {
+    } else if (angle < 112.5) {
       phaseName = '🌓 First Quarter';
-    } else if (angle < 166.8) {
+    } else if (angle < 157.5) {
       phaseName = '🌔 Waxing Gibbous';
-    } else if (angle < 233.4) {
+    } else if (angle < 202.5) {
+      phaseName = '🌕 Full Moon';
+    } else if (angle < 247.5) {
       phaseName = '🌖 Waning Gibbous';
-    } else if (angle < 266.6) {
+    } else if (angle < 292.5) {
       phaseName = '🌗 Last Quarter';
-    } else {
+    } else { // angle < 337.5
       phaseName = '🌘 Waning Crescent';
     }
 
+    // 다음 주요 위상(삭, 상현, 망, 하현) 정보를 찾습니다.
     final nextPhaseInfo = _findNextPrimaryPhase(date);
 
+    // 현재 위상 이름과 다음 주요 위상 정보를 반환합니다.
     return {
       'phaseName': phaseName,
-      'phaseTime': phaseTime,
       'nextPhaseName': nextPhaseInfo['name'],
       'nextPhaseTime': nextPhaseInfo['time'],
     };
   }
 
+  // 다음 주요 위상(삭, 상현, 망, 하현)의 시간과 이름을 찾는 함수입니다.
   Map<String, dynamic> _findNextPrimaryPhase(DateTime date) {
     final phases = {
       0.0: '🌑 New Moon',
@@ -149,12 +151,16 @@ class AstroCalculator {
     DateTime? nextPhaseTime;
     String? nextPhaseName;
 
+    // 각 주요 위상에 대해 다음 발생 시간을 찾습니다.
     for (var entry in phases.entries) {
       final angle = entry.key;
       final name = entry.value;
+      // 30일 이내에 해당 각도가 되는 시간을 찾습니다.
       DateTime? time = _findSpecificPhaseTime(date, angle, daysRange: 30);
 
+      // 찾은 시간이 현재 시간 이후인지 확인합니다.
       if (time != null && time.isAfter(date)) {
+        // 가장 가까운 다음 위상 시간을 저장합니다.
         if (nextPhaseTime == null || time.isBefore(nextPhaseTime)) {
           nextPhaseTime = time;
           nextPhaseName = name;
