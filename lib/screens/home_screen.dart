@@ -137,6 +137,20 @@ class _HomeScreenState extends State<HomeScreen> {
             ? 'Next Sign : ${DateFormat('yyyy-MM-dd HH:mm').format(provider.nextSignTime!)}'
             : 'Next Sign : N/A';
 
+    // --- New VOC Logic ---
+    final vocStart = provider.vocStart;
+    final vocEnd = provider.vocEnd;
+    final now = DateTime.now();
+    bool isVocNow = false;
+    if (vocStart != null && vocEnd != null) {
+      isVocNow = now.isAfter(vocStart) && now.isBefore(vocEnd);
+    }
+
+    final String vocStatusText = isVocNow ? 'Is Void Now' : 'Is Not Void';
+    final IconData vocIcon = isVocNow ? Icons.warning : Icons.park;
+    final Color vocColor = isVocNow ? Colors.deepOrange : Colors.green;
+    // --- End of New Logic ---
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -182,18 +196,38 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildMoonPhaseCard(provider),
-                  const SizedBox(height: 16),
+                  const SizedBox(height:8),
                   _buildMoonSignCard(provider, nextSignTimeText),
-                  const SizedBox(height: 16),
+                  const SizedBox(height:8),
                   _buildInfoCard(
-                    icon: Icons.timelapse,
+                    icon: vocIcon, // Use dynamic icon
                     title: 'Void of Course',
-                    subtitle:
-                        '시작: ${_formatDateTime(provider.vocStart)}\n'
-                        '종료: ${_formatDateTime(provider.vocEnd)}',
-                    iconColor: Colors.teal,
+                    subtitleWidget: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '시작: ${_formatDateTime(provider.vocStart)}\n' // Corrected newline escape
+                          '종료: ${_formatDateTime(provider.vocEnd)}',
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.bodyMedium?.color,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          vocStatusText, // Use dynamic text
+                          style: TextStyle(
+                            color: vocColor, // Use dynamic color
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
+                    iconColor: vocColor, // Use dynamic color for icon
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       vertical: 12,
@@ -390,7 +424,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildInfoCard({
     required IconData icon,
     required String title,
-    required String subtitle,
+    required Widget subtitleWidget,
     required Color iconColor,
   }) {
     return Container(
@@ -419,32 +453,15 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: iconColor.withOpacity(0.1),
           child: Icon(icon, color: iconColor, size: 28),
         ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // 텍스트를 왼쪽으로 정렬
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                color: Theme.of(context).textTheme.titleLarge?.color,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4), // 제목과 추가 텍스트 사이 간격
-            Text(
-              '새롭게 추가할 텍스트입니다.', // 여기에 원하는 텍스트를 넣으세요.
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
-            ),
-            // subtitle은 Column 아래에 자동으로 위치하므로 별도 조정이 필요 없습니다.
-          ],
-        ),
-        subtitle: Text(
-          subtitle,
+        title: Text(
+          title,
           style: TextStyle(
-            color: Theme.of(context).textTheme.bodyMedium?.color,
-            fontSize: 14,
+            color: Theme.of(context).textTheme.titleLarge?.color,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
           ),
         ),
+        subtitle: subtitleWidget,
       ),
     );
   }

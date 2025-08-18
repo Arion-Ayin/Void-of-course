@@ -56,6 +56,9 @@ class SettingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final themeIcon = isDarkMode ? Icons.dark_mode : Icons.light_mode;
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -86,16 +89,18 @@ class SettingScreen extends StatelessWidget {
           children: [
             _buildSettingCard(
               context: context,
-              icon: Icons.palette,
+              icon: themeIcon,
               title: '다크 모드',
-              iconColor: Colors.purple,
+              iconColor: isDarkMode ? Colors.white : Colors.pink,
               trailing: ThemeSwitcher(
                 builder: (context) {
-                  final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+                  final isDarkModeSwitch =
+                      Theme.of(context).brightness == Brightness.dark;
                   return Switch(
-                    value: isDarkMode,
+                    value: isDarkModeSwitch,
                     onChanged: (value) {
-                      final theme = value ? Themes.darkTheme : Themes.lightTheme;
+                      final theme =
+                          value ? Themes.darkTheme : Themes.lightTheme;
                       ThemeSwitcher.of(context).changeTheme(theme: theme);
                     },
                   );
@@ -130,7 +135,6 @@ class SettingScreen extends StatelessWidget {
                 },
               ),
             ),
-
             _buildSettingCard(
               context: context,
               icon: Icons.feedback,
@@ -144,7 +148,7 @@ class SettingScreen extends StatelessWidget {
               ),
             ),
           ],
-        ),  
+        ),
       ),
     );
   }
