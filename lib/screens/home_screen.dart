@@ -1,3 +1,4 @@
+// home_screen.dart
 import 'package:flutter/material.dart'; // 플러터의 기본 디자인 라이브러리를 가져와요.
 import 'package:intl/intl.dart'; // 날짜와 시간을 예쁘게 보여주는 라이브러리를 가져와요.
 import 'package:provider/provider.dart'; // 앱의 상태(데이터)를 쉽게 관리하게 도와주는 라이브러리를 가져와요.
@@ -102,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ? '다음 싸인 : ${DateFormat('MM월 dd일 HH:mm').format(provider.nextSignTime!)}'
         : '다음 싸인 : N/A';
 
-        //---------------------------------------------------------------------------------------------
+    // ---------------------------------------------------------------------------------------------
 
     // --- VOC (Void of Course) 관련 로직 ---
     final vocStart = provider.vocStart; // VOC 시작 시간을 가져와요.
@@ -117,7 +118,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // isVocNow 값에 따라 다른 글자, 아이콘, 색깔을 정해요.
     final String vocStatusText = isVocNow ? '보이드 입니다' : '보이드가 아닙니다'; // 상태 글자
-    final IconData vocIcon = isVocNow ? Icons.warning : Icons.park; // 아이콘 모양
+    final String vocIcon = isVocNow ? '⚠️' : '✅'; // 아이콘 모양
     final Color vocColor = isVocNow ? Colors.deepOrange : Colors.green; // 아이콘과 글자 색깔
     // --- 로직 끝 ---
 
@@ -180,9 +181,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // 3. VOC(Void of Course) 정보를 보여주는 카드를 넣어요.
                 VocInfoCard(
-                  icon: vocIcon, // 위에서 정한 아이콘을 줘요.
                   title: 'Void of Course', // 제목을 줘요.
                   iconColor: vocColor, // 위에서 정한 아이콘 색깔을 줘요.
+                  cardIcon: vocIcon, // 위에서 정의한 vocIcon을 전달합니다.
                   // 카드 부제목에 들어갈 내용을 만들어요.
                   subtitleWidget: Column(
                     crossAxisAlignment: CrossAxisAlignment.start, // 글자를 왼쪽부터 시작하도록 정렬해요.
