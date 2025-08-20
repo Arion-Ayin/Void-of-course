@@ -49,13 +49,13 @@ class VocInfoCard extends StatelessWidget {
         contentPadding: const EdgeInsets.all(15), // 내용물 주변에 모든 방향으로 20만큼 여백을 줘요.
         // 왼쪽에 아이콘을 보여줄 공간을 만들어요.
         leading: SizedBox(
-          width: 50,
-          height: 50,
+          width: 60,
+          height: 60,
           child: Center(
             child: CircleAvatar(
-              radius: 24, // 동그라미의 반지름은 24
+              radius: 28, // 동그라미의 반지름은 28 (조정)
               backgroundColor: iconColor.withOpacity(0.1), // 아이콘 색깔을 아주 연하게 해서 배경색으로 써요.
-              child: Icon(icon, color: iconColor, size: 27), // 아이콘을 보여주고, 정해진 색깔과 크기로 설정해요.
+              child: Icon(icon, color: iconColor, size: 35), // 아이콘을 보여주고, 정해진 색깔과 크기로 설정해요. (조정)
             ),
           ),
         ),

@@ -319,4 +319,34 @@ class AstroCalculator {
       return {'start': null, 'end': null};
     }
   }
+
+  // 달의 위상 이름에 따라 해당하는 이모티콘을 반환하는 함수입니다.
+  String getMoonPhaseEmoji(String moonPhaseName) {
+    switch (moonPhaseName) {
+      case '🌑 New Moon':
+        return '🌑';
+      case '🌒 Waxing Crescent':
+        return '🌒';
+      case '🌓 First Quarter':
+        return '🌓';
+      case '🌔 Waxing Gibbous':
+        return '🌔';
+      case '🌕 Full Moon':
+        return '🌕';
+      case '🌖 Waning Gibbous':
+        return '🌖';
+      case '🌗 Last Quarter':
+        return '🌗';
+      case '🌘 Waning Crescent':
+        return '🌘';
+      default:
+        return '❓'; // 알 수 없는 위상일 경우 물음표 이모티콘을 반환합니다.
+    }
+  }
+
+  // 달의 위상 이름에서 이모지를 제거하고 순수한 이름만 반환하는 함수입니다.
+  String getMoonPhaseNameOnly(String moonPhaseName) {
+    // 이모지와 공백을 제거합니다.
+    return moonPhaseName.replaceAll(RegExp(r'^\S+\s'), '');
+  }
 }

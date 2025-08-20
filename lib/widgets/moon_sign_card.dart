@@ -77,13 +77,13 @@ class MoonSignCard extends StatelessWidget {
         contentPadding: const EdgeInsets.all(15), // 내용물 주변에 모든 방향으로 20만큼 여백을 줘요.
         // 왼쪽에 별자리 이모티콘을 보여줄 공간을 만들어요.
         leading: SizedBox(
-          width: 50, // 너비 50
-          height: 50, // 높이 50
+          width: 60, // 너비 60
+          height: 60, // 높이 60
           // 공간의 가운데에 이모티콘을 놓아요.
           child: Center(
             child: Text(
               getZodiacEmoji(provider.moonInSign), // 별자리 이름으로 이모티콘을 찾아서 보여줘요.
-              style: const TextStyle(fontSize: 30), // 이모티콘 크기를 30으로 해요.
+              style: const TextStyle(fontSize: 35), // 이모티콘 크기를 40으로 해요.
             ),
           ),
         ),

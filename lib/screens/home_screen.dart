@@ -98,8 +98,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // 다음 별자리로 바뀌는 시간에 대한 글자를 만들어요.
     final nextSignTimeText = provider.nextSignTime != null
+        // 만약 다음 별자리로 바뀌는 시간이 있다면, 그 시간을 예쁘게 만들어서 보여줘요.
         ? '다음 싸인 : ${DateFormat('MM월 dd일 HH:mm').format(provider.nextSignTime!)}'
         : '다음 싸인 : N/A';
+
         //---------------------------------------------------------------------------------------------
 
     // --- VOC (Void of Course) 관련 로직 ---

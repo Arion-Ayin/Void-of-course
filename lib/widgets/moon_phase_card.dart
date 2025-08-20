@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart'; // 플러터의 디자인 라이브러리를 가져와요.
 import 'package:intl/intl.dart'; // 날짜와 시간을 예쁘게 보여주는 라이브러리를 가져와요.
 import '../services/astro_state.dart'; // 별자리 계산과 관련된 우리 앱의 기능을 가져와요.
+import '../services/astro_calculator.dart'; // 별자리 계산 관련 도구를 가져와요.
 
 // 달의 현재 상태를 보여주는 예쁜 카드를 만드는 위젯이에요.
 class MoonPhaseCard extends StatelessWidget {
@@ -16,6 +17,7 @@ class MoonPhaseCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // 카드를 담을 상자를 만들어요.
     return Container(
+
       // 상자를 예쁘게 꾸며줘요.
       decoration: BoxDecoration(
         // 배경색을 보라색에서 남색으로 변하게 만들어요.
@@ -38,42 +40,45 @@ class MoonPhaseCard extends StatelessWidget {
           ),
         ],
       ),
-      // 상자 안쪽에 여백을 줘요.
-      child: Padding(
-        padding: const EdgeInsets.all(13.0), // 모든 방향으로 13만큼 여백을 줘요.
-        // 내용물들을 세로로 차곡차곡 쌓아요.
-        child: Column(
-          children: [
-            // 아이콘과 제목을 가로로 나란히 놓아요.
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center, // 가운데 정렬해요.
-              children: [
-                const Icon(Icons.brightness_3, color: Colors.white, size: 32), // 달 모양 아이콘을 넣어요.
-                const SizedBox(width: 8), // 아이콘과 글자 사이에 작은 공간을 만들어요.
-                const Text(
-                  'Moon Phase', // '달의 위상'이라는 제목을 써요.
-                  style: TextStyle(
-                    color: Colors.white, // 글자색은 하얀색
-                    fontSize: 24, // 글자 크기는 24
-                    fontWeight: FontWeight.bold, // 글자를 두껍게 만들어요.
-                  ),
-                ),
-              ],
+      // 카드 안에 들어갈 내용(아이콘, 글자 등)을 설정해요.
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(15), // 내용물 주변에 모든 방향으로 15만큼 여백을 줘요.
+        // 왼쪽에 달 위상 이모티콘을 보여줄 공간을 만들어요.
+        leading: SizedBox(
+          width: 60, // 너비 60
+          height: 60, // 높이 60
+          // 공간의 가운데에 이모티콘을 놓아요.
+          child: Center(
+            child: Text(
+              AstroCalculator().getMoonPhaseEmoji(provider.moonPhase), // 달의 위상에 따른 이모티콘을 가져와요.
+              style: const TextStyle(fontSize: 40), // 이모티콘 크기를 40으로 해요.
             ),
-            const SizedBox(height: 8), // 제목과 내용 사이에 공간을 만들어요.
+          ),
+        ),
+        // 이모티콘 오른쪽에 글자들을 세로로 쌓아서 보여줘요.
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start, // 글자들을 왼쪽부터 시작하도록 정렬해요.
+          mainAxisSize: MainAxisSize.min, // 내용물 크기만큼만 공간을 차지하게 해요.
+          children: [
+            // 'Moon Phase' 제목을 보여줘요.
+            Text(
+              'Moon Phase', // '달의 위상'이라는 제목을 써요.
+              style: TextStyle(
+                color: Colors.white, // 글자색은 하얀색
+                fontSize: 18,
+                fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요.
+              ),
+            ),
             // 달의 현재 상태를 보여주는 글자를 써요.
             Text(
-              provider.moonPhase, // 별자리 정보에서 달의 현재 상태를 가져와요.
+              AstroCalculator().getMoonPhaseNameOnly(provider.moonPhase), // 별자리 정보에서 달의 현재 상태를 가져와요.
               style: const TextStyle(color: Colors.white, fontSize: 18), // 하얀색, 크기 18
-              textAlign: TextAlign.center, // 글자를 가운데 정렬해요.
             ),
-            const SizedBox(height: 8), // 내용과 다음 내용 사이에 작은 공간을 만들어요.
+            const SizedBox(height: 4), // 내용과 다음 내용 사이에 작은 공간을 만들어요.
             // 다음 달의 상태가 언제인지 보여주는 글자를 써요.
             Text(
-              // '다음 상태: 08-18 15:30' 와 같은 형식으로 보여줘요.
               '다음 상태 : ${provider.nextSignTime != null ? DateFormat('MM월 dd일 HH:mm').format(provider.nextSignTime!) : 'N/A'}',
               style: const TextStyle(color: Colors.white, fontSize: 16), // 하얀색, 크기 16
-              textAlign: TextAlign.center, // 글자를 가운데 정렬해요.
             ),
           ],
         ),
