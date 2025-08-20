@@ -85,16 +85,15 @@ class AstroCalculator {
     } else {
       phaseName = '🌘 Waning Crescent';
     }
-
-    final nextPhaseInfo = _findNextPrimaryPhase(date);
-    return {
-      'phaseName': phaseName,
-      'nextPhaseName': nextPhaseInfo['name'],
-      'nextPhaseTime': nextPhaseInfo['time'],
-    };
+    
+    return {'phaseName': phaseName};
   }
 
-  Map<String, dynamic> _findNextPrimaryPhase(DateTime date) {
+  // 매개변수 'date'를 제거합니다.
+  Map<String, dynamic> findNextPrimaryPhase() {
+    // 이제 함수 호출 시 매개변수를 전달할 필요가 없습니다.
+    final now = DateTime.now();
+
     final phases = {
       0.0: '🌑 New Moon',
       90.0: '🌓 First Quarter',
@@ -105,11 +104,28 @@ class AstroCalculator {
     DateTime? nextPhaseTime;
     String? nextPhaseName;
 
-    for (var entry in phases.entries) {
-      final angle = entry.key;
-      final name = entry.value;
-      DateTime? time = _findSpecificPhaseTime(date, angle, daysRange: 30);
-      if (time != null && time.isAfter(date)) {
+    // 현재 위상을 찾습니다.
+    final positions = getSunMoonLongitude(now);
+    final sunLon = positions['sun']!;
+    final moonLon = positions['moon']!;
+    final currentAngle = Sweph.swe_degnorm(moonLon - sunLon);
+
+    List<double> anglesToSearch = [];
+    for (var angle in phases.keys) {
+      if (angle >= currentAngle) {
+        anglesToSearch.add(angle);
+      }
+    }
+    if (anglesToSearch.isEmpty) {
+      anglesToSearch = phases.keys.toList();
+    }
+    anglesToSearch.sort();
+
+    for (var angle in anglesToSearch) {
+      final name = phases[angle];
+      DateTime? time = _findSpecificPhaseTime(now, angle, daysRange: 30);
+      
+      if (time != null && time.isAfter(now)) {
         if (nextPhaseTime == null || time.isBefore(nextPhaseTime)) {
           nextPhaseTime = time;
           nextPhaseName = name;
@@ -117,6 +133,18 @@ class AstroCalculator {
       }
     }
 
+    if (nextPhaseTime == null) {
+      final nextMonthDate = now.add(Duration(days: 30));
+      for (var angle in phases.keys) {
+        final name = phases[angle];
+        DateTime? time = _findSpecificPhaseTime(nextMonthDate, angle, daysRange: 30);
+        if (time != null && (nextPhaseTime == null || time.isBefore(nextPhaseTime))) {
+          nextPhaseTime = time;
+          nextPhaseName = name;
+        }
+      }
+    }
+    
     return {'name': nextPhaseName, 'time': nextPhaseTime};
   }
 
@@ -166,7 +194,7 @@ class AstroCalculator {
   DateTime? _findSpecificPhaseTime(DateTime date, double targetAngle, {int daysRange = 14}) {
     DateTime utcStart = date.subtract(Duration(days: daysRange)).toUtc();
     DateTime utcEnd = date.add(Duration(days: daysRange)).toUtc();
-
+    
     for (int i = 0; i < 100; i++) {
       final mid = utcStart.add(Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2));
       final positions = getSunMoonLongitude(mid);
@@ -300,7 +328,6 @@ class AstroCalculator {
 
     print('Moon sign period for $date: $signStartTime to $signEndTime');
 
-    // 입력 날짜가 현재 별자리 기간 내이거나 종료 시간과 같은 경우
     if ((date.isAfter(signStartTime) || date.isAtSameMomentAs(signStartTime)) &&
         (date.isBefore(signEndTime) || date.isAtSameMomentAs(signEndTime))) {
       print('Date $date is within or at the end of current moon sign period');
@@ -320,7 +347,6 @@ class AstroCalculator {
     }
   }
 
-  // 달의 위상 이름에 따라 해당하는 이모티콘을 반환하는 함수입니다.
   String getMoonPhaseEmoji(String moonPhaseName) {
     switch (moonPhaseName) {
       case '🌑 New Moon':
@@ -340,13 +366,11 @@ class AstroCalculator {
       case '🌘 Waning Crescent':
         return '🌘';
       default:
-        return '❓'; // 알 수 없는 위상일 경우 물음표 이모티콘을 반환합니다.
+        return '❓';
     }
   }
 
-  // 달의 위상 이름에서 이모지를 제거하고 순수한 이름만 반환하는 함수입니다.
   String getMoonPhaseNameOnly(String moonPhaseName) {
-    // 이모지와 공백을 제거합니다.
     return moonPhaseName.replaceAll(RegExp(r'^\S+\s'), '');
   }
 }

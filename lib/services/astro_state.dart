@@ -18,6 +18,10 @@ class AstroState with ChangeNotifier {
   bool _isInitialized = false;
   bool _isLoading = false;
   bool _isDarkMode = false;
+  
+  // 다음 위상 정보를 위한 새로운 변수들
+  String _nextMoonPhaseName = 'Calculating...';
+  DateTime? _nextMoonPhaseTime;
 
   final Map<String, Map<String, dynamic>> _cache = {};
 
@@ -33,6 +37,10 @@ class AstroState with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isDarkMode => _isDarkMode;
 
+  // 다음 위상 정보를 가져오는 getter
+  String get nextMoonPhaseName => _nextMoonPhaseName;
+  DateTime? get nextMoonPhaseTime => _nextMoonPhaseTime;
+
   void toggleTheme() {
     _isDarkMode = !_isDarkMode;
     notifyListeners();
@@ -45,9 +53,26 @@ class AstroState with ChangeNotifier {
 
   Future<void> initialize() async {
     if (_isInitialized) return;
-    await _updateData();
-    _isInitialized = true;
+    
+    _isLoading = true;
     notifyListeners();
+
+    try {
+      // Sweph 라이브러리 초기화
+      await Sweph.init();
+
+      // UI에 표시될 초기 데이터를 로드
+      await _updateData();
+      _isInitialized = true;
+      _lastError = null;
+
+    } catch (e, stack) {
+      print('Initialization error: $e\n$stack');
+      _lastError = '초기화 오류: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> updateDate(DateTime newDate) async {
@@ -64,11 +89,12 @@ class AstroState with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    // 캐시 키를 마이크로초까지 포함
     final dateKey = _selectedDate.toIso8601String();
     if (_cache.containsKey(dateKey)) {
       final result = _cache[dateKey]!;
-      print('Using cached data for $dateKey: $result');
+      if (kDebugMode) {
+        print('Using cached data for $dateKey: $result');
+      }
       _updateStateFromResult(result);
       _isLoading = false;
       notifyListeners();
@@ -76,6 +102,11 @@ class AstroState with ChangeNotifier {
     }
 
     try {
+      // 이제 `_calculator.findNextPrimaryPhase()`는 매개변수가 필요 없습니다.
+      final nextPhaseInfo = _calculator.findNextPrimaryPhase();
+      _nextMoonPhaseName = nextPhaseInfo['name'] ?? 'N/A';
+      _nextMoonPhaseTime = nextPhaseInfo['time'];
+
       final moonPhaseInfo = _calculator.getMoonPhaseInfo(_selectedDate);
       final moonPhase = moonPhaseInfo['phaseName'];
       final moonZodiac = _calculator.getMoonZodiacEmoji(_selectedDate);
@@ -92,12 +123,16 @@ class AstroState with ChangeNotifier {
         'nextSignTime': moonSignTimes['end'],
       };
 
-      print('Calculated data for $dateKey: $result');
+      if (kDebugMode) {
+        print('Calculated data for $dateKey: $result');
+      }
       _cache[dateKey] = result;
       _updateStateFromResult(result);
       _lastError = null;
     } catch (e, stack) {
-      print('계산 중 오류 발생: $e\n$stack');
+      if (kDebugMode) {
+        print('계산 중 오류 발생: $e\n$stack');
+      }
       _lastError = '계산 중 오류 발생: $e';
     } finally {
       _isLoading = false;
