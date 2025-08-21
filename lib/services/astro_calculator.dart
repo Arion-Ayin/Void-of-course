@@ -258,18 +258,44 @@ class AstroCalculator {
     DateTime utcStart = start.toUtc();
     DateTime utcEnd = end.toUtc();
 
+    double startDiff, endDiff;
+    try {
+      final startMoonLon = getLongitude(HeavenlyBody.SE_MOON, utcStart);
+      final startPlanetLon = getLongitude(planet, utcStart);
+      startDiff = Sweph.swe_degnorm(startMoonLon - startPlanetLon);
+
+      final endMoonLon = getLongitude(HeavenlyBody.SE_MOON, utcEnd);
+      final endPlanetLon = getLongitude(planet, utcEnd);
+      endDiff = Sweph.swe_degnorm(endMoonLon - endPlanetLon);
+    } catch (e) {
+      return null; // Position not available
+    }
+
+    final range = (endDiff - startDiff + 360) % 360;
+    final targetFromStart = (targetDiff - startDiff + 360) % 360;
+
+    // Exit early if the target aspect is not within the search window.
+    if (targetFromStart > range + 0.01) {
+      return null;
+    }
+
+    // Binary search for the exact time.
     for (int i = 0; i < 100; i++) {
       final mid = utcStart.add(Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2));
+      if (mid.isAtSameMomentAs(utcStart) || mid.isAtSameMomentAs(utcEnd)) break;
+
       final moonLon = getLongitude(HeavenlyBody.SE_MOON, mid);
       final planetLon = getLongitude(planet, mid);
       final midDiff = Sweph.swe_degnorm(moonLon - planetLon);
 
-      if ((midDiff - targetDiff).abs() < 0.0003) { // 허용 오차 감소
-        print('Aspect found at $mid: moonLon=$moonLon, planetLon=$planetLon, angle=$midDiff');
+      final delta = Sweph.swe_degnorm(midDiff - targetDiff);
+      if (delta < 0.001 || delta > 359.999) {
+        // print('Aspect found at $mid: moonLon=$moonLon, planetLon=$planetLon, angle=$midDiff');
         return mid.toLocal();
       }
 
-      if (midDiff < targetDiff) {
+      // Guide the search by comparing the progress along the circular path.
+      if (((midDiff - startDiff + 360) % 360) < targetFromStart) {
         utcStart = mid;
       } else {
         utcEnd = mid;
@@ -281,9 +307,7 @@ class AstroCalculator {
   DateTime? _findLastAspectTime(DateTime moonSignEntryTime, DateTime moonSignExitTime) {
     DateTime? lastAspectTime;
 
-    final extendedMoonSignExitTime = moonSignExitTime.add(const Duration(minutes: 10)); // 버퍼 증가
-
-    print('Searching aspects between $moonSignEntryTime and $moonSignExitTime');
+    // print('Searching aspects between $moonSignEntryTime and $moonSignExitTime');
 
     for (final planet in majorPlanets) {
       for (final aspect in majorAspects) {
@@ -295,15 +319,13 @@ class AstroCalculator {
         for (final targetDiff in targets) {
           final aspectTime = _findExactAspectTime(
             moonSignEntryTime,
-            moonSignExitTime.add(Duration(seconds: 1)), // 버퍼 추가
+            moonSignExitTime,
             planet,
             targetDiff,
           );
 
-          if (aspectTime != null &&
-              (aspectTime.isAfter(moonSignEntryTime) || aspectTime.isAtSameMomentAs(moonSignEntryTime)) &&
-              (aspectTime.isBefore(moonSignExitTime) || aspectTime.isAtSameMomentAs(moonSignExitTime))) {
-            print('Found aspect at $aspectTime with planet $planet, angle $targetDiff');
+          if (aspectTime != null) {
+            // print('Found aspect at $aspectTime with planet $planet, angle $targetDiff');
             if (lastAspectTime == null || aspectTime.isAfter(lastAspectTime)) {
               lastAspectTime = aspectTime;
             }
@@ -312,7 +334,7 @@ class AstroCalculator {
       }
     }
 
-    print('Last aspect time: $lastAspectTime');
+    // print('Last aspect time: $lastAspectTime');
     return lastAspectTime;
   }
 
@@ -322,28 +344,22 @@ class AstroCalculator {
     final signEndTime = moonSignTimes['end'];
 
     if (signStartTime == null || signEndTime == null) {
-      print('No sign times available for $date');
+      // print('No sign times available for $date');
       return {'start': null, 'end': null};
     }
 
-    print('Moon sign period for $date: $signStartTime to $signEndTime');
+    // print('Moon sign period for $date: $signStartTime to $signEndTime');
 
-    if ((date.isAfter(signStartTime) || date.isAtSameMomentAs(signStartTime)) &&
-        (date.isBefore(signEndTime) || date.isAtSameMomentAs(signEndTime))) {
-      print('Date $date is within or at the end of current moon sign period');
-      final lastAspectTime = _findLastAspectTime(signStartTime, signEndTime);
+    final lastAspectTime = _findLastAspectTime(signStartTime, signEndTime);
 
-      if (lastAspectTime != null &&
-          (lastAspectTime.isBefore(signEndTime) || lastAspectTime.isAtSameMomentAs(signEndTime))) {
-        print('VoC found: $lastAspectTime to $signEndTime');
-        return {'start': lastAspectTime, 'end': signEndTime};
-      } else {
-        print('No VoC period in current sign for $date');
-        return {'start': null, 'end': null};
-      }
+    if (lastAspectTime != null) {
+      // VoC starts from the last aspect and ends when moon changes sign.
+      // print('VoC found: $lastAspectTime to $signEndTime');
+      return {'start': lastAspectTime, 'end': signEndTime};
     } else {
-      print('Date $date is outside current moon sign period ($signStartTime to $signEndTime)');
-      return {'start': null, 'end': null};
+      // If there are no aspects, the moon is VoC for the entire sign.
+      // print('No aspects in sign. VoC is from sign entry: $signStartTime to $signEndTime');
+      return {'start': signStartTime, 'end': signEndTime};
     }
   }
 
