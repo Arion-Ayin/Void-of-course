@@ -168,21 +168,21 @@ class AstroCalculator {
     DateTime? signStartTime;
     DateTime? signEndTime;
 
+    // 달이 현재 별자리에 들어간 시간을 찾습니다. 최대 3일 전까지 검색합니다.
     final utcStartTime = _findTimeOfLongitude(
       date.subtract(const Duration(days: 3)),
       date,
       currentSignLon,
-      isAscending: false,
     );
     if (utcStartTime != null) {
       signStartTime = utcStartTime.toLocal();
     }
 
+    // 달이 다음 별자리에 들어가는 시간을 찾습니다. 최대 3일 후까지 검색합니다.
     final utcEndTime = _findTimeOfLongitude(
       date,
       date.add(const Duration(days: 3)),
       nextSignLon,
-      isAscending: true,
     );
     if (utcEndTime != null) {
       signEndTime = utcEndTime.toLocal();
@@ -216,36 +216,60 @@ class AstroCalculator {
   }
 
   DateTime? _findTimeOfLongitude(
-      DateTime start,
-      DateTime end,
-      double targetLon, {
-        required bool isAscending,
-      }) {
+    DateTime start,
+    DateTime end,
+    double targetLon,
+  ) {
     targetLon = Sweph.swe_degnorm(targetLon);
     DateTime utcStart = start.toUtc();
     DateTime utcEnd = end.toUtc();
 
+    double startLon;
+    try {
+      startLon = Sweph.swe_degnorm(getLongitude(HeavenlyBody.SE_MOON, utcStart));
+    } catch (e) {
+      return null; // 위치를 계산할 수 없는 경우
+    }
+
+    final targetFromStart = (targetLon - startLon + 360) % 360;
+
+    // 검색 범위 내에 목표 각도가 있는지 확인합니다.
+    double endLon;
+    try {
+      endLon = Sweph.swe_degnorm(getLongitude(HeavenlyBody.SE_MOON, utcEnd));
+    } catch (e) {
+      return null; // 위치를 계산할 수 없는 경우
+    }
+    final range = (endLon - startLon + 360) % 360;
+
+    // 목표 각도가 검색 범위를 벗어나면 일찍 종료합니다.
+    if (targetFromStart > range + 0.1) {
+      return null;
+    }
+
+    // 이진 탐색으로 정확한 시간을 찾습니다.
     for (int i = 0; i < 100; i++) {
+      if (utcStart.isAtSameMomentAs(utcEnd)) break;
       final mid = utcStart.add(Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2));
+      if (mid.isAtSameMomentAs(utcStart) || mid.isAtSameMomentAs(utcEnd)) break;
+
       final midLon = Sweph.swe_degnorm(getLongitude(HeavenlyBody.SE_MOON, mid));
+      final delta = Sweph.swe_degnorm(midLon - targetLon);
 
-      if ((midLon - targetLon).abs() < 0.0001) return mid.toLocal(); // toLocal()로 KST 반환
+      if (delta < 0.0001 || delta > 359.9999) {
+        return mid.toLocal(); // 정확한 시간을 찾았습니다.
+      }
 
-      if (isAscending) {
-        if (midLon < targetLon) {
-          utcStart = mid;
-        } else {
-          utcEnd = mid;
-        }
+      // 순환 경로를 따라 진행 상황을 비교하여 검색을 안내합니다.
+      if (((midLon - startLon + 360) % 360) < targetFromStart) {
+        utcStart = mid;
       } else {
-        if (midLon > targetLon) {
-          utcStart = mid;
-        } else {
-          utcEnd = mid;
-        }
+        utcEnd = mid;
       }
     }
-    return utcStart.toLocal();
+    
+    // 100회 반복 후에도 정확한 시간을 찾지 못한 경우, null을 반환하여 호출자가 처리하도록 합니다.
+    return null;
   }
 
   DateTime? _findExactAspectTime(
