@@ -1,14 +1,14 @@
 // home_screen.dart
-import 'package:flutter/material.dart'; // 플러터의 기본 디자인 라이브러리를 가져와요.
-import 'package:intl/intl.dart'; // 날짜와 시간을 예쁘게 보여주는 라이브러리를 가져와요.
-import 'package:provider/provider.dart'; // 앱의 상태(데이터)를 쉽게 관리하게 도와주는 라이브러리를 가져와요.
-import '../services/astro_state.dart'; // 별자리 계산과 관련된 우리 앱의 기능을 가져와요.
-import '../widgets/calendar_dialog.dart'; // 우리가 만든 달력 다이얼로그 위젯을 가져와요.
-import '../widgets/date_selector.dart'; // 우리가 만든 날짜 선택 위젯을 가져와요.
-import '../widgets/moon_phase_card.dart'; // 우리가 만든 달 위상 카드 위젯을 가져와요.
-import '../widgets/moon_sign_card.dart'; // 우리가 만든 달 별자리 카드 위젯을 가져와요.
-import '../widgets/reset_date_button.dart'; // 우리가 만든 날짜 초기화 버튼 위젯을 가져와요.
-import '../widgets/voc_info_card.dart'; // 우리가 만든 VOC 정보 카드 위젯을 가져와요.
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../services/astro_state.dart';
+import '../widgets/calendar_dialog.dart';
+import '../widgets/date_selector.dart';
+import '../widgets/moon_phase_card.dart';
+import '../widgets/moon_sign_card.dart';
+import '../widgets/reset_date_button.dart';
+import '../widgets/voc_info_card.dart';
 
 // 홈 화면을 보여주는 위젯이에요.
 class HomeScreen extends StatefulWidget {
@@ -59,13 +59,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // 날짜를 오늘로 되돌리는 함수예요.
+  // 날짜를 오늘로 되돌리는 함수를 추가합니다.
   void _resetDateToToday() {
-    // 이 위젯이 화면에 잘 붙어있을 때만 실행해요.
     if (mounted) {
-      // 앱의 전체적인 상태(데이터)를 가져와요.
       final provider = Provider.of<AstroState>(context, listen: false);
-      // 앱의 날짜 정보를 지금 현재 시간으로 업데이트해요.
       provider.updateDate(DateTime.now());
     }
   }
@@ -191,7 +188,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // VOC 시작 시간과 종료 시간을 보여줘요.
                       Text(
-                        '시작 : ${_formatDateTime(provider.vocStart)}\n종료 : ${_formatDateTime(provider.vocEnd)}',
+                        '시작 : ${_formatDateTime(provider.vocStart)}\n'
+                        '종료 : ${_formatDateTime(provider.vocEnd)}',
                         style: TextStyle(
                           color: Theme.of(context).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
                           fontSize: 15, // 글자 크기는 14

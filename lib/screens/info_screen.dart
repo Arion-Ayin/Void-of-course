@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart'; // 플러터의 기본 디자인 라이브러리를 가져와요.
-import '../widgets/app_header.dart'; // 우리가 만든 앱 헤더 위젯을 가져와요.
-import '../widgets/copyright_text.dart'; // 우리가 만든 저작권 텍스트 위젯을 가져와요.
+
+
 import '../widgets/info_card.dart'; // 우리가 만든 정보 카드 위젯을 가져와요.
 
 // 앱의 정보를 보여주는 화면이에요.
@@ -66,7 +66,46 @@ class InfoScreen extends StatelessWidget {
             child: Column(
               children: [
                 // 1. 앱의 헤더(머리글) 부분을 넣어요.
-                const AppHeader(),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.purple.withOpacity(0.8),
+                        Colors.indigo.withOpacity(0.6),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.purple.withOpacity(0.3),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.brightness_3, color: Colors.white, size: 48),
+                      const SizedBox(height: 16),
+                      const Text(
+                        'Void of Course',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      const Text(
+                        '보이드 오브 코스 계산기',
+                        style: TextStyle(color: Colors.white70, fontSize: 16),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 30), // 헤더와 다음 내용 사이에 공간을 만들어요.
 
                 // 2. '우리는 누구인가요?' 정보를 보여주는 카드예요.
@@ -116,7 +155,29 @@ class InfoScreen extends StatelessWidget {
                 const SizedBox(height: 30), // 카드와 저작권 텍스트 사이에 공간을 만들어요.
 
                 // 6. 저작권 텍스트를 넣어요.
-                const CopyrightText(),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).shadowColor.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    '© 2025 Studio_Saan. All rights reserved.',
+                    style: TextStyle(
+                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
               ],
             ),
           ),
