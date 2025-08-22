@@ -118,84 +118,57 @@ class AstroCalculator {
     return {'phaseName': phaseName};
   }
 
-  // 매개변수 'date'를 제거합니다. 이 함수는 현재 시간을 기준으로 다음 주요 달의 위상을 찾아요.
+  // 시간순으로 다음 주요 달의 위상을 정확히 찾는 함수
   Map<String, dynamic> findNextPrimaryPhase() {
-    // 이제 함수 호출 시 매개변수를 전달할 필요가 없습니다.
-    // 지금 현재 시간을 now 상자에 저장해요.
     final now = DateTime.now();
-
-    // 주요 달의 위상과 그에 해당하는 각도를 저장해둔 지도(Map)예요.
     final phases = {
-      0.0: '🌑 New Moon', // 0도는 초승달
-      90.0: '🌓 First Quarter', // 90도는 상현달
-      180.0: '🌕 Full Moon', // 180도는 보름달
-      270.0: '🌗 Last Quarter', // 270도는 하현달
+      0.0: '🌑 New Moon',
+      90.0: '🌓 First Quarter',
+      180.0: '🌕 Full Moon',
+      270.0: '🌗 Last Quarter',
     };
 
-    // 다음에 올 달의 위상 시간을 저장할 상자예요. 처음에는 비어있어요.
-    DateTime? nextPhaseTime;
-    // 다음에 올 달의 위상 이름을 저장할 상자예요. 처음에는 비어있어요.
-    String? nextPhaseName;
+    DateTime? bestTime;
+    String? bestName;
 
-    // 현재 달의 위상 각도를 찾습니다.
-    final positions = getSunMoonLongitude(now);
-    final sunLon = positions['sun']!;
-    final moonLon = positions['moon']!;
-    // 현재 달과 태양의 각도 차이를 계산해요.
-    final currentAngle = Sweph.swe_degnorm(moonLon - sunLon);
+    // 4개의 주요 위상 각각에 대해 다음 발생 시간을 찾고, 그 중 가장 빠른 시간을 선택
+    for (var entry in phases.entries) {
+      final targetAngle = entry.key;
+      final name = entry.value;
 
-    // 검색할 각도들을 저장할 목록이에요.
-    List<double> anglesToSearch = [];
-    // phases 지도에 있는 모든 각도들을 하나씩 살펴봐요.
-    for (var angle in phases.keys) {
-      // 만약 지금 각도(currentAngle)보다 크거나 같은 각도라면,
-      if (angle >= currentAngle) {
-        anglesToSearch.add(angle); // anglesToSearch 목록에 추가해요.
+      // 현재 태양과 달의 각도를 계산
+      final positions = getSunMoonLongitude(now);
+      final currentAngle = Sweph.swe_degnorm(positions['moon']! - positions['sun']!);
+
+      // 목표 각도까지 남은 각도를 계산
+      var deg_to_go = (targetAngle - currentAngle + 360) % 360;
+      // 만약 목표 각도에 매우 가깝다면(이미 해당 위상에 있다면), 다음 주기의 같은 위상을 찾도록 360도를 더함
+      if (deg_to_go < 0.5) {
+        deg_to_go += 360;
       }
-    }
-    // 만약 anglesToSearch 목록이 비어있다면 (즉, 현재 각도보다 큰 각도가 없다면),
-    if (anglesToSearch.isEmpty) {
-      anglesToSearch = phases.keys.toList(); // phases 지도에 있는 모든 각도들을 다시 추가해요. (다음 주기를 찾기 위해)
-    }
-    anglesToSearch.sort(); // 각도들을 작은 것부터 큰 순서대로 정렬해요.
 
-    // anglesToSearch 목록에 있는 각도들을 하나씩 살펴봐요.
-    for (var angle in anglesToSearch) {
-      // 해당 각도에 맞는 위상 이름을 가져와요.
-      final name = phases[angle];
-      // _findSpecificPhaseTime 함수를 사용해서 해당 위상이 언제 나타나는지 찾아요. 지금 시간부터 30일 범위 내에서 찾아요.
-      DateTime? time = _findSpecificPhaseTime(now, angle, daysRange: 30);
-      
-      // 만약 시간을 찾았고, 그 시간이 지금 시간보다 미래라면,
-      if (time != null && time.isAfter(now)) {
-        // 만약 nextPhaseTime이 아직 정해지지 않았거나, 지금 찾은 시간이 nextPhaseTime보다 더 빠르다면,
-        if (nextPhaseTime == null || time.isBefore(nextPhaseTime)) {
-          nextPhaseTime = time; // nextPhaseTime을 지금 찾은 시간으로 바꿔요.
-          nextPhaseName = name; // nextPhaseName도 지금 찾은 이름으로 바꿔요.
+      // 달과 태양의 상대 속도(하루 약 12.19도)를 이용해 다음 위상까지 남은 시간을 추정
+      var days_to_go = deg_to_go / 12.19;
+      DateTime estimated_time = now.add(Duration(microseconds: (days_to_go * 24 * 3600 * 1000000).round()));
+
+      // 추정된 시간 주변의 좁은 범위(4일) 내에서 정확한 시간을 탐색
+      var time = _findSpecificPhaseTime(estimated_time, targetAngle, daysRange: 2);
+
+      // 탐색된 시간이 현재 시간보다 이전인 경우 (추정이 약간 빗나간 경우), 한 달 뒤를 기준으로 다시 탐색하여 미래 시간을 찾음
+      if (time != null && time.isBefore(now)) {
+        time = _findSpecificPhaseTime(estimated_time.add(const Duration(days: 28)), targetAngle, daysRange: 3);
+      }
+
+      // 찾은 시간이 현재까지 찾은 가장 빠른 시간이면, 이 시간과 이름으로 업데이트
+      if (time != null) {
+        if (bestTime == null || time.isBefore(bestTime)) {
+          bestTime = time;
+          bestName = name;
         }
       }
     }
 
-    // 만약 모든 검색에도 불구하고 nextPhaseTime을 찾지 못했다면,
-    if (nextPhaseTime == null) {
-      // 지금으로부터 30일 뒤의 날짜를 계산해요.
-      final nextMonthDate = now.add(Duration(days: 30));
-      // phases 지도에 있는 모든 각도들을 다시 살펴봐요.
-      for (var angle in phases.keys) {
-        // 해당 각도에 맞는 위상 이름을 가져와요.
-        final name = phases[angle];
-        // _findSpecificPhaseTime 함수를 사용해서 해당 위상이 언제 나타나는지 찾아요. 다음 달부터 30일 범위 내에서 찾아요.
-        DateTime? time = _findSpecificPhaseTime(nextMonthDate, angle, daysRange: 30);
-        // 만약 시간을 찾았고, nextPhaseTime이 아직 정해지지 않았거나, 지금 찾은 시간이 nextPhaseTime보다 더 빠르다면,
-        if (time != null && (nextPhaseTime == null || time.isBefore(nextPhaseTime))) {
-          nextPhaseTime = time; // nextPhaseTime을 지금 찾은 시간으로 바꿔요.
-          nextPhaseName = name; // nextPhaseName도 지금 찾은 이름으로 바꿔요.
-        }
-      }
-    }
-    
-    // 찾은 위상 이름과 시간을 'name', 'time'이라는 이름표를 붙여서 돌려줘요.
-    return {'name': nextPhaseName, 'time': nextPhaseTime};
+    return {'name': bestName, 'time': bestTime};
   }
 
   // 주어진 날짜에 달이 어떤 별자리에 있는지 이모티콘으로 알려주는 함수예요.
@@ -497,36 +470,54 @@ class AstroCalculator {
     return lastAspectTime;
   }
 
-  // 주어진 날짜에 보이드 오브 코스(Void of Course) 기간을 찾는 함수예요.
+  // 주어진 날짜에 해당하는 보이드 오브 코스(Void of Course) 기간을 찾는 함수예요.
+  // 선택된 날짜에 이미 진행중이거나, 그 날에 시작될 첫 번째 보이드 정보를 찾도록 수정되었어요.
   Map<String, dynamic> findVoidOfCoursePeriod(DateTime date) {
-    // 달이 별자리에 들어가는 시간과 나가는 시간을 가져와요.
-    final moonSignTimes = getMoonSignTimes(date);
-    // 달이 별자리에 들어간 시간을 signStartTime 상자에 넣어요.
-    final signStartTime = moonSignTimes['start'];
-    // 달이 별자리에서 나가는 시간을 signEndTime 상자에 넣어요.
-    final signEndTime = moonSignTimes['end'];
+    // 사용자가 선택한 날짜의 자정(0시 0분)을 기준으로 검색을 시작해요.
+    // 이렇게 하면 그 날 전체에 대한 보이드 정보를 정확히 포착할 수 있어요.
+    final dayStart = DateTime(date.year, date.month, date.day);
+    var searchDate = dayStart;
 
-    // 만약 달이 별자리에 들어가는 시간이나 나가는 시간을 알 수 없으면,
-    if (signStartTime == null || signEndTime == null) {
-      // print('No sign times available for $date'); // 개발자용 메시지
-      return {'start': null, 'end': null}; // 시작 시간과 끝 시간을 알 수 없다고 돌려줘요.
+    // 무한 루프에 빠지지 않도록 최대 5번까지만 다음 별자리를 탐색해요.
+    for (int i = 0; i < 5; i++) {
+      // 현재 검색 시간(searchDate)을 기준으로 달이 현재 속한 별자리의 시작과 끝 시간을 가져와요.
+      final moonSignTimes = getMoonSignTimes(searchDate);
+      final signStartTime = moonSignTimes['start'];
+      final signEndTime = moonSignTimes['end'];
+
+      // 만약 별자리 정보를 가져올 수 없다면, 계산을 중단하고 결과를 반환해요.
+      if (signStartTime == null || signEndTime == null) {
+        return {'start': null, 'end': null};
+      }
+
+      // 이 별자리 안에서 달이 마지막으로 주요 행성과 각도를 맺는 시간을 찾아요.
+      final lastAspectTime = _findLastAspectTime(signStartTime, signEndTime);
+
+      // 보이드 시작 시간(vocStart)을 정해요.
+      DateTime? vocStart;
+      if (lastAspectTime != null) {
+        // 마지막 각도가 있었다면 그 시간이 보이드의 시작이에요.
+        vocStart = lastAspectTime;
+      } else {
+        // 만약 각도가 없었다면, 달이 그 별자리에 들어선 순간부터 보이드 상태예요.
+        vocStart = signStartTime;
+      }
+      // 보이드 종료 시간(vocEnd)은 달이 다음 별자리로 넘어가는 시간이에요.
+      final vocEnd = signEndTime;
+
+      // 찾은 보이드의 종료 시간이, 우리가 기준점으로 삼은 '그 날의 시작'보다 뒤라면,
+      // 이 정보가 바로 사용자에게 보여줘야 할 올바른 보이드 정보예요.
+      if (vocEnd.isAfter(dayStart)) {
+        return {'start': vocStart, 'end': vocEnd};
+      }
+
+      // 만약 찾은 보이드가 이미 '그 날의 시작'보다 전에 끝나버렸다면,
+      // 다음 정보를 찾기 위해 검색 기준 시간을 현재 보이드가 끝난 시간으로 옮겨서 다시 시도해요.
+      searchDate = signEndTime;
     }
 
-    // print('Moon sign period for $date: $signStartTime to $signEndTime'); // 개발자용 메시지
-
-    // 달이 별자리에 머무는 동안 마지막으로 주요 행성들과 각도를 이루는 시간을 찾아요.
-    final lastAspectTime = _findLastAspectTime(signStartTime, signEndTime);
-
-    // 만약 마지막 각도 시간을 찾았다면,
-    if (lastAspectTime != null) {
-      // 보이드 오브 코스는 마지막 각도 시간부터 달이 다음 별자리로 바뀔 때까지예요.
-      // print('VoC found: $lastAspectTime to $signEndTime'); // 개발자용 메시지
-      return {'start': lastAspectTime, 'end': signEndTime}; // 보이드 오브 코스 시작 시간과 끝 시간을 돌려줘요.
-    } else { // 만약 별자리에 머무는 동안 아무런 각도도 이루지 않았다면,
-      // 달은 별자리에 들어간 순간부터 보이드 오브 코스 상태예요.
-      // print('No aspects in sign. VoC is from sign entry: $signStartTime to $signEndTime'); // 개발자용 메시지
-      return {'start': signStartTime, 'end': signEndTime}; // 달이 별자리에 들어간 시간부터 나가는 시간까지가 보이드 오브 코스예요.
-    }
+    // 여러 번 시도해도 유효한 보이드 정보를 찾지 못하면, 없음을 반환해요.
+    return {'start': null, 'end': null};
   }
 
   // 달의 위상 이름(예: '🌑 New Moon')을 받아서 해당 이모티콘(예: '🌑')만 돌려주는 함수예요.

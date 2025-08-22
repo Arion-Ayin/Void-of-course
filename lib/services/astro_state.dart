@@ -150,8 +150,11 @@ class AstroState with ChangeNotifier {
     // 화면에 "나 바뀌었어!"라고 알려줘서 로딩 중인 화면을 보여주게 해요.
     notifyListeners();
 
-    // 선택된 날짜를 '2025-08-21T10:00:00.000' 같은 글자 형태로 바꿔서 dateKey 상자에 저장해요.
-    final dateKey = _selectedDate.toIso8601String();
+    // 선택된 날짜의 자정(0시 0분)을 기준으로 고유 키를 만들어요.
+    // 이렇게 하면 시간과 관계없이 같은 날짜는 같은 캐시를 사용해요.
+    final dayStart = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final dateKey = dayStart.toIso8601String();
+
     // 만약에(_cache에 dateKey와 똑같은 이름표가 있다면) 이미 계산한 적이 있다면,
     if (_cache.containsKey(dateKey)) {
       // 저장해뒀던 계산 결과를 result 상자에 꺼내와요.
@@ -180,18 +183,19 @@ class AstroState with ChangeNotifier {
       // 결과로 받은 정보에서 'time'이라는 이름표가 붙은 값을 _nextMoonPhaseTime에 저장해요.
       _nextMoonPhaseTime = nextPhaseInfo['time'];
 
-      // _calculator에게 선택된 날짜의 달 모양 정보를 계산해달라고 부탁해요.
-      final moonPhaseInfo = _calculator.getMoonPhaseInfo(_selectedDate);
+      // 모든 계산은 시간 정보를 제외한 'dayStart'를 기준으로 수행해요.
+      // 이렇게 하면 하루 동안 표시되는 정보가 일관성 있게 유지돼요.
+      final moonPhaseInfo = _calculator.getMoonPhaseInfo(dayStart);
       // 계산 결과에서 'phaseName'이라는 이름표가 붙은 값을 moonPhase 상자에 저장해요.
       final moonPhase = moonPhaseInfo['phaseName'];
       // _calculator에게 선택된 날짜의 달 별자리 이모티콘(그림글자)을 계산해달라고 부탁해요.
-      final moonZodiac = _calculator.getMoonZodiacEmoji(_selectedDate);
+      final moonZodiac = _calculator.getMoonZodiacEmoji(dayStart);
       // _calculator에게 선택된 날짜의 달 별자리 이름을 계산해달라고 부탁해요.
-      final moonInSign = _calculator.getMoonZodiacName(_selectedDate);
+      final moonInSign = _calculator.getMoonZodiacName(dayStart);
       // _calculator에게 선택된 날짜의 보이드 오브 코스 시간을 찾아달라고 부탁해요.
-      final vocTimes = _calculator.findVoidOfCoursePeriod(_selectedDate);
+      final vocTimes = _calculator.findVoidOfCoursePeriod(dayStart);
       // _calculator에게 선택된 날짜의 달이 별자리에 머무는 시간을 계산해달라고 부탁해요.
-      final moonSignTimes = _calculator.getMoonSignTimes(_selectedDate);
+      final moonSignTimes = _calculator.getMoonSignTimes(dayStart);
 
       // 위에서 계산한 모든 결과들을 'result'라는 이름의 지도(Map)에 정리해서 담아둬요.
       final Map<String, dynamic> result = {
