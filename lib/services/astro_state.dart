@@ -15,6 +15,9 @@ final AstroCalculator _calculator = AstroCalculator();
 // AstroState 클래스는 앱의 중요한 정보들을 가지고 있고, 정보가 바뀔 때 화면에 알려주는 역할을 해요.
 // with ChangeNotifier는 이 클래스가 변화를 알려줄 수 있는 능력을 가졌다는 뜻이에요.
 class AstroState with ChangeNotifier {
+  // 실시간 업데이트를 위한 타이머 변수예요.
+  Timer? _timer;
+
   // 사용자가 선택한 날짜를 저장하는 상자예요. 처음에는 지금 현재 날짜와 시간으로 정해져요.
   DateTime _selectedDate = DateTime.now();
   // 달의 모양(예: 보름달)을 글자로 저장하는 상자예요. 처음에는 비어있어요.
@@ -109,6 +112,8 @@ class AstroState with ChangeNotifier {
       await _updateData();
       // 이제 준비가 끝났다고 상태를 바꿔요.
       _isInitialized = true;
+      // 실시간 업데이트 타이머를 시작해요.
+      _startTimer();
       // 혹시 이전에 오류가 있었다면, 이제 없애줘요.
       _lastError = null;
 
@@ -125,6 +130,41 @@ class AstroState with ChangeNotifier {
       // 화면에 "나 바뀌었어!"라고 알려줘서 로딩 화면을 없애고 원래 화면을 보여주게 해요.
       notifyListeners();
     }
+  }
+
+  // 1초마다 실행되는 타이머를 설정하는 함수예요.
+  void _startTimer() {
+    // 이미 타이머가 실행 중이면 또 만들지 않아요.
+    _timer?.cancel();
+    // 1초마다 _checkTime 함수를 실행하는 타이머를 만들어요.
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      _checkTime();
+    });
+  }
+
+  // 시간이 지났는지 확인하고 필요하면 데이터를 업데이트하는 함수예요.
+  void _checkTime() {
+    final now = DateTime.now();
+    // 사용자가 오늘 날짜를 보고 있는지 확인해요.
+    final isToday = now.year == _selectedDate.year &&
+        now.month == _selectedDate.month &&
+        now.day == _selectedDate.day;
+
+    // 만약 사용자가 오늘을 보고 있고, 보이드 종료 시간이 지났다면,
+    if (isToday && _vocEnd != null && now.isAfter(_vocEnd!)) {
+      if (kDebugMode) {
+        print("Void of course ended. Refreshing data...");
+      }
+      // 현재 시간으로 데이터를 새로고침해요.
+      updateDate(now);
+    }
+  }
+
+  // 이 클래스가 화면에서 사라질 때 타이머를 멈추게 하는 함수예요.
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   // 사용자가 날짜를 바꾸면, 그 날짜에 맞는 정보로 업데이트하는 함수예요.
@@ -231,7 +271,7 @@ class AstroState with ChangeNotifier {
     } finally {
       // 로딩이 끝났다고 상태를 바꿔요.
       _isLoading = false;
-      // 화면에 "나 바뀌었어!"라고 알려줘요.
+      // 화면에 "나 바뀌었어!"라고 알려줘서 화면을 새로 그리게 해요.
       notifyListeners();
     }
   }
