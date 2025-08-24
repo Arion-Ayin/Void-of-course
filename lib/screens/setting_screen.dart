@@ -2,6 +2,8 @@
 import 'package:flutter/material.dart';
 // 테마를 부드럽게 바꿔주는 라이브러리를 가져와요. (animated_theme_switcher)
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
+import 'package:provider/provider.dart';
+import '../services/astro_state.dart';
 // 우리가 만든 테마 파일(밝은 모드, 어두운 모드)을 가져와요.
 import '../themes.dart';
 // 우리가 만든 설정 카드 위젯을 가져와요.
@@ -12,8 +14,7 @@ class SettingScreen extends StatelessWidget {
   // const는 이 위젯이 변하지 않는다는 뜻이에요. super.key는 위젯을 구분하는 이름표 같은 거예요.
   const SettingScreen({super.key});
 
-  @override
-  // 이 위젯이 화면에 어떻게 보일지 정하는 부분이에요. Widget은 화면에 보이는 모든 것을 뜻해요.
+    // 이 위젯이 화면에 어떻게 보일지 정하는 부분이에요. Widget은 화면에 보이는 모든 것을 뜻해요.
   Widget build(BuildContext context) {
     // 현재 테마가 다크 모드인지 확인해요. Theme.of(context).brightness는 현재 테마의 밝기를 알려줘요.
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -54,6 +55,24 @@ class SettingScreen extends StatelessWidget {
         // 설정 항목들을 세로로 차곡차곡 쌓아요. Column은 위젯들을 세로로 쌓을 때 사용해요.
         child: Column(
           children: [
+
+                // 3. 보이드 알람 설정 카드
+            SettingCard(
+              icon: Icons.notifications_active_outlined,
+              title: '보이드 알람',
+              iconColor: Colors.deepPurpleAccent,
+              trailing: Consumer<AstroState>(
+                builder: (context, astroState, child) {
+                  return Switch(
+                    value: astroState.voidAlarmEnabled,
+                    onChanged: (value) {
+                      astroState.toggleVoidAlarm(value);
+                    },
+                  );
+                },
+              ),
+            ),
+
             // 1. 다크 모드 설정 카드
             SettingCard(
               icon: themeIcon, // 위에서 정한 테마 아이콘(달 또는 해)을 보여줘요.
@@ -79,7 +98,8 @@ class SettingScreen extends StatelessWidget {
               ),
             ),
 
-            // 2. 언어 설정 카드 (현재는 기능이 구현되지 않았어요)
+
+        
             SettingCard(
               icon: Icons.language, // 언어 아이콘
               title: '언어 설정', // 제목은 '언어 설정'
@@ -94,20 +114,6 @@ class SettingScreen extends StatelessWidget {
                 ],
                 onChanged: (value) {
                   // 언어를 바꾸는 기능은 여기에 만들면 돼요. (지금은 아무것도 하지 않아요)
-                },
-              ),
-            ),
-
-            // 3. 앱 정보 카드 (현재는 기능이 구현되지 않았어요)
-            SettingCard(
-              icon: Icons.info_outline, // 정보 아이콘
-              title: '앱 정보', // 제목은 '앱 정보'
-              iconColor: Colors.green, // 아이콘 색깔은 초록색
-              // 카드 오른쪽에 아이콘 버튼을 넣어요. IconButton은 아이콘 모양의 버튼이에요.
-              trailing: IconButton(
-                icon: const Icon(Icons.info, color: Colors.green), // 정보 아이콘 버튼
-                onPressed: () {
-                  // 앱 정보 화면으로 넘어가는 기능은 여기에 만들면 돼요. (지금은 아무것도 하지 않아요)
                 },
               ),
             ),

@@ -143,19 +143,6 @@ class InfoScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20), // 카드와 카드 사이에 공간을 만들어요.
 
-                // 5. '업데이트 로그' 정보를 보여주는 카드예요.
-                const InfoCard(
-                  icon: Icons.login, // 로그인 아이콘 (업데이트 기록을 의미)
-                  title: '업데이트 로그',
-                  subtitle:
-                      'v1.0.0 (2025-08-14)\n'
-                      '• 초기 릴리즈\n'
-                      '• 달 위상 계산 기능\n'
-                      '• 보이드 오브 코스 계산\n',
-                  iconColor: Colors.orange, // 아이콘 색깔은 주황색
-                ),
-                const SizedBox(height: 30), // 카드와 저작권 텍스트 사이에 공간을 만들어요.
-
                 // 6. 저작권 텍스트를 넣어요.
                 Container(
                   padding: const EdgeInsets.all(10),

@@ -16,8 +16,15 @@ class AstroCalculator {
   ];
 
   // 달의 8가지 위상(모양) 이름을 순서대로 저장해둔 목록이에요. (예: 초승달, 보름달 등)
-  static const List<String> moonPhaseNames = [
-    '🌑 New Moon', '🌒 Waxing Crescent', '🌓 First Quarter', '🌔 Waxing Gibbous', '🌕 Full Moon', '🌖 Waning Gibbous', '🌗 Last Quarter', '🌘 Waning Crescent',
+    static const List<String> moonPhaseNames = [
+    '🌑 New Moon',
+    '🌒 Crescent Moon',
+    '🌓 First Quarter',
+    '🌔 Gibbous Moon',
+    '🌕 Full Moon',
+    '🌖 Disseminating Moon',
+    '🌗 Last Quarter',
+    '🌘 Balsamic Moon',
   ];
 
   // 주요 행성들의 목록을 저장해둔 곳이에요. Sweph 라이브러리에서 정해준 이름들이에요.
@@ -95,23 +102,24 @@ class AstroCalculator {
 
     // 달의 위상 이름을 저장할 상자예요.
     String phaseName;
-    // 만약 angle이 337.5도보다 크거나 22.5도보다 작으면 (이 조건은 달과 태양이 거의 같은 방향에 있을 때예요),
-    if (angle >= 337.5 || angle < 22.5) {
-      phaseName = '🌑 New Moon'; // '초승달'이라고 정해요.
-    } else if (angle < 67.5) { // 만약 angle이 67.5도보다 작으면,
-      phaseName = '🌒 Waxing Crescent'; // '상현달'이라고 정해요.
-    } else if (angle < 112.5) { // 만약 angle이 112.5도보다 작으면,
-      phaseName = '🌓 First Quarter'; // '상현달'이라고 정해요.
-    } else if (angle < 157.5) { // 만약 angle이 157.5도보다 작으면,
-      phaseName = '🌔 Waxing Gibbous'; // '상현망월'이라고 정해요.
-    } else if (angle < 202.5) { // 만약 angle이 202.5도보다 작으면,
-      phaseName = '🌕 Full Moon'; // '보름달'이라고 정해요.
-    } else if (angle < 247.5) { // 만약 angle이 247.5도보다 작으면,
-      phaseName = '🌖 Waning Gibbous'; // '하현망월'이라고 정해요.
-    } else if (angle < 292.5) { // 만약 angle이 292.5도보다 작으면,
-      phaseName = '🌗 Last Quarter'; // '하현달'이라고 정해요.
-    } else { // 그 외의 경우에는,
-      phaseName = '🌘 Waning Crescent'; // '하현달'이라고 정해요.
+    // 사용자의 요청에 따라 달의 위상 구분을 표준적인 8단계로 수정합니다.
+    // 이로써 발사믹 문(Balsamic Moon, 그믐달 마지막)이 뉴문(New Moon)으로 잘못 표시되는 문제를 해결합니다.
+    if (angle < 45) {
+      phaseName = '🌑 New Moon'; // 0-45도: 뉴문 (삭)
+    } else if (angle < 90) {
+      phaseName = '🌒 Crescent Moon'; // 45-90도: 초승달
+    } else if (angle < 135) {
+      phaseName = '🌓 First Quarter'; // 90-135도: 상현달
+    } else if (angle < 180) {
+      phaseName = '🌔 Gibbous Moon'; // 135-180도: 차오르는 달
+    } else if (angle < 225) {
+      phaseName = '🌕 Full Moon'; // 180-225도: 보름달 (망)
+    } else if (angle < 270) {
+      phaseName = '🌖 Disseminating Moon'; // 225-270도: 이지러지는 달
+    } else if (angle < 315) {
+      phaseName = '🌗 Last Quarter'; // 270-315도: 하현달
+    } else {
+      phaseName = '🌘 Balsamic Moon'; // 315-360도: 그믐달
     }
     
     // 계산된 달의 위상 이름을 'phaseName'이라는 이름표를 붙여서 돌려줘요.
@@ -524,24 +532,24 @@ class AstroCalculator {
   String getMoonPhaseEmoji(String moonPhaseName) {
     // moonPhaseName에 따라 다른 이모티콘을 돌려줘요.
     switch (moonPhaseName) {
-      case '🌑 New Moon': // 만약 '🌑 New Moon'이라면,
-        return '🌑'; // '🌑'를 돌려줘요.
-      case '🌒 Waxing Crescent': // 만약 '🌒 Waxing Crescent'이라면,
-        return '🌒'; // '🌒'를 돌려줘요.
-      case '🌓 First Quarter': // 만약 '🌓 First Quarter'이라면,
-        return '🌓'; // '🌓'를 돌려줘요.
-      case '🌔 Waxing Gibbous': // 만약 '🌔 Waxing Gibbous'이라면,
-        return '🌔'; // '🌔'를 돌려줘요.
-      case '🌕 Full Moon': // 만약 '🌕 Full Moon'이라면,
-        return '🌕'; // '🌕'를 돌려줘요.
-      case '🌖 Waning Gibbous': // 만약 '🌖 Waning Gibbous'이라면,
-        return '🌖'; // '🌖'를 돌려줘요.
-      case '🌗 Last Quarter': // 만약 '🌗 Last Quarter'이라면,
-        return '🌗'; // '🌗'를 돌려줘요.
-      case '🌘 Waning Crescent': // 만약 '🌘 Waning Crescent'이라면,
-        return '🌘'; // '🌘'를 돌려줘요.
+      case '🌑 New Moon':
+        return '🌑';
+      case '🌒 Crescent Moon':
+        return '🌒';
+      case '🌓 First Quarter':
+        return '🌓';
+      case '🌔 Gibbous Moon':
+        return '🌔';
+      case '🌕 Full Moon':
+        return '🌕';
+      case '🌖 Disseminating Moon':
+        return '🌖';
+      case '🌗 Last Quarter':
+        return '🌗';
+      case '🌘 Balsamic Moon':
+        return '🌘';
       default:
-        return '❓'; // 그 외의 경우에는,
+        return '❓';
     }
   }
 

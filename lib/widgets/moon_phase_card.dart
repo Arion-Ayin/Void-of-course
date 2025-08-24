@@ -69,7 +69,7 @@ class MoonPhaseCard extends StatelessWidget {
               'Moon Phase', // '달의 위상'이라는 제목을 써요.
               style: TextStyle(
                 color: Colors.white, // 글자색은 하얀색
-                fontSize: 18, // 글자 크기는 18
+                fontSize: 22, // 글자 크기는 18
                 fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요. (600은 중간 정도의 두께)
               ),
             ),

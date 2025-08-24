@@ -4,8 +4,10 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 // 플러터 프레임워크의 widgets 라이브러리를 가져와요. 화면에 보이는 버튼이나 글자 같은 것들을 만들 때 필요해요.
 import 'package:flutter/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // 우리가 만든 astro_calculator.dart 파일을 가져와서 사용해요. 여기에는 천문학 계산 기능이 들어있어요.
 import 'astro_calculator.dart';
+import 'notification_service.dart';
 // sweph라는 외부 라이브러리를 가져와요. 천문 현상을 계산할 때 사용하는 전문적인 도구예요.
 import 'package:sweph/sweph.dart';
 
@@ -17,6 +19,13 @@ final AstroCalculator _calculator = AstroCalculator();
 class AstroState with ChangeNotifier {
   // 실시간 업데이트를 위한 타이머 변수예요.
   Timer? _timer;
+
+  // 알람 서비스를 사용하기 위한 변수예요.
+  final NotificationService _notificationService = NotificationService();
+  // 보이드 알람이 켜져 있는지 상태를 저장하는 변수예요.
+  bool _voidAlarmEnabled = false;
+  // 현재 지속 알람이 화면에 보이는지 상태를 저장하는 변수예요.
+  bool _isOngoingNotificationVisible = false;
 
   // 사용자가 선택한 날짜를 저장하는 상자예요. 처음에는 지금 현재 날짜와 시간으로 정해져요.
   DateTime _selectedDate = DateTime.now();
@@ -72,6 +81,8 @@ class AstroState with ChangeNotifier {
   bool get isLoading => _isLoading;
   // 다른 파일에서 _isDarkMode 값을 읽을 수 있게 해주는 문이에요.
   bool get isDarkMode => _isDarkMode;
+  // 다른 파일에서 보이드 알람 설정 상태를 읽을 수 있게 해주는 문이에요.
+  bool get voidAlarmEnabled => _voidAlarmEnabled;
 
   // 다음 달의 위상 정보를 다른 파일에서 읽을 수 있게 해주는 문들이에요.
   String get nextMoonPhaseName => _nextMoonPhaseName;
@@ -105,8 +116,13 @@ class AstroState with ChangeNotifier {
 
     // try는 "일단 시도해봐"라는 뜻이에요. 혹시 문제가 생길 수도 있는 코드를 여기에 넣어요.
     try {
-      // Sweph 라이브러리를 준비시키는 과정이에요. await는 이 작업이 끝날 때까지 기다리라는 뜻이에요.
+      // Sweph 라이브러리를 준비시키는 과정이에요.
       await Sweph.init();
+      // 알람 서비스를 준비시켜요.
+      await _notificationService.init();
+      // 저장된 알람 설정을 불러와요.
+      final prefs = await SharedPreferences.getInstance();
+      _voidAlarmEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
 
       // 화면에 보여줄 데이터를 처음으로 불러오는 작업을 해요.
       await _updateData();
@@ -132,6 +148,51 @@ class AstroState with ChangeNotifier {
     }
   }
 
+  // 보이드 알람 설정을 켜고 끄는 함수예요.
+  Future<void> toggleVoidAlarm(bool enable) async {
+    if (enable) {
+      // 알람을 켜는 경우, 사용자에게 권한을 요청해요.
+      final bool hasPermission = await _notificationService.requestPermissions();
+      if (hasPermission) {
+        _voidAlarmEnabled = true;
+        // 알람 예약을 시작해요.
+        _scheduleVoidNotifications();
+      } else {
+        // 사용자가 권한을 거부하면 스위치를 꺼진 상태로 둬요.
+        _voidAlarmEnabled = false;
+      }
+    } else {
+      // 알람을 끄는 경우, 모든 알람 예약을 취소해요.
+      _voidAlarmEnabled = false;
+      _notificationService.cancelAllNotifications();
+    }
+    // 설정을 기기에 저장해요.
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('voidAlarmEnabled', _voidAlarmEnabled);
+    // 화면에 변경사항을 알려요.
+    notifyListeners();
+  }
+
+  // 보이드 알람을 예약하는 함수예요.
+  void _scheduleVoidNotifications() {
+    // 이전에 예약된 알람을 모두 취소해요.
+    _notificationService.cancelAllNotifications();
+    // 알람 설정이 꺼져있으면 아무것도 하지 않아요.
+    if (!_voidAlarmEnabled) return;
+
+    // 보이드 시작 시간이 있고, 아직 지나지 않았다면 알람을 예약해요.
+    if (_vocStart != null && _vocStart!.isAfter(DateTime.now())) {
+      // 보이드 시작 1시간 전 알람
+      final oneHourBefore = _vocStart!.subtract(const Duration(hours: 1));
+      _notificationService.scheduleNotification(
+        id: 0,
+        title: '보이드 알람',
+        body: '1시간 후에 보이드를 시작합니다.',
+        scheduledTime: oneHourBefore,
+      );
+    }
+  }
+
   // 1초마다 실행되는 타이머를 설정하는 함수예요.
   void _startTimer() {
     // 이미 타이머가 실행 중이면 또 만들지 않아요.
@@ -142,7 +203,7 @@ class AstroState with ChangeNotifier {
     });
   }
 
-  // 시간이 지났는지 확인하고 필요하면 데이터를 업데이트하는 함수예요.
+  // 시간이 지났는지 확인하고 필요하면 데이터를 업데이트하거나 알람을 관리하는 함수예요.
   void _checkTime() {
     final now = DateTime.now();
     // 사용자가 오늘 날짜를 보고 있는지 확인해요.
@@ -150,7 +211,7 @@ class AstroState with ChangeNotifier {
         now.month == _selectedDate.month &&
         now.day == _selectedDate.day;
 
-    // 만약 사용자가 오늘을 보고 있고, 보이드 종료 시간이 지났다면,
+    // 데이터 자동 새로고침 로직
     if (isToday && _vocEnd != null && now.isAfter(_vocEnd!)) {
       if (kDebugMode) {
         print("Void of course ended. Refreshing data...");
@@ -158,11 +219,35 @@ class AstroState with ChangeNotifier {
       // 현재 시간으로 데이터를 새로고침해요.
       updateDate(now);
     }
+
+    // 보이드 알람 로직
+    if (_voidAlarmEnabled) {
+      final start = _vocStart;
+      final end = _vocEnd;
+
+      if (start != null && end != null) {
+        // 현재 시간이 보이드 기간 안이고, 지속 알람이 아직 보이지 않는다면
+        if (now.isAfter(start) && now.isBefore(end) && !_isOngoingNotificationVisible) {
+          _notificationService.showOngoingNotification(
+            id: 1,
+            title: '보이드 중',
+            body: '현재 보이드 오브 코스 기간입니다.',
+          );
+          _isOngoingNotificationVisible = true;
+          if (kDebugMode) print("Showing ongoing notification.");
+        } 
+        // 현재 시간이 보이드 기간을 지났고, 지속 알람이 보이고 있다면
+        else if (now.isAfter(end) && _isOngoingNotificationVisible) {
+          _notificationService.cancelNotification(1);
+          _isOngoingNotificationVisible = false;
+          if (kDebugMode) print("Cancelling ongoing notification.");
+        }
+      }
+    }
   }
 
   // 이 클래스가 화면에서 사라질 때 타이머를 멈추게 하는 함수예요.
-  @override
-  void dispose() {
+    void dispose() {
     _timer?.cancel();
     super.dispose();
   }
@@ -271,7 +356,7 @@ class AstroState with ChangeNotifier {
     } finally {
       // 로딩이 끝났다고 상태를 바꿔요.
       _isLoading = false;
-      // 화면에 "나 바뀌었어!"라고 알려줘서 화면을 새로 그리게 해요.
+      // 화면에 "나 바뀌었어!"라고 알려줘요.
       notifyListeners();
     }
   }
@@ -290,5 +375,8 @@ class AstroState with ChangeNotifier {
     _vocEnd = result['vocEnd'] as DateTime?;
     // 결과 지도(result)에서 'nextSignTime' 이름표를 가진 값을 꺼내 _nextSignTime 상자에 저장해요.
     _nextSignTime = result['nextSignTime'] as DateTime?;
+
+    // 데이터가 업데이트될 때마다 알람 예약을 다시 설정해요.
+    _scheduleVoidNotifications();
   }
 }
