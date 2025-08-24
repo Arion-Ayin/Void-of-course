@@ -1,4 +1,3 @@
-// home_screen.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -67,14 +66,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // 날짜와 시간을 '년-월-일 시:분' 형식으로 예쁘게 만들어주는 함수예요.
-  String _formatDateTime(DateTime? dateTime) {
-    // 만약 날짜와 시간이 없다면 'N/A' (정보 없음) 라고 보여줘요.
-    if (dateTime == null) return 'N/A';
-    // 날짜와 시간이 있다면, 정해진 형식으로 만들어서 돌려줘요.
-    return DateFormat('MM월 dd일 HH:mm').format(dateTime);
-  }
-
   @override
   // 이 위젯이 화면에 어떻게 보일지 정하는 가장 중요한 부분이에요.
   Widget build(BuildContext context) {
@@ -100,25 +91,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ? '다음 싸인 : ${DateFormat('MM월 dd일 HH:mm').format(provider.nextSignTime!)}'
         : '다음 싸인 : N/A';
 
-    // ---------------------------------------------------------------------------------------------
-
-    // --- VOC (Void of Course) 관련 로직 ---
-    final vocStart = provider.vocStart; // VOC 시작 시간을 가져와요.
-    final vocEnd = provider.vocEnd; // VOC 종료 시간을 가져와요.
-    final now = DateTime.now(); // 지금 현재 시간을 가져와요.
-    bool isVocNow = false; // 지금이 VOC 시간인지 아닌지를 저장할 변수예요.
-    // 만약 VOC 시작 시간과 종료 시간이 모두 있다면,
-    if (vocStart != null && vocEnd != null) {
-      // 지금 시간이 VOC 시작 시간보다 뒤이고, 종료 시간보다 앞인지 확인해요.
-      isVocNow = now.isAfter(vocStart) && now.isBefore(vocEnd);
-    }
-
-    // isVocNow 값에 따라 다른 글자, 아이콘, 색깔을 정해요.
-    final String vocStatusText = isVocNow ? '보이드 입니다' : '보이드가 아닙니다'; // 상태 글자
-    final String vocIcon = isVocNow ? '⚠️' : '✅'; // 아이콘 모양
-    final Color vocColor = isVocNow ? Colors.deepOrange : Colors.green; // 아이콘과 글자 색깔
-    // --- 로직 끝 ---
-
     // 화면의 전체적인 구조를 짜요.
     return Scaffold(
       // 화면 상단의 앱 바(제목 바)예요.
@@ -136,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
             // 앱 제목을 써요.
             Text(
               'Void of Course',
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface), // 앱 테마에 맞는 글자 색깔을 사용해요.
+              style: Theme.of(context).appBarTheme.titleTextStyle, // 테마에 정의된 앱 바 제목 스타일을 사용해요.
             ),
           ],
         ),
@@ -177,38 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 8), // 카드와 카드 사이에 작은 공간을 만들어요.
 
                 // 3. VOC(Void of Course) 정보를 보여주는 카드를 넣어요.
-                VocInfoCard(
-                  title: 'Void of Course', // 제목을 줘요.
-                  iconColor: vocColor, // 위에서 정한 아이콘 색깔을 줘요.
-                  cardIcon: vocIcon, // 위에서 정의한 vocIcon을 전달합니다.
-                  // 카드 부제목에 들어갈 내용을 만들어요.
-                  subtitleWidget: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start, // 글자를 왼쪽부터 시작하도록 정렬해요.
-                    mainAxisSize: MainAxisSize.min, // 내용물 크기만큼만 공간을 차지하게 해요.
-                    children: [
-                      // VOC 시작 시간과 종료 시간을 보여줘요.
-                      Text(
-                        '시작 : ${_formatDateTime(provider.vocStart)}\n'
-                        '종료 : ${_formatDateTime(provider.vocEnd)}',
-                        style: TextStyle(
-                          color: Theme.of(context).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
-                          fontSize: 15, // 글자 크기는 14
-                          fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요.
-                        ),
-                      ),
-                      const SizedBox(height: 8), // 글자와 글자 사이에 작은 공간을 만들어요.
-                      // 현재 VOC 상태를 보여줘요.
-                      Text(
-                        vocStatusText, // 위에서 정한 상태 글자를 보여줘요.
-                        style: TextStyle(
-                          color: vocColor, // 위에서 정한 색깔을 사용해요.
-                          fontSize: 16, // 글자 크기는 16
-                          fontWeight: FontWeight.w900, // 글자를 매우 두껍게 만들어요.
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                VocInfoCard(provider: provider), // provider만 넘겨주면 카드 안에서 모든 것을 처리해요.
                 const SizedBox(height: 8), // 카드와 날짜 선택기 사이에 작은 공간을 만들어요.
 
                 // 4. 날짜를 선택하는 위젯을 넣어요.

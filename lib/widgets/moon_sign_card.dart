@@ -1,6 +1,7 @@
-
-import 'package:flutter/material.dart'; // 플러터의 디자인 라이브러리를 가져와요.
-import '../services/astro_state.dart'; // 별자리 계산과 관련된 우리 앱의 기능을 가져와요.
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import '../services/astro_state.dart';
+import '../services/astro_calculator.dart';
 
 // 달이 어떤 별자리에 있는지 보여주는 카드를 만드는 위젯이에요.
 class MoonSignCard extends StatelessWidget {
@@ -48,6 +49,12 @@ class MoonSignCard extends StatelessWidget {
   @override
   // 이 위젯이 화면에 어떻게 보일지 정하는 부분이에요.
   Widget build(BuildContext context) {
+    // 다음 별자리 시간 텍스트를 포맷팅합니다.
+    final nextSignTime = provider.nextSignTime;
+    final formattedNextSignTime = nextSignTime != null 
+        ? DateFormat('MM월 dd일 HH:mm').format(nextSignTime)
+        : 'N/A';
+
     // 카드를 담을 상자를 만들어요.
     return Container(
       // 상자를 예쁘게 꾸며줘요.
@@ -74,7 +81,7 @@ class MoonSignCard extends StatelessWidget {
       ),
       // 카드 안에 들어갈 내용(아이콘, 글자 등)을 설정해요.
       child: ListTile(
-        contentPadding: const EdgeInsets.all(15), // 내용물 주변에 모든 방향으로 20만큼 여백을 줘요.
+        contentPadding: const EdgeInsets.all(8), // 내용물 주변에 모든 방향으로 20만큼 여백을 줘요.
         // 왼쪽에 별자리 이모티콘을 보여줄 공간을 만들어요.
         leading: SizedBox(
           width: 60, // 너비 60
@@ -83,7 +90,7 @@ class MoonSignCard extends StatelessWidget {
           child: Center(
             child: Text(
               getZodiacEmoji(provider.moonInSign), // 별자리 이름으로 이모티콘을 찾아서 보여줘요.
-              style: const TextStyle(fontSize: 35), // 이모티콘 크기를 40으로 해요.
+              style: const TextStyle(fontSize: 44), // 이모티콘 크기를 40으로 해요.
             ),
           ),
         ),
@@ -103,10 +110,10 @@ class MoonSignCard extends StatelessWidget {
             ),
             // 다음 별자리로 바뀌는 시간을 보여줘요.
             Text(
-              nextSignTimeText, // '다음 별자리: 08-18 15:30' 과 같은 글자를 보여줘요.
+              '다음 싸인 : ${formattedNextSignTime}', // 포맷팅된 시간을 보여줘요.
               style: TextStyle(
                 color: Theme.of(context).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
-                fontSize: 15, // 글자 크기는 14
+                fontSize: 17, // 글자 크기는 14
                 fontWeight: FontWeight.w900, // 글자를 매우 두껍게 만들어요.
               ),
             ),

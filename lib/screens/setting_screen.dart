@@ -1,12 +1,8 @@
-// 플러터의 기본 디자인 라이브러리를 가져와요. 화면에 보이는 것들을 만들 때 필요해요.
 import 'package:flutter/material.dart';
-// 테마를 부드럽게 바꿔주는 라이브러리를 가져와요. (animated_theme_switcher)
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'package:provider/provider.dart';
 import '../services/astro_state.dart';
-// 우리가 만든 테마 파일(밝은 모드, 어두운 모드)을 가져와요.
 import '../themes.dart';
-// 우리가 만든 설정 카드 위젯을 가져와요.
 import '../widgets/setting_card.dart';
 
 // 설정 화면을 보여주는 위젯이에요. StatelessWidget은 한 번 만들어지면 잘 변하지 않는 위젯이라는 뜻이에요.
@@ -98,8 +94,6 @@ class SettingScreen extends StatelessWidget {
               ),
             ),
 
-
-        
             SettingCard(
               icon: Icons.language, // 언어 아이콘
               title: '언어 설정', // 제목은 '언어 설정'
@@ -118,7 +112,6 @@ class SettingScreen extends StatelessWidget {
               ),
             ),
 
-            // 4. 피드백 카드 (현재는 기능이 구현되지 않았어요)
             SettingCard(
               icon: Icons.feedback, // 피드백 아이콘
               title: '피드백', // 제목은 '피드백'

@@ -1,16 +1,11 @@
-// 플러터의 기본 디자인 라이브러리를 가져와요. 화면에 보이는 것들을 만들 때 필요해요.
 import 'package:flutter/material.dart';
-
-// 우리가 만든 정보 카드 위젯을 가져와요. InfoCard는 다른 파일에 있어요.
 import '../widgets/info_card.dart';
 
-// 앱의 정보를 보여주는 화면이에요. StatelessWidget은 한 번 만들어지면 잘 변하지 않는 위젯이라는 뜻이에요.
 class InfoScreen extends StatelessWidget {
-  // const는 이 위젯이 변하지 않는다는 뜻이에요. super.key는 위젯을 구분하는 이름표 같은 거예요.
+
   const InfoScreen({super.key});
 
   @override
-  // 이 위젯이 화면에 어떻게 보일지 정하는 부분이에요. Widget은 화면에 보이는 모든 것을 뜻해요.
   Widget build(BuildContext context) {
     // 화면의 전체적인 구조를 짜요. Scaffold는 기본적인 앱 디자인을 제공하는 위젯이에요.
     return Scaffold(
@@ -137,7 +132,6 @@ class InfoScreen extends StatelessWidget {
                   icon: Icons.app_shortcut, // 앱 아이콘
                   title: '왜 이 앱을 만들었나요?',
                   subtitle:
-                      '• 간단하게 택일하고 싶었기에\n'
                       '• 누구나 손쉽게 이 정보들에 \n  접근 가능하면 좋겠다는 마음에\n',
                   iconColor: Colors.purple, // 아이콘 색깔은 보라색
                 ),

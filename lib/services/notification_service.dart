@@ -52,10 +52,10 @@ class NotificationService {
     required String body,
     required DateTime scheduledTime,
   }) async {
-    // 예약 시간이 현재 시간보다 이전이면 알람을 보내지 않아요.
-    if (scheduledTime.isBefore(DateTime.now())) {
-      return;
-    }
+    // 예약 시간이 현재 시간보다 이전이면 알람을 보내지 않아요. (실험을 위해 주석 처리)
+    // if (scheduledTime.isBefore(DateTime.now())) {
+    //   return;
+    // }
 
     await _notificationsPlugin.zonedSchedule(
       id,
