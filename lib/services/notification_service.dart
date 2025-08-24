@@ -1,8 +1,5 @@
-// dart:io 라이브러리를 가져와서 플랫폼(안드로이드, iOS 등)을 확인하는 데 사용해요.
 import 'dart:io';
-// 플러터에서 로컬 알람을 띄울 때 사용하는 패키지예요.
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-// 타임존 데이터를 초기화하고 관리하는 패키지예요.
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -95,12 +92,10 @@ class NotificationService {
     await _notificationsPlugin.show(id, title, body, notificationDetails);
   }
 
-  // 특정 ID의 알람을 취소하는 함수예요.
   Future<void> cancelNotification(int id) async {
     await _notificationsPlugin.cancel(id);
   }
 
-  // 모든 알람을 취소하는 함수예요.
   Future<void> cancelAllNotifications() async {
     await _notificationsPlugin.cancelAll();
   }

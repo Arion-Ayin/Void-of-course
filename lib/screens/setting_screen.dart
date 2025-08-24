@@ -61,8 +61,16 @@ class SettingScreen extends StatelessWidget {
                 builder: (context, astroState, child) {
                   return Switch(
                     value: astroState.voidAlarmEnabled,
-                    onChanged: (value) {
-                      astroState.toggleVoidAlarm(value);
+                    onChanged: (value) async {
+                      final bool enabled = await astroState.toggleVoidAlarm(value);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(enabled
+                              ? '보이드 알람이 활성화되었습니다.'
+                              : '보이드 알람이 비활성화되었습니다.'),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
                     },
                   );
                 },

@@ -84,7 +84,7 @@ class VocInfoCard extends StatelessWidget {
             child: Text(
               vocIcon,
               style: const TextStyle(
-                fontSize: 43,
+                fontSize: 40,
               ),
             ),
           ),

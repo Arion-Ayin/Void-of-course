@@ -90,7 +90,7 @@ class MoonSignCard extends StatelessWidget {
           child: Center(
             child: Text(
               getZodiacEmoji(provider.moonInSign), // 별자리 이름으로 이모티콘을 찾아서 보여줘요.
-              style: const TextStyle(fontSize: 44), // 이모티콘 크기를 40으로 해요.
+              style: const TextStyle(fontSize: 40), // 이모티콘 크기를 40으로 해요.
             ),
           ),
         ),

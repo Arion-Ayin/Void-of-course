@@ -1,4 +1,3 @@
-// astro_state.dart
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -78,12 +77,14 @@ class AstroState with ChangeNotifier {
     }
   }
 
-  Future<void> toggleVoidAlarm(bool enable) async {
+  Future<bool> toggleVoidAlarm(bool enable) async {
+    print('toggleVoidAlarm called with enable: $enable'); // Debug print
     if (enable) {
       final bool hasPermission = await _notificationService.requestPermissions();
+      print('Notification permission granted: $hasPermission'); // Debug print
       if (hasPermission) {
         _voidAlarmEnabled = true;
-        _scheduleVoidNotifications();
+        _schedulePreVoidAlarm();
       } else {
         _voidAlarmEnabled = false;
       }
@@ -94,17 +95,19 @@ class AstroState with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('voidAlarmEnabled', _voidAlarmEnabled);
     notifyListeners();
+    print('Returning _voidAlarmEnabled: $_voidAlarmEnabled'); // Debug print
+    return _voidAlarmEnabled;
   }
 
-  void _scheduleVoidNotifications() {
+  void _schedulePreVoidAlarm() {
     _notificationService.cancelAllNotifications();
     if (!_voidAlarmEnabled) return;
 
     if (_vocStart != null && _vocStart!.isAfter(DateTime.now())) {
-      final oneHourBefore = _vocStart!.subtract(const Duration(hours: 5));
+      final oneHourBefore = _vocStart!.subtract(const Duration(hours: 1));
       _notificationService.scheduleNotification(
         id: 0,
-        title: '보이드 알람',
+        title: 'Void of Course 알림',
         body: '1시간 후에 보이드가 시작됩니다.',
         scheduledTime: oneHourBefore,
       );
@@ -121,38 +124,63 @@ class AstroState with ChangeNotifier {
   void _checkTime() {
     final now = DateTime.now();
 
-    // 실시간 데이터 갱신은 사용자가 현재 날짜를 보고 있을 때만 실행합니다.
+    // 1. 데이터 새로고침 조건 확인 (오늘 날짜일 경우)
     if (_selectedDate.year == now.year &&
         _selectedDate.month == now.month &&
         _selectedDate.day == now.day) {
-      final shouldRefreshForSign = _nextSignTime != null && now.isAfter(_nextSignTime!);
+      
+      bool shouldRefresh = false;
+      String refreshReason = "";
 
-      if (shouldRefreshForSign) {
+      // 다음 문 페이즈 시간이 지났는지 확인
+      if (_nextMoonPhaseTime != null && now.isAfter(_nextMoonPhaseTime!)) {
+        shouldRefresh = true;
+        refreshReason = "Next Moon Phase time has passed.";
+      }
+      // 다음 문 사인이 끝나는 시간이 지났는지 확인
+      else if (_nextSignTime != null && now.isAfter(_nextSignTime!)) {
+        shouldRefresh = true;
+        refreshReason = "Moon Sign end time has passed.";
+      }
+      // 보이드 종료 시간이 지났는지 확인
+      else if (_vocEnd != null && now.isAfter(_vocEnd!) && _isOngoingNotificationVisible) {
+        shouldRefresh = true;
+        refreshReason = "VOC end time has passed.";
+      }
+
+      if (shouldRefresh) {
         if (kDebugMode) {
-          print("Moon sign ended. Refreshing data...");
+          print("Time to refresh data: $refreshReason. Refreshing...");
         }
-        _selectedDate = now;
-        refreshData();
+        _selectedDate = now; // 날짜를 현재로 업데이트
+        refreshData(); // 데이터 새로고침
+        return; // 새로고침 후 함수 종료
       }
     }
-    
-    // 이전에 논의한 VOC 알람 로직은 그대로 유지합니다.
+
+
+    // 2. 보이드 알람 및 지속적인 알림 처리
     if (_voidAlarmEnabled) {
       final start = _vocStart;
       final end = _vocEnd;
       if (start != null && end != null) {
-        if (now.isAfter(start) && now.isBefore(end) && !_isOngoingNotificationVisible) {
+        final isCurrentlyInVoc = now.isAfter(start) && now.isBefore(end);
+
+        if (isCurrentlyInVoc && !_isOngoingNotificationVisible) {
+          // 보이드 기간 시작 -> 지속적인 알림 표시
           _notificationService.showOngoingNotification(
             id: 1,
             title: '보이드 중',
             body: '현재 보이드 오브 코스 기간입니다.',
           );
           _isOngoingNotificationVisible = true;
-          if (kDebugMode) print("Showing ongoing notification.");
-        } else if (now.isAfter(end) && _isOngoingNotificationVisible) {
+          if (kDebugMode) print("Showing ongoing VOC notification.");
+        } else if (!isCurrentlyInVoc && _isOngoingNotificationVisible) {
+          // 보이드 기간 종료 -> 지속적인 알림 취소
           _notificationService.cancelNotification(1);
           _isOngoingNotificationVisible = false;
-          if (kDebugMode) print("Cancelling ongoing notification.");
+          if (kDebugMode) print("Cancelling ongoing VOC notification as VOC period has ended.");
+          // 데이터 새로고침은 위의 로직에서 처리하므로 여기서는 알림만 제거합니다.
         }
       }
     }
@@ -177,24 +205,16 @@ class AstroState with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    // 모든 계산은 선택된 날짜의 시작(자정)을 기준으로 수행합니다.
-    final dateForCalc = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
-    // final dateKey = '${dateForCalc.year}-${dateForCalc.month}-${dateForCalc.day}';
+    if (kDebugMode) {
+      print("--- ");
+      print("[AstroState] Starting data update for: $_selectedDate");
+    }
 
-    // Caching disabled
-    // if (_cache.containsKey(dateKey)) {
-    //   final result = _cache[dateKey]!;
-    //   if (kDebugMode) {
-    //     print('Using cached data for $dateKey: $result');
-    //   }
-    //   _updateStateFromResult(result);
-    //   _isLoading = false;
-    //   notifyListeners();
-    //   return;
-    // }
+    final dateForCalc = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
 
     try {
-      // 모든 계산은 dateForCalc를 기준으로 수행합니다.
+      if (kDebugMode) print("[AstroState] Calculating Moon Phase, Sign, and VOC...");
+      
       final nextPhaseInfo = _calculator.findNextPhase(dateForCalc);
       final moonPhaseInfo = _calculator.getMoonPhaseInfo(dateForCalc);
       final moonPhase = moonPhaseInfo['phaseName'];
@@ -214,15 +234,20 @@ class AstroState with ChangeNotifier {
         'nextMoonPhaseTime': nextPhaseInfo['time'],
       };
 
-      // if (kDebugMode) {
-      //   print('Calculated data for $dateKey: $result');
-      // }
-      // _cache[dateKey] = result;
+      if (kDebugMode) {
+        print("[AstroState] Calculation complete. New data:");
+        result.forEach((key, value) {
+          print("  - $key: $value");
+        });
+        print("--- ");
+      }
+      
       _updateStateFromResult(result);
       _lastError = null;
     } catch (e, stack) {
       if (kDebugMode) {
-        print('계산 중 오류 발생: $e\n$stack');
+        print('[AstroState] Error during calculation: $e\n$stack');
+        print("--- ");
       }
       _lastError = '계산 중 오류 발생: $e';
     } finally {
@@ -240,6 +265,6 @@ class AstroState with ChangeNotifier {
     _nextSignTime = result['nextSignTime'] as DateTime?;
     _nextMoonPhaseName = result['nextMoonPhaseName'] as String;
     _nextMoonPhaseTime = result['nextMoonPhaseTime'] as DateTime?;
-    _scheduleVoidNotifications();
+    _schedulePreVoidAlarm();
   }
 }

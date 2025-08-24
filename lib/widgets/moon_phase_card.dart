@@ -1,10 +1,8 @@
-// MoonPhaseCard.dart
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/astro_state.dart';
 import '../services/astro_calculator.dart';
 
-// 달의 현재 상태를 보여주는 예쁜 카드를 만드는 위젯이에요.
 class MoonPhaseCard extends StatelessWidget {
   final AstroState provider;
 
@@ -39,7 +37,7 @@ class MoonPhaseCard extends StatelessWidget {
           child: Center(
             child: Text(
               AstroCalculator().getMoonPhaseEmoji(provider.moonPhase),
-              style: const TextStyle(fontSize: 44),
+              style: const TextStyle(fontSize: 40),
             ),
           ),
         ),
