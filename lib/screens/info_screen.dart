@@ -64,49 +64,8 @@ class InfoScreen extends StatelessWidget {
             // 화면에 보이는 위젯들을 세로로 차곡차곡 쌓아요. Column은 위젯들을 세로로 쌓을 때 사용해요.
             child: Column(
               children: [
-                // 1. 앱의 헤더(머리글) 부분을 넣어요.
                 Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.purple.withOpacity(0.8),
-                        Colors.indigo.withOpacity(0.6),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.purple.withOpacity(0.3),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.brightness_3, color: Colors.white, size: 48), // 달 모양 아이콘
-                      const SizedBox(height: 16),
-                      const Text(
-                        'Void of Course',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        appLocalizations.headerSubtitle,
-                        style: TextStyle(color: Colors.white70, fontSize: 16),
-                      ),
-                    ],
-                  ),
                 ),
-                const SizedBox(height: 30), // 헤더와 다음 내용 사이에 공간을 만들어요.
-
                 // 2. '우리는 누구인가요?' 정보를 보여주는 카드예요.
                 InfoCard(
                   icon: Icons.people, // 사람 아이콘
