@@ -19,7 +19,7 @@ class AstroState with ChangeNotifier {
   Timer? _timer;
   final NotificationService _notificationService = NotificationService();
   bool _voidAlarmEnabled = false;
-  int _preVoidAlarmHours = 5; // Default to 5 hours
+  int _preVoidAlarmHours = 4; // 4. 알람 시간을 3시간으로 변경
   bool _isOngoingNotificationVisible = false;
   DateTime _selectedDate = DateTime.now();
   String _moonPhase = '';
@@ -34,7 +34,6 @@ class AstroState with ChangeNotifier {
   bool _isDarkMode = false;
   String _nextMoonPhaseName = 'Calculating...';
   DateTime? _nextMoonPhaseTime;
-  final Map<String, Map<String, dynamic>> _cache = {};
 
   DateTime get selectedDate => _selectedDate;
   String get moonPhase => _moonPhase;
@@ -48,7 +47,7 @@ class AstroState with ChangeNotifier {
   bool get isLoading => _isLoading;
   bool get isDarkMode => _isDarkMode;
   bool get voidAlarmEnabled => _voidAlarmEnabled;
-  int get preVoidAlarmHours => _preVoidAlarmHours; // Getter for the new setting
+  int get preVoidAlarmHours => _preVoidAlarmHours;
   String get nextMoonPhaseName => _nextMoonPhaseName;
   DateTime? get nextMoonPhaseTime => _nextMoonPhaseTime;
 
@@ -72,8 +71,7 @@ class AstroState with ChangeNotifier {
       await _notificationService.init();
       final prefs = await SharedPreferences.getInstance();
       _voidAlarmEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
-      _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 5; // Load setting
-
+      _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 3;
       await _updateData();
       _isInitialized = true;
       _startTimer();
@@ -89,87 +87,60 @@ class AstroState with ChangeNotifier {
 
   Future<AlarmPermissionStatus> toggleVoidAlarm(bool enable) async {
     final prefs = await SharedPreferences.getInstance();
+    _voidAlarmEnabled = enable;
+    await prefs.setBool('voidAlarmEnabled', _voidAlarmEnabled);
+    
     if (enable) {
       final bool hasNotificationPermission = await _notificationService.requestPermissions();
       if (!hasNotificationPermission) {
-        _voidAlarmEnabled = false;
-        await prefs.setBool('voidAlarmEnabled', _voidAlarmEnabled);
         notifyListeners();
         return AlarmPermissionStatus.notificationDenied;
       }
-
-      final bool hasExactAlarmPermission = await _notificationService.checkExactAlarmPermission();
       
-      _voidAlarmEnabled = true;
-      await _schedulePreVoidAlarm();
-      await prefs.setBool('voidAlarmEnabled', _voidAlarmEnabled);
-      notifyListeners();
-
+      final bool hasExactAlarmPermission = await _notificationService.checkExactAlarmPermission();
+      _schedulePreVoidAlarm(isToggleOn: true);
       if (!hasExactAlarmPermission) {
+        notifyListeners();
         return AlarmPermissionStatus.exactAlarmDenied;
       }
-
-      return AlarmPermissionStatus.granted;
-
-    } else {
-      _voidAlarmEnabled = false;
-      await _notificationService.cancelAllNotifications();
-      await prefs.setBool('voidAlarmEnabled', _voidAlarmEnabled);
       notifyListeners();
-      return AlarmPermissionStatus.granted; // Or a more specific status if needed
+      return AlarmPermissionStatus.granted;
+    } else {
+      await _notificationService.cancelAllNotifications();
+      notifyListeners();
+      return AlarmPermissionStatus.granted;
     }
   }
 
-  // Method to update the pre-alarm hours setting
   Future<void> setPreVoidAlarmHours(int hours) async {
     _preVoidAlarmHours = hours;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('preVoidAlarmHours', hours);
-    // Reschedule notifications with the new setting
-    await _schedulePreVoidAlarm();
+    await _schedulePreVoidAlarm(isToggleOn: false);
     notifyListeners();
   }
 
-  Future<void> _schedulePreVoidAlarm() async {
-    // Cancel only the notifications that this scheduling logic manages.
-    await _notificationService.cancelNotification(0); // Pre-VOC notification
-    await _notificationService.cancelNotification(1); // Ongoing VOC notification
-
+  Future<void> _schedulePreVoidAlarm({bool isToggleOn = false}) async {
+    await _notificationService.cancelNotification(0);
     if (!_voidAlarmEnabled) {
-      if (kDebugMode) print('[VOC ALARM] Alarm is disabled. Cancelling notifications.');
+      if (kDebugMode) print('[VOC ALARM] Alarm is disabled.');
       return;
     }
     if (_vocStart == null || _vocStart!.isBefore(DateTime.now())) {
-      if (kDebugMode) print('[VOC ALARM] No upcoming VOC found. No alarm scheduled.');
+      if (kDebugMode) print('[VOC ALARM] No upcoming VOC found or it has passed.');
       _lastError = '선택된 날짜에 예정된 보이드 기간이 없거나 이미 지났습니다. 알람이 예약되지 않았습니다.';
       notifyListeners();
       return;
     }
 
-    // 이전 오류 메시지 제거
     _lastError = null;
-
-    // Check for exact alarm permission before scheduling
-    final bool canScheduleExact = await _notificationService.checkExactAlarmPermission();
-
     final now = DateTime.now();
-    final timeUntilVocStart = _vocStart!.difference(now);
     final scheduledNotificationTime = _vocStart!.subtract(Duration(hours: _preVoidAlarmHours));
+    final bool canScheduleExact = await _notificationService.checkExactAlarmPermission();
+    String notificationBody = '$_preVoidAlarmHours시간 후에 보이드가 시작됩니다.';
 
-    if (kDebugMode) {
-      print('[VOC ALARM] Scheduling check initiated at $now');
-      print('[VOC ALARM] Upcoming VOC starts at: $_vocStart');
-      print('[VOC ALARM] Pre-alarm setting: $_preVoidAlarmHours hours before');
-      print('[VOC ALARM] Calculated notification time: $scheduledNotificationTime');
-      print('[VOC ALARM] Can schedule exact alarm: $canScheduleExact');
-    }
-
-    String notificationBody;
-
-    // Scenario 1: The scheduled notification time is in the future.
     if (scheduledNotificationTime.isAfter(now)) {
-      notificationBody = '$_preVoidAlarmHours시간 후에 보이드가 시작됩니다.';
-      
+      if (kDebugMode) print('[VOC ALARM] SCENARIO 1: Scheduled for the future.');
       try {
         await _notificationService.scheduleNotification(
           id: 0,
@@ -182,18 +153,10 @@ class AstroState with ChangeNotifier {
         print('[VOC ALARM] ERROR scheduling notification: $e\n$stack');
         _lastError = '알람 예약 중 오류 발생: $e';
       }
-
-      if (kDebugMode) {
-        print('[VOC ALARM] SCENARIO 1: Scheduled for the future.');
-        print('[VOC ALARM] Notification will be sent at: $scheduledNotificationTime');
-        print('[VOC ALARM] Notification body: "$notificationBody"');
-      }
-    }
-    // Scenario 2: The pre-alarm time has already passed, but the VOC hasn't started yet.
-    else {
-      final hoursRemaining = timeUntilVocStart.inHours;
-      final minutesRemaining = timeUntilVocStart.inMinutes % 60;
-
+    } else if (isToggleOn) {
+      final hoursRemaining = _vocStart!.difference(now).inHours;
+      final minutesRemaining = _vocStart!.difference(now).inMinutes % 60;
+      
       if (hoursRemaining > 0) {
         notificationBody = '$hoursRemaining시간 $minutesRemaining분 후에 보이드가 시작됩니다.';
       } else if (minutesRemaining > 0) {
@@ -201,37 +164,17 @@ class AstroState with ChangeNotifier {
       } else {
         notificationBody = '보이드가 곧 시작됩니다.';
       }
-      
-      // Send notification immediately
+
+      if (kDebugMode) print('[VOC ALARM] SCENARIO 2: VOC is starting soon. Sending immediate notification.');
       try {
-        // --- DEBUGGING START ---
-        // Let's try to show a notification directly to test if notifications can be shown at all.
-        print('[VOC ALARM] DEBUG: Attempting to show a direct ongoing notification with ID 99.');
-        await _notificationService.showOngoingNotification(
-            id: 99,
-            title: '보이드 알림',
-            body: notificationBody,
+        await _notificationService.showImmediateNotification(
+          id: 0,
+          title: 'Void of Course 알림',
+          body: notificationBody,
         );
-        // --- DEBUGGING END ---
-
-        /* Original code commented out for debugging
-        await _notificationService.scheduleNotification(
-        id: 0,
-        title: 'Void of Course 알림',
-        body: notificationBody,
-        scheduledTime: now.add(const Duration(seconds: 2)), // Schedule for 2 seconds from now
-        canScheduleExact: canScheduleExact,
-        );
-        */
       } catch (e, stack) {
-        print('[VOC ALARM] ERROR scheduling notification: $e\n$stack');
-        _lastError = '알람 예약 중 오류 발생: $e';
-      }
-
-      if (kDebugMode) {
-        print('[VOC ALARM] SCENARIO 2: VOC is starting soon (within $_preVoidAlarmHours hours).');
-        print('[VOC ALARM] Sending immediate notification.');
-        print('[VOC ALARM] Notification body: "$notificationBody"');
+        print('[VOC ALARM] ERROR showing immediate notification: $e\n$stack');
+        _lastError = '즉시 알람 표시 중 오류 발생: $e';
       }
     }
     notifyListeners();
@@ -247,16 +190,13 @@ class AstroState with ChangeNotifier {
   void _checkTime() {
     final now = DateTime.now();
 
-    // 1. 보이드 알람 및 상태 변경 처리
     if (_voidAlarmEnabled) {
       final start = _vocStart;
       final end = _vocEnd;
       if (start != null && end != null) {
         final isCurrentlyInVoc = now.isAfter(start) && now.isBefore(end);
 
-        // Case 1: VOC is active and ongoing notification is not visible
         if (isCurrentlyInVoc && !_isOngoingNotificationVisible) {
-          // 보이드 기간 시작 -> 지속적인 알림 표시
           _notificationService.showOngoingNotification(
             id: 1,
             title: '보이드 중',
@@ -265,33 +205,24 @@ class AstroState with ChangeNotifier {
           _isOngoingNotificationVisible = true;
           if (kDebugMode) print("Showing ongoing VOC notification.");
 
-        // Case 2: VOC has ended and ongoing notification was visible
         } else if (!isCurrentlyInVoc && now.isAfter(end) && _isOngoingNotificationVisible) {
-          // 보이드 기간 종료 -> 지속적인 알림 취소 및 종료 알림 표시
-          _notificationService.cancelNotification(1); // 지속적인 알림 취소
+          _notificationService.cancelNotification(1);
           _isOngoingNotificationVisible = false;
           if (kDebugMode) print("Cancelling ongoing VOC notification.");
 
-          // 보이드 종료 알림 표시
-          _notificationService.scheduleNotification(
-            id: 2, // 새 ID로 종료 알림
+          _notificationService.showImmediateNotification(
+            id: 2,
             title: '보이드 종료',
             body: '보이드가 종료되었습니다.',
-            scheduledTime: now.add(const Duration(seconds: 1)), // 즉시 표시
-            canScheduleExact: true,
           );
           if (kDebugMode) print("Showing VOC ended notification.");
-
-          // 데이터 새로고침을 트리거하여 다음 VOC를 찾습니다.
-          if (kDebugMode) print("VOC ended, triggering data refresh.");
           _selectedDate = now;
           refreshData();
-          return; // 새로고침 후 종료
+          return;
         }
       }
     }
 
-    // 2. 데이터 새로고침 조건 확인 (VOC 외)
     if (_selectedDate.year == now.year &&
         _selectedDate.month == now.month &&
         _selectedDate.day == now.day) {
@@ -299,13 +230,10 @@ class AstroState with ChangeNotifier {
       bool shouldRefresh = false;
       String refreshReason = "";
 
-      // 다음 문 페이즈 시간이 지났는지 확인
       if (_nextMoonPhaseTime != null && now.isAfter(_nextMoonPhaseTime!)) {
         shouldRefresh = true;
         refreshReason = "Next Moon Phase time has passed.";
-      }
-      // 다음 문 사인이 끝나는 시간이 지났는지 확인
-      else if (_nextSignTime != null && now.isAfter(_nextSignTime!)) {
+      } else if (_nextSignTime != null && now.isAfter(_nextSignTime!)) {
         shouldRefresh = true;
         refreshReason = "Moon Sign end time has passed.";
       }
@@ -314,9 +242,9 @@ class AstroState with ChangeNotifier {
         if (kDebugMode) {
           print("Time to refresh data: $refreshReason. Refreshing...");
         }
-        _selectedDate = now; // 날짜를 현재로 업데이트
-        refreshData(); // 데이터 새로고침
-        return; // 새로고침 후 함수 종료
+        _selectedDate = now;
+        refreshData();
+        return;
       }
     }
   }
@@ -332,7 +260,6 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> refreshData() async {
-    _cache.clear();
     await _updateData();
   }
 
@@ -372,7 +299,7 @@ class AstroState with ChangeNotifier {
       if (kDebugMode) {
         print("[AstroState] Calculation complete. New data:");
         result.forEach((key, value) {
-          print("  - $key: $value");
+          print(" - $key: $value");
         });
         print("--- ");
       }
@@ -400,6 +327,6 @@ class AstroState with ChangeNotifier {
     _nextSignTime = result['nextSignTime'] as DateTime?;
     _nextMoonPhaseName = result['nextMoonPhaseName'] as String;
     _nextMoonPhaseTime = result['nextMoonPhaseTime'] as DateTime?;
-    await _schedulePreVoidAlarm();
+    await _schedulePreVoidAlarm(isToggleOn: false);
   }
 }
