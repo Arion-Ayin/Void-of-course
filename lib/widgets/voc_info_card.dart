@@ -31,11 +31,15 @@ class VocInfoCard extends StatelessWidget {
 
     // 선택한 날짜에 보이드가 포함되어 있는지 확인 (과거, 현재, 미래 모두)
     bool doesSelectedDateHaveVoc = false;
-    if (vocStart != null &&
-        selectedDate.year == vocStart.year &&
-        selectedDate.month == vocStart.month &&
-        selectedDate.day == vocStart.day) {
-      doesSelectedDateHaveVoc = true;
+    if (vocStart != null && vocEnd != null) {
+      final selectedDayStart =
+          DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+      final selectedDayEnd = selectedDayStart.add(const Duration(days: 1));
+
+      // selectedDate 하루 전체(00:00 ~ 23:59)와 vocStart-vocEnd 기간이 겹치는지 확인
+      if (vocStart.isBefore(selectedDayEnd) && vocEnd.isAfter(selectedDayStart)) {
+        doesSelectedDateHaveVoc = true;
+      }
     }
 
     String vocStatusText;
@@ -44,8 +48,8 @@ class VocInfoCard extends StatelessWidget {
 
     if (isVocNow) {
       vocStatusText = '보이드 입니다';
-      vocIcon = '⚠️';
-      vocColor = Colors.redAccent;
+      vocIcon = '🚫';
+      vocColor = Colors.red;
     } else if (doesSelectedDateHaveVoc) {
       vocStatusText = '금일 보이드가 있습니다.';
       vocIcon = '🔔';
