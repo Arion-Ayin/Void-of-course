@@ -126,7 +126,7 @@ class AstroState with ChangeNotifier {
         );
       } else {
         // If VOC starts more than an hour later, schedule for 1 hour before
-        final oneHourBefore = _vocStart!.subtract(const Duration(hours: 10));
+        final oneHourBefore = _vocStart!.subtract(const Duration(hours: 1));
         _notificationService.scheduleNotification(
           id: 0,
           title: 'Void of Course 알림',

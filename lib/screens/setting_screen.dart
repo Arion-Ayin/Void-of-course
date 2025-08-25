@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../services/astro_state.dart';
 import '../themes.dart';
 import '../widgets/setting_card.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:lioluna/services/locale_provider.dart';
 
 // 설정 화면을 보여주는 위젯이에요. StatelessWidget은 한 번 만들어지면 잘 변하지 않는 위젯이라는 뜻이에요.
 class SettingScreen extends StatelessWidget {
@@ -16,6 +18,7 @@ class SettingScreen extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     // 다크 모드일 때는 달 아이콘, 아닐 때는 해 아이콘을 보여줘요.
     final themeIcon = isDarkMode ? Icons.dark_mode : Icons.light_mode;
+    final appLocalizations = AppLocalizations.of(context)!;
 
     // 화면의 전체적인 구조를 짜요. Scaffold는 기본적인 앱 디자인을 제공하는 위젯이에요.
     return Scaffold(
@@ -33,7 +36,7 @@ class SettingScreen extends StatelessWidget {
             const SizedBox(width: 8), // 아이콘과 글자 사이에 작은 공간을 만들어요. SizedBox는 빈 공간을 만들어요.
             // '설정'이라는 제목을 써요. Text는 글자를 보여줘요.
             Text(
-              '설정',
+              appLocalizations.settings,
               style: TextStyle(
                 // 다크 모드일 때는 하얀색, 아닐 때는 검은색 계열 글자색을 사용해요.
                 color: isDarkMode ? Colors.white : Colors.black87,
@@ -104,18 +107,32 @@ class SettingScreen extends StatelessWidget {
 
             SettingCard(
               icon: Icons.language, // 언어 아이콘
-              title: '언어 설정', // 제목은 '언어 설정'
+              title: appLocalizations.languageSettings, // 제목은 '언어 설정'
               iconColor: Colors.blue, // 아이콘 색깔은 파란색
               // 카드 오른쪽에 드롭다운 메뉴를 넣어요. DropdownButton은 여러 선택지 중 하나를 고를 때 사용해요.
-              trailing: DropdownButton<String>(
-                value: '한국어', // 기본으로 '한국어'가 선택되어 있어요.
-                // 선택할 수 있는 항목들이에요. DropdownMenuItem은 드롭다운 메뉴의 각 항목이에요.
-                items: const [
-                  DropdownMenuItem(value: '한국어', child: Text('한국어')), // '한국어' 항목
-                  DropdownMenuItem(value: 'English', child: Text('English')), // 'English' 항목
-                ],
-                onChanged: (value) {
-                  // 언어를 바꾸는 기능은 여기에 만들면 돼요. (지금은 아무것도 하지 않아요)
+              trailing: Consumer<LocaleProvider>(
+                builder: (context, localeProvider, child) {
+                  return DropdownButton<String>(
+                    value: localeProvider.locale?.languageCode == 'ko'
+                        ? appLocalizations.korean
+                        : appLocalizations.english,
+                    // 선택할 수 있는 항목들이에요. DropdownMenuItem은 드롭다운 메뉴의 각 항목이에요.
+                    items: [
+                      DropdownMenuItem(
+                          value: appLocalizations.korean,
+                          child: Text(appLocalizations.korean)), // '한국어' 항목
+                      DropdownMenuItem(
+                          value: appLocalizations.english,
+                          child: Text(appLocalizations.english)), // 'English' 항목
+                    ],
+                    onChanged: (value) {
+                      if (value == appLocalizations.korean) {
+                        localeProvider.setLocale(const Locale('ko'));
+                      } else if (value == appLocalizations.english) {
+                        localeProvider.setLocale(const Locale('en'));
+                      }
+                    },
+                  );
                 },
               ),
             ),

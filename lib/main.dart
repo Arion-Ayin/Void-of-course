@@ -1,30 +1,27 @@
-// 플러터의 기본 디자인 라이브러리를 가져와요. 화면에 보이는 것들을 만들 때 필요해요.
 import 'package:flutter/material.dart';
 // 앱의 상태(데이터)를 쉽게 관리하게 도와주는 라이브러리를 가져와요. (provider)
 import 'package:provider/provider.dart';
-// 테마를 부드럽게 바꿔주는 라이브러리를 가져와요. (animated_theme_switcher)
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
-// 홈 화면 위젯을 가져와요.
 import 'screens/home_screen.dart';
-// 정보 화면 위젯을 가져와요.
 import 'screens/info_screen.dart';
-// 설정 화면 위젯을 가져와요.
 import 'screens/setting_screen.dart';
-// 별자리 계산과 관련된 우리 앱의 기능을 가져와요. (AstroState)
 import 'services/astro_state.dart';
-// 우리가 만든 테마 파일(밝은 모드, 어두운 모드)을 가져와요.
 import 'themes.dart';
 import 'services/notification_service.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:lioluna/services/locale_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-// 앱이 시작될 때 가장 먼저 실행되는 함수예요. 모든 플러터 앱은 main 함수에서 시작해요.
 void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요. (앱이 시작하기 전에 필요한 준비를 해요)
   WidgetsFlutterBinding.ensureInitialized();
   // 우리 앱을 실행해요. runApp은 화면에 위젯을 보여주는 함수예요.
   runApp(
-    // 앱 전체에서 AstroState를 사용할 수 있도록 설정해요.
-    ChangeNotifierProvider(
-      create: (context) => AstroState()..initialize(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AstroState()..initialize()),
+        ChangeNotifierProvider(create: (context) => LocaleProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -41,11 +38,20 @@ class MyApp extends StatelessWidget {
           ? Themes.darkTheme
           : Themes.lightTheme,
       builder: (context, myTheme) {
+        final localeProvider = Provider.of<LocaleProvider>(context);
         return MaterialApp(
           title: 'Void of Course',
           debugShowCheckedModeBanner: false,
           theme: myTheme,
           home: MainAppScreen(),
+          locale: localeProvider.locale,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
         );
       },
     );

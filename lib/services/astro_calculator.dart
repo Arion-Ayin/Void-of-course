@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 
 class AstroCalculator {
   static const List<String> zodiacSigns = [
-    '♈', '♉', '♊', '♋', '♌', '♍', '♎', '♏', '♐', '♑', '♒', '♓',
+    '♈︎', '♉︎', '♊︎', '♋︎', '♌︎', '♍︎', '♎︎', '♏︎', '♐︎', '♑︎', '♒︎', '♓︎',
   ];
 
   static const List<String> zodiacNames = [
