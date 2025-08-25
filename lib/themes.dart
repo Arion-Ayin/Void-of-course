@@ -1,11 +1,8 @@
-// 플러터의 기본 디자인 라이브러리를 가져와요. 화면에 보이는 것들을 만들 때 필요해요.
 import 'package:flutter/material.dart';
-// 시스템 UI(상태표시줄 등)의 스타일을 조절하는 라이브러리를 가져와요.
 import 'package:flutter/services.dart';
 
-// 앱의 밝은 테마와 어두운 테마를 정의하는 클래스예요.
 class Themes {
-  // 밝은 테마를 정의하는 부분이에요. ThemeData는 앱의 전체적인 디자인을 설정하는 도구예요.
+  //light theme
   static final ThemeData lightTheme = ThemeData(
     brightness: Brightness.light, // 이 테마는 밝은 모드예요.
     primarySwatch: Colors.blue, // 앱의 주요 색상으로 파란색 계열을 사용해요. (여러 파란색 농도를 자동으로 만들어줘요)
@@ -43,7 +40,7 @@ class Themes {
     ),
   );
 
-  // 어두운 테마를 정의하는 부분이에요.
+  //dark theme
   static final ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark, // 이 테마는 어두운 모드예요.
     primarySwatch: Colors.blue, // 앱의 주요 색상으로 파란색 계열을 사용해요.

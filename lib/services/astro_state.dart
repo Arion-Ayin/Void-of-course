@@ -104,13 +104,36 @@ class AstroState with ChangeNotifier {
     if (!_voidAlarmEnabled) return;
 
     if (_vocStart != null && _vocStart!.isAfter(DateTime.now())) {
-      final oneHourBefore = _vocStart!.subtract(const Duration(hours: 1));
-      _notificationService.scheduleNotification(
-        id: 0,
-        title: 'Void of Course 알림',
-        body: '1시간 후에 보이드가 시작됩니다.',
-        scheduledTime: oneHourBefore,
-      );
+      final now = DateTime.now();
+      final timeUntilVocStart = _vocStart!.difference(now);
+
+      // If VOC starts within the next hour (60 minutes)
+      if (timeUntilVocStart.inMinutes <= 60) {
+        final minutesRemaining = timeUntilVocStart.inMinutes;
+        String notificationBody;
+        if (minutesRemaining > 0) {
+          notificationBody = '$minutesRemaining분 후에 보이드가 시작됩니다.';
+        } else {
+          // If it's very close or already started (within a minute or so)
+          notificationBody = '보이드가 곧 시작됩니다.';
+        }
+
+        _notificationService.scheduleNotification(
+          id: 0,
+          title: 'Void of Course 알림',
+          body: notificationBody,
+          scheduledTime: now, // Schedule immediately
+        );
+      } else {
+        // If VOC starts more than an hour later, schedule for 1 hour before
+        final oneHourBefore = _vocStart!.subtract(const Duration(hours: 10));
+        _notificationService.scheduleNotification(
+          id: 0,
+          title: 'Void of Course 알림',
+          body: '1시간 후에 보이드가 시작됩니다.',
+          scheduledTime: oneHourBefore,
+        );
+      }
     }
   }
 
