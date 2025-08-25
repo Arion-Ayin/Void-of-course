@@ -19,7 +19,7 @@ class AstroState with ChangeNotifier {
   Timer? _timer;
   final NotificationService _notificationService = NotificationService();
   bool _voidAlarmEnabled = false;
-  int _preVoidAlarmHours = 4; // 4. 알람 시간을 3시간으로 변경
+  int _preVoidAlarmHours = 4;
   bool _isOngoingNotificationVisible = false;
   DateTime _selectedDate = DateTime.now();
   String _moonPhase = '';
@@ -190,8 +190,17 @@ class AstroState with ChangeNotifier {
         // 보이드 진행 중 알림 업데이트
         if (isCurrentlyInVoc) {
           if (!_isOngoingNotificationVisible) {
-            _notificationService.showOngoingNotification(
+            // 보이드 시작 시, 진동이 있는 알림을 한 번만 보냄
+            _notificationService.showImmediateNotification(
               id: 1,
+              title: '보이드 시작',
+              body: '지금부터 보이드 시간입니다.',
+              isVibrate: true,
+            );
+            
+            // 동시에, 진동이 없는 고정 알림을 시작하여 시간 업데이트에 사용
+            _notificationService.showOngoingNotification(
+              id: 2,
               title: '보이드 중',
               body: '지금은 보이드 시간입니다.',
             );
@@ -200,15 +209,14 @@ class AstroState with ChangeNotifier {
           } else {
             _updateOngoingNotification();
           }
-        } else if (!isCurrentlyInVoc &&
-            now.isAfter(end) &&
-            _isOngoingNotificationVisible) {
+        } else if (!isCurrentlyInVoc && now.isAfter(end) && _isOngoingNotificationVisible) {
           _notificationService.cancelNotification(1);
+          _notificationService.cancelNotification(2);
           _isOngoingNotificationVisible = false;
           if (kDebugMode) print("Cancelling ongoing VOC notification.");
 
           _notificationService.showImmediateNotification(
-            id: 2,
+            id: 3,
             title: '보이드 종료',
             body: '보이드가 종료되었습니다.',
           );
@@ -337,7 +345,6 @@ class AstroState with ChangeNotifier {
     final minutes = remainingDuration.inMinutes.remainder(60);
     final seconds = remainingDuration.inSeconds.remainder(60);
 
-    // 알림 본문 메시지를 남은 시간에 따라 동적으로 생성
     String remainingTimeText;
     if (hours > 0) {
       remainingTimeText = '남은 시간: ${hours}시간 ${minutes}분';
@@ -346,7 +353,7 @@ class AstroState with ChangeNotifier {
     }
 
     await _notificationService.showOngoingNotification(
-      id: 1,
+      id: 2,
       title: '보이드 중',
       body: '지금은 보이드 시간입니다. $remainingTimeText',
     );
