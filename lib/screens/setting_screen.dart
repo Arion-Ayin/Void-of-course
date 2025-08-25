@@ -6,6 +6,7 @@ import '../themes.dart';
 import '../widgets/setting_card.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:lioluna/services/locale_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // 설정 화면을 보여주는 위젯이에요. StatelessWidget은 한 번 만들어지면 잘 변하지 않는 위젯이라는 뜻이에요.
 class SettingScreen extends StatelessWidget {
@@ -58,7 +59,7 @@ class SettingScreen extends StatelessWidget {
                 // 3. 보이드 알람 설정 카드
             SettingCard(
               icon: Icons.notifications_active_outlined,
-              title: '보이드 알람',
+              title: appLocalizations.voidAlarmTitle,
               iconColor: Colors.deepPurpleAccent,
               trailing: Consumer<AstroState>(
                 builder: (context, astroState, child) {
@@ -69,8 +70,8 @@ class SettingScreen extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(enabled
-                              ? '보이드 알람이 활성화되었습니다.'
-                              : '보이드 알람이 비활성화되었습니다.'),
+                              ? appLocalizations.voidAlarmEnabledMessage
+                              : appLocalizations.voidAlarmDisabledMessage),
                           duration: const Duration(seconds: 2),
                         ),
                       );
@@ -83,7 +84,7 @@ class SettingScreen extends StatelessWidget {
             // 1. 다크 모드 설정 카드
             SettingCard(
               icon: themeIcon, // 위에서 정한 테마 아이콘(달 또는 해)을 보여줘요.
-              title: '다크 모드', // 제목은 '다크 모드'
+              title: appLocalizations.darkMode,
               iconColor: isDarkMode ? Colors.white : Colors.pink, // 다크 모드일 땐 하얀색, 아닐 땐 핑크색 아이콘
               // 카드 오른쪽에 스위치를 넣어요. trailing은 목록의 맨 뒤에 오는 위젯이에요.
               trailing: ThemeSwitcher(
@@ -126,11 +127,24 @@ class SettingScreen extends StatelessWidget {
                           child: Text(appLocalizations.english)), // 'English' 항목
                     ],
                     onChanged: (value) {
+                      Locale newLocale;
+                      String message;
                       if (value == appLocalizations.korean) {
-                        localeProvider.setLocale(const Locale('ko'));
+                        newLocale = const Locale('ko');
+                        message = '언어가 한국어로 변경되었습니다.';
                       } else if (value == appLocalizations.english) {
-                        localeProvider.setLocale(const Locale('en'));
+                        newLocale = const Locale('en');
+                        message = 'Language changed to English.';
+                      } else {
+                        return; // Should not happen
                       }
+                      localeProvider.setLocale(newLocale);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(message),
+                          duration: const Duration(seconds: 2),
+                        ),
+                      );
                     },
                   );
                 },
@@ -139,14 +153,29 @@ class SettingScreen extends StatelessWidget {
 
             SettingCard(
               icon: Icons.feedback, // 피드백 아이콘
-              title: '피드백', // 제목은 '피드백'
+              title: appLocalizations.feedbackTitle,
               iconColor: Colors.orange, // 아이콘 색깔은 주황색
               // 카드 오른쪽에 아이콘 버튼을 넣어요.
               trailing: IconButton(
                 icon: const Icon(Icons.mail, color: Colors.orange), // 메일 아이콘 버튼
-                onPressed: () {
-                  // 피드백을 보낼 수 있는 이메일 앱을 여는 기능은 여기에 만들면 돼요. (지금은 아무것도 하지 않아요)
-                },
+                onPressed: () async {
+                  final Uri emailLaunchUri = Uri(
+                    scheme: 'mailto',
+                    path: 'Arion.Ayin@gmail.com',
+                    query: encodeQueryParameters(<String, String>{
+                      'subject': 'Feedback for Void-of-course App',
+                    }),
+                  );
+                  if (await canLaunchUrl(emailLaunchUri)) {
+                    await launchUrl(emailLaunchUri);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('${appLocalizations.mailAppError}\n${appLocalizations.contactEmail}'),
+                      )
+                    );
+                  }
+                }
               ),
             ),
           ],
@@ -154,4 +183,12 @@ class SettingScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+
+String? encodeQueryParameters(Map<String, String> params) {
+  return params.entries
+      .map((MapEntry<String, String> e) =>
+          '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+      .join('&');
 }

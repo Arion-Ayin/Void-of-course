@@ -18,29 +18,29 @@ class MoonSignCard extends StatelessWidget {
     // 만약 별자리 이름이 'Aries'(양자리)이면, 양자리 이모티콘을 돌려줘요.
     switch (sign) {
       case 'Aries':
-        return '♈'; // 양자리
+        return '♈︎'; // 양자리
       case 'Taurus':
-        return '♉'; // 황소자리
+        return '♉︎'; // 황소자리
       case 'Gemini':
-        return '♊'; // 쌍둥이자리
+        return '♊︎'; // 쌍둥이자리
       case 'Cancer':
-        return '♋'; // 게자리
+        return '♋︎'; // 게자리
       case 'Leo':
-        return '♌'; // 사자자리
+        return '♌︎'; // 사자자리
       case 'Virgo':
-        return '♍'; // 처녀자리
+        return '♍︎'; // 처녀자리
       case 'Libra':
-        return '♎'; // 천칭자리
+        return '♎︎'; // 천칭자리
       case 'Scorpio':
-        return '♏'; // 전갈자리
+        return '♏︎'; // 전갈자리
       case 'Sagittarius':
-        return '♐'; // 사수자리
+        return '♐︎'; // 사수자리
       case 'Capricorn':
-        return '♑'; // 염소자리
+        return '♑︎'; // 염소자리
       case 'Aquarius':
-        return '♒'; // 물병자리
+        return '♒︎'; // 물병자리
       case 'Pisces':
-        return '♓'; // 물고기자리
+        return '♓︎'; // 물고기자리
       default:
         return '❔'; // 아는 별자리가 없으면 물음표를 보여줘요.
     }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/info_card.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class InfoScreen extends StatelessWidget {
 
@@ -7,6 +8,7 @@ class InfoScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appLocalizations = AppLocalizations.of(context)!;
     // 화면의 전체적인 구조를 짜요. Scaffold는 기본적인 앱 디자인을 제공하는 위젯이에요.
     return Scaffold(
       // 화면 상단의 앱 바(제목 바)예요. AppBar는 앱의 맨 위에 있는 막대기예요.
@@ -23,7 +25,7 @@ class InfoScreen extends StatelessWidget {
             const SizedBox(width: 8), // 아이콘과 글자 사이에 작은 공간을 만들어요. SizedBox는 빈 공간을 만들어요.
             // '정보'라는 제목을 써요. Text는 글자를 보여줘요.
             Text(
-              '정보',
+              appLocalizations.infoScreenTitle,
               style: TextStyle(
                 // 현재 테마가 다크 모드인지에 따라 글자색을 정해요.
                 // Theme.of(context).brightness == Brightness.dark는 지금 화면이 어두운 모드인지 물어보는 거예요.
@@ -96,8 +98,8 @@ class InfoScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
-                        '보이드 오브 코스 계산기',
+                      Text(
+                        appLocalizations.headerSubtitle,
                         style: TextStyle(color: Colors.white70, fontSize: 16),
                       ),
                     ],
@@ -106,33 +108,28 @@ class InfoScreen extends StatelessWidget {
                 const SizedBox(height: 30), // 헤더와 다음 내용 사이에 공간을 만들어요.
 
                 // 2. '우리는 누구인가요?' 정보를 보여주는 카드예요.
-                const InfoCard(
+                InfoCard(
                   icon: Icons.people, // 사람 아이콘
-                  title: '우리는 누구인가요?',
-                  subtitle:
-                      '• 스튜디오 사안의 사명 : \n사자의 눈으로 세상을 헤아립니다.\n', // 여러 줄의 글자
+                  title: appLocalizations.whoAreWeTitle,
+                  subtitle: appLocalizations.whoAreWeSubtitle,
                   iconColor: Colors.amber, // 아이콘 색깔은 호박색
                 ),
                 const SizedBox(height: 20), // 카드와 카드 사이에 공간을 만들어요.
 
                 // 3. '누구에게 유용한가요?' 정보를 보여주는 카드예요.
-                const InfoCard(
+                InfoCard(
                   icon: Icons.timer_sharp, // 시계 아이콘
-                  title: '누구에게 유용한가요?',
-                  subtitle:
-                      '• 간단한 택일이 필요하신 분들\n'
-                      '• 보이드 오브 코스 계산이 필요한 분들\n'
-                      '• 행동의 지표성이 필요한 분들\n',
+                  title: appLocalizations.whoIsItUsefulForTitle,
+                  subtitle: appLocalizations.whoIsItUsefulForSubtitle,
                   iconColor: Colors.green, // 아이콘 색깔은 초록색
                 ),
                 const SizedBox(height: 20), // 카드와 카드 사이에 공간을 만들어요.
 
                 // 4. '왜 이 앱을 만들었나요?' 정보를 보여주는 카드예요.
-                const InfoCard(
+                InfoCard(
                   icon: Icons.app_shortcut, // 앱 아이콘
-                  title: '왜 이 앱을 만들었나요?',
-                  subtitle:
-                      '• 누구나 손쉽게 이 정보들에 \n  접근 가능하면 좋겠다는 마음에\n',
+                  title: appLocalizations.whyDidWeMakeThisAppTitle,
+                  subtitle: appLocalizations.whyDidWeMakeThisAppSubtitle,
                   iconColor: Colors.purple, // 아이콘 색깔은 보라색
                 ),
                 const SizedBox(height: 20), // 카드와 카드 사이에 공간을 만들어요.
@@ -152,7 +149,7 @@ class InfoScreen extends StatelessWidget {
                     ],
                   ),
                   child: Text(
-                    '© 2025 Studio_Saan. All rights reserved.', // 저작권 문구예요.
+                    appLocalizations.copyrightText, // 저작권 문구예요.
                     style: TextStyle(
                       // 글자색을 앱의 기본 텍스트 색상에서 살짝 투명하게 만들어요.
                       color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),

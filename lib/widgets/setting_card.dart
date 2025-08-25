@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart'; // 플러터의 디자인 라이브러리를 가져와요.
 
 // 설정 화면에 들어가는 한 줄짜리 카드를 만드는 위젯이에요.

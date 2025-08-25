@@ -5,5 +5,21 @@
     "info": "Info",
     "languageSettings": "Language Settings",
     "korean": "Korean",
-    "english": "English"
+    "english": "English",
+    "darkMode": "Dark Mode",
+    "voidAlarmTitle": "Void Alarm",
+    "voidAlarmEnabledMessage": "Void alarm has been activated.",
+    "voidAlarmDisabledMessage": "Void alarm has been deactivated.",
+    "feedbackTitle": "Feedback",
+    "mailAppError": "Cannot open mail app. Please check your default mail app settings.",
+    "contactEmail": "Arion.Ayin@gmail.com",
+    "infoScreenTitle": "Info",
+    "headerSubtitle": "Void of Course Calculator",
+    "whoAreWeTitle": "Who are we?",
+    "whoAreWeSubtitle": "• Arion Ayin's Mission: \nFathoming the world with the eyes of a lion\n",
+    "whoIsItUsefulForTitle": "Who is it useful for?",
+    "whoIsItUsefulForSubtitle": "• Those who need simple date selection\n• Those who need Void of Course calculations\n• Those who need an indicator for action\n",
+    "whyDidWeMakeThisAppTitle": "Why did we make this app?",
+    "whyDidWeMakeThisAppSubtitle": "• With the hope that anyone can easily \n  access this information.\n",
+    "copyrightText": "© 2025 Arion Ayin. All rights reserved."
 }
