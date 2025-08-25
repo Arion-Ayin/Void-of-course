@@ -34,15 +34,33 @@
     "initializationError": "초기화 오류",
     "calculationError": "계산 중 오류 발생",
     "vocStartsInMinutes": "{minutesRemaining}분 후에 보이드가 시작됩니다.",
+    "@vocStartsInMinutes": {
+        "placeholders": {
+            "minutesRemaining": {
+                "type": "int",
+                "format": "compact"
+            }
+        }
+    },
+    "vocStartsInHours": "{count}시간 후에 보이드가 시작됩니다.",
+    "@vocStartsInHours": {
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "compact"
+            }
+        }
+    },
     "vocStartsSoon": "보이드가 곧 시작됩니다.",
     "vocNotificationTitle": "Void of Course 알림",
-    "vocStartsInOneHour": "1시간 후에 보이드가 시작됩니다.",
     "vocOngoingTitle": "보이드 중",
-    "vocOngoingBody": "현재 보이드 오브 코스 기간입니다.",
-    "nextMoonPhaseTimePassed": "Next Moon Phase time has passed.",
-    "moonSignEndTimePassed": "Moon Sign end time has passed.",
-    "vocEndTimePassed": "VOC end time has passed.",
-    "timeToRefreshData": "Time to refresh data: {refreshReason}. Refreshing...",
+    "vocOngoingBody": "지금은 보이드 시간입니다.",
+    "vocEndedTitle": "보이드 종료",
+    "vocEndedBody": "보이드가 종료되었습니다.",
+    "nextMoonPhaseTimePassed": "다음 달 위상 시간이 지났습니다.",
+    "moonSignEndTimePassed": "다음 달 싸인으로의 진입 시간이 지났습니다.",
+    "vocEndTimePassed": "보이드 기간이 종료되었습니다.",
+    "timeToRefreshData": "데이터를 새로고침할 시간입니다: {refreshReason}. 새로고침 중...",
     "voidAlarmTimeTitle": "알림 시간",
     "voidAlarmTimeUnit": "{count}시간 전",
     "@voidAlarmTimeUnit": {
@@ -62,5 +80,8 @@
             }
         }
     },
-    "voidAlarmExactAlarmDeniedMessage": "알림 권한은 허용되었지만, 정확한 알람을 위해 추가 권한이 필요합니다. 앱 설정에서 '알람 및 리마인더' 권한을 허용해주세요."
+    "voidAlarmExactAlarmDeniedMessage": "앱 설정에서 '알람 및 리마인더' 권한을 허용해주세요.",
+    "noUpcomingVocFound": "선택된 날짜에 예정된 보이드 기간이 없거나 이미 지났습니다. 알람이 예약되지 않았습니다.",
+    "errorSchedulingAlarm": "알람 예약 중 오류 발생",
+    "errorShowingImmediateAlarm": "즉시 알람 표시 중 오류 발생"
 }

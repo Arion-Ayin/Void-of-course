@@ -1,3 +1,4 @@
+
 import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -63,7 +64,7 @@ class NotificationService {
   }) async {
     // 예약 시간이 현재 시간보다 이전이면 알람을 보내지 않아요. (실험을 위해 주석 처리)
     // if (scheduledTime.isBefore(DateTime.now())) {
-    //   return;
+    //   return;
     // }
 
     await _notificationsPlugin.zonedSchedule(
@@ -80,8 +81,8 @@ class NotificationService {
           priority: Priority.high,
         ),
       ),
-      androidScheduleMode: canScheduleExact 
-          ? AndroidScheduleMode.exactAllowWhileIdle 
+      androidScheduleMode: canScheduleExact
+          ? AndroidScheduleMode.exactAllowWhileIdle
           : AndroidScheduleMode.inexact,
     );
   }

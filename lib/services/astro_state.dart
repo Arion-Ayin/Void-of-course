@@ -89,16 +89,18 @@ class AstroState with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     _voidAlarmEnabled = enable;
     await prefs.setBool('voidAlarmEnabled', _voidAlarmEnabled);
-    
+
     if (enable) {
-      final bool hasNotificationPermission = await _notificationService.requestPermissions();
+      final bool hasNotificationPermission =
+          await _notificationService.requestPermissions();
       if (!hasNotificationPermission) {
         notifyListeners();
         return AlarmPermissionStatus.notificationDenied;
       }
-      
-      final bool hasExactAlarmPermission = await _notificationService.checkExactAlarmPermission();
-      _schedulePreVoidAlarm(isToggleOn: true);
+
+      final bool hasExactAlarmPermission =
+          await _notificationService.checkExactAlarmPermission();
+      await _schedulePreVoidAlarm(isToggleOn: true);
       if (!hasExactAlarmPermission) {
         notifyListeners();
         return AlarmPermissionStatus.exactAlarmDenied;
@@ -135,8 +137,10 @@ class AstroState with ChangeNotifier {
 
     _lastError = null;
     final now = DateTime.now();
-    final scheduledNotificationTime = _vocStart!.subtract(Duration(hours: _preVoidAlarmHours));
-    final bool canScheduleExact = await _notificationService.checkExactAlarmPermission();
+    final scheduledNotificationTime =
+        _vocStart!.subtract(Duration(hours: _preVoidAlarmHours));
+    final bool canScheduleExact =
+        await _notificationService.checkExactAlarmPermission();
     String notificationBody = '$_preVoidAlarmHours시간 후에 보이드가 시작됩니다.';
 
     if (scheduledNotificationTime.isAfter(now)) {
@@ -154,28 +158,7 @@ class AstroState with ChangeNotifier {
         _lastError = '알람 예약 중 오류 발생: $e';
       }
     } else if (isToggleOn) {
-      final hoursRemaining = _vocStart!.difference(now).inHours;
-      final minutesRemaining = _vocStart!.difference(now).inMinutes % 60;
-      
-      if (hoursRemaining > 0) {
-        notificationBody = '$hoursRemaining시간 $minutesRemaining분 후에 보이드가 시작됩니다.';
-      } else if (minutesRemaining > 0) {
-        notificationBody = '$minutesRemaining분 후에 보이드가 시작됩니다.';
-      } else {
-        notificationBody = '보이드가 곧 시작됩니다.';
-      }
-
-      if (kDebugMode) print('[VOC ALARM] SCENARIO 2: VOC is starting soon. Sending immediate notification.');
-      try {
-        await _notificationService.showImmediateNotification(
-          id: 0,
-          title: 'Void of Course 알림',
-          body: notificationBody,
-        );
-      } catch (e, stack) {
-        print('[VOC ALARM] ERROR showing immediate notification: $e\n$stack');
-        _lastError = '즉시 알람 표시 중 오류 발생: $e';
-      }
+      await _updatePreVoidAlarmNotification();
     }
     notifyListeners();
   }
@@ -195,17 +178,31 @@ class AstroState with ChangeNotifier {
       final end = _vocEnd;
       if (start != null && end != null) {
         final isCurrentlyInVoc = now.isAfter(start) && now.isBefore(end);
+        final isVocStartingSoon =
+            now.isAfter(start.subtract(Duration(hours: preVoidAlarmHours))) &&
+                now.isBefore(start);
 
-        if (isCurrentlyInVoc && !_isOngoingNotificationVisible) {
-          _notificationService.showOngoingNotification(
-            id: 1,
-            title: '보이드 중',
-            body: '지금은 보이드 시간입니다.',
-          );
-          _isOngoingNotificationVisible = true;
-          if (kDebugMode) print("Showing ongoing VOC notification.");
+        // 보이드 시작 전 알림 업데이트
+        if (isVocStartingSoon) {
+          _updatePreVoidAlarmNotification();
+        }
 
-        } else if (!isCurrentlyInVoc && now.isAfter(end) && _isOngoingNotificationVisible) {
+        // 보이드 진행 중 알림 업데이트
+        if (isCurrentlyInVoc) {
+          if (!_isOngoingNotificationVisible) {
+            _notificationService.showOngoingNotification(
+              id: 1,
+              title: '보이드 중',
+              body: '지금은 보이드 시간입니다.',
+            );
+            _isOngoingNotificationVisible = true;
+            if (kDebugMode) print("Showing ongoing VOC notification.");
+          } else {
+            _updateOngoingNotification();
+          }
+        } else if (!isCurrentlyInVoc &&
+            now.isAfter(end) &&
+            _isOngoingNotificationVisible) {
           _notificationService.cancelNotification(1);
           _isOngoingNotificationVisible = false;
           if (kDebugMode) print("Cancelling ongoing VOC notification.");
@@ -226,7 +223,6 @@ class AstroState with ChangeNotifier {
     if (_selectedDate.year == now.year &&
         _selectedDate.month == now.month &&
         _selectedDate.day == now.day) {
-      
       bool shouldRefresh = false;
       String refreshReason = "";
 
@@ -272,11 +268,12 @@ class AstroState with ChangeNotifier {
       print("[AstroState] Starting data update for: $_selectedDate");
     }
 
-    final dateForCalc = DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final dateForCalc =
+        DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
 
     try {
       if (kDebugMode) print("[AstroState] Calculating Moon Phase, Sign, and VOC...");
-      
+
       final nextPhaseInfo = _calculator.findNextPhase(dateForCalc);
       final moonPhaseInfo = _calculator.getMoonPhaseInfo(dateForCalc);
       final moonPhase = moonPhaseInfo['phaseName'];
@@ -303,7 +300,7 @@ class AstroState with ChangeNotifier {
         });
         print("--- ");
       }
-      
+
       await _updateStateFromResult(result);
       _lastError = null;
     } catch (e, stack) {
@@ -328,5 +325,59 @@ class AstroState with ChangeNotifier {
     _nextMoonPhaseName = result['nextMoonPhaseName'] as String;
     _nextMoonPhaseTime = result['nextMoonPhaseTime'] as DateTime?;
     await _schedulePreVoidAlarm(isToggleOn: false);
+  }
+
+  Future<void> _updateOngoingNotification() async {
+    if (_vocStart == null || _vocEnd == null) return;
+
+    final now = DateTime.now();
+    final remainingDuration = _vocEnd!.difference(now);
+
+    final hours = remainingDuration.inHours;
+    final minutes = remainingDuration.inMinutes.remainder(60);
+    final seconds = remainingDuration.inSeconds.remainder(60);
+
+    // 알림 본문 메시지를 남은 시간에 따라 동적으로 생성
+    String remainingTimeText;
+    if (hours > 0) {
+      remainingTimeText = '남은 시간: ${hours}시간 ${minutes}분';
+    } else {
+      remainingTimeText = '남은 시간: ${minutes}분 ${seconds}초';
+    }
+
+    await _notificationService.showOngoingNotification(
+      id: 1,
+      title: '보이드 중',
+      body: '지금은 보이드 시간입니다. $remainingTimeText',
+    );
+
+    _isOngoingNotificationVisible = true;
+    if (kDebugMode) print("Updating ongoing VOC notification.");
+  }
+
+  Future<void> _updatePreVoidAlarmNotification() async {
+    if (_vocStart == null) return;
+
+    final now = DateTime.now();
+    final remainingDuration = _vocStart!.difference(now);
+
+    final hours = remainingDuration.inHours;
+    final minutes = remainingDuration.inMinutes.remainder(60);
+    final seconds = remainingDuration.inSeconds.remainder(60);
+
+    String notificationBody;
+    if (hours > 0) {
+      notificationBody = '보이드 시작까지 ${hours}시간 ${minutes}분 남았습니다.';
+    } else if (minutes > 0) {
+      notificationBody = '보이드 시작까지 ${minutes}분 남았습니다.';
+    } else {
+      notificationBody = '보이드가 곧 시작됩니다.';
+    }
+
+    await _notificationService.showOngoingNotification(
+      id: 0,
+      title: 'Void of Course 알림',
+      body: notificationBody,
+    );
   }
 }

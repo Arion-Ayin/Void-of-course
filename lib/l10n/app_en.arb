@@ -53,14 +53,35 @@
     "initializationError": "Initialization Error",
     "calculationError": "Error during calculation",
     "vocStartsInMinutes": "{minutesRemaining} minutes until Void of Course begins.",
+    "@vocStartsInMinutes": {
+        "placeholders": {
+            "minutesRemaining": {
+                "type": "int",
+                "format": "compact"
+            }
+        }
+    },
+    "vocStartsInHours": "Void of Course begins in {count} hours.",
+    "@vocStartsInHours": {
+        "placeholders": {
+            "count": {
+                "type": "int",
+                "format": "compact"
+            }
+        }
+    },
     "vocStartsSoon": "Void of Course begins soon.",
     "vocNotificationTitle": "Void of Course Notification",
-    "vocStartsInOneHour": "Void of Course begins in 1 hour.",
     "vocOngoingTitle": "Void of Course in Progress",
     "vocOngoingBody": "Currently in Void of Course period.",
+    "vocEndedTitle": "Void of Course Ended",
+    "vocEndedBody": "The Void of Course period has ended.",
     "nextMoonPhaseTimePassed": "Next Moon Phase time has passed.",
     "moonSignEndTimePassed": "Moon Sign end time has passed.",
     "vocEndTimePassed": "VOC end time has passed.",
     "timeToRefreshData": "Time to refresh data: {refreshReason}. Refreshing...",
-    "voidAlarmExactAlarmDeniedMessage": "Permission granted, but please enable 'Alarms & Reminders' in the app's system settings for the alarm to work correctly."
+    "voidAlarmExactAlarmDeniedMessage": "Please allow the *Alarms & Reminders* permission in the app settings.",
+    "noUpcomingVocFound": "No upcoming Void of Course period found or it has passed. No alarm scheduled.",
+    "errorSchedulingAlarm": "Error scheduling alarm",
+    "errorShowingImmediateAlarm": "Error showing immediate alarm"
 }
