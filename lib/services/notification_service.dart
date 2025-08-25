@@ -32,7 +32,6 @@ class NotificationService {
   // 사용자에게 알람 권한을 요청하는 함수예요. (안드로이드 13 이상)
   Future<bool> requestPermissions() async {
     if (Platform.isAndroid) {
-      // 최신 버전(v12 이상)에서는 requestNotificationsPermission()을 사용합니다.
       final bool? androidResult = await _notificationsPlugin
           .resolvePlatformSpecificImplementation<
               AndroidFlutterLocalNotificationsPlugin>()
@@ -42,12 +41,25 @@ class NotificationService {
     return false;
   }
 
+  // 정확한 알람 권한이 있는지 확인하는 함수예요.
+  Future<bool> checkExactAlarmPermission() async {
+    if (Platform.isAndroid) {
+      final bool? canSchedule = await _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.canScheduleExactNotifications();
+      return canSchedule ?? false;
+    }
+    return true; // 안드로이드가 아니면 항상 true를 반환해요.
+  }
+
   // 특정 시간에 알람을 예약하는 함수예요.
   Future<void> scheduleNotification({
     required int id,
     required String title,
     required String body,
     required DateTime scheduledTime,
+    required bool canScheduleExact,
   }) async {
     // 예약 시간이 현재 시간보다 이전이면 알람을 보내지 않아요. (실험을 위해 주석 처리)
     // if (scheduledTime.isBefore(DateTime.now())) {
@@ -68,7 +80,9 @@ class NotificationService {
           priority: Priority.high,
         ),
       ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      androidScheduleMode: canScheduleExact 
+          ? AndroidScheduleMode.exactAllowWhileIdle 
+          : AndroidScheduleMode.inexact,
     );
   }
 
@@ -98,5 +112,25 @@ class NotificationService {
 
   Future<void> cancelAllNotifications() async {
     await _notificationsPlugin.cancelAll();
+  }
+
+  // 즉시 알람을 보여주는 함수예요. (스케줄링 없이)
+  Future<void> showImmediateNotification({
+    required int id,
+    required String title,
+    required String body,
+  }) async {
+    const NotificationDetails notificationDetails = NotificationDetails(
+      android: AndroidNotificationDetails(
+        'void_channel_id', // Use the same channel as scheduled notifications
+        'Void Notifications',
+        channelDescription: 'Notifications for Void of Course periods',
+        importance: Importance.max,
+        priority: Priority.high,
+        ongoing: false,
+        autoCancel: true,
+      ),
+    );
+    await _notificationsPlugin.show(id, title, body, notificationDetails);
   }
 }

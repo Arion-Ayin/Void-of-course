@@ -10,16 +10,57 @@
     "voidAlarmTitle": "Void Alarm",
     "voidAlarmEnabledMessage": "Void alarm has been activated.",
     "voidAlarmDisabledMessage": "Void alarm has been deactivated.",
+    "voidAlarmTimeTitle": "Alarm Time",
+    "voidAlarmTimeUnit": "{count} hours before",
+    "@voidAlarmTimeUnit": {
+        "description": "Unit for void alarm time setting",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "voidAlarmTimeSetMessage": "Void alarm time set to {count} hours before.",
+    "@voidAlarmTimeSetMessage": {
+        "description": "Message shown when void alarm time is set",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "feedbackTitle": "Feedback",
     "mailAppError": "Cannot open mail app. Please check your default mail app settings.",
     "contactEmail": "Arion.Ayin@gmail.com",
     "infoScreenTitle": "Info",
     "headerSubtitle": "Void of Course Calculator",
     "whoAreWeTitle": "Who are we?",
-    "whoAreWeSubtitle": "• Arion Ayin's Mission: \nFathoming the world with the eyes of a lion\n",
+    "whoAreWeSubtitle": "• Arion Ayin's Mission : Fathoming the world with the eyes of a lion",
     "whoIsItUsefulForTitle": "Who is it useful for?",
-    "whoIsItUsefulForSubtitle": "• Those who need simple date selection\n• Those who need Void of Course calculations\n• Those who need an indicator for action\n",
+    "whoIsItUsefulForSubtitle": "• Those who need simple date selection\n• Those who need Void of Course calculations\n• Those who need an indicator for action",
     "whyDidWeMakeThisAppTitle": "Why did we make this app?",
-    "whyDidWeMakeThisAppSubtitle": "• With the hope that anyone can easily \n  access this information.\n",
-    "copyrightText": "© 2025 Arion Ayin. All rights reserved."
+    "whyDidWeMakeThisAppSubtitle": "• With the hope that anyone can easily access this information.",
+    "copyrightText": "© 2025 Arion Ayin. All rights reserved.",
+    "newMoon": "New Moon",
+    "crescentMoon": "Crescent Moon",
+    "firstQuarter": "First Quarter",
+    "gibbousMoon": "Gibbous Moon",
+    "fullMoon": "Full Moon",
+    "disseminatingMoon": "Disseminating Moon",
+    "lastQuarter": "Last Quarter",
+    "balsamicMoon": "Balsamic Moon",
+    "sunMoonPositionError": "Sun or Moon position not available.",
+    "initializationError": "Initialization Error",
+    "calculationError": "Error during calculation",
+    "vocStartsInMinutes": "{minutesRemaining} minutes until Void of Course begins.",
+    "vocStartsSoon": "Void of Course begins soon.",
+    "vocNotificationTitle": "Void of Course Notification",
+    "vocStartsInOneHour": "Void of Course begins in 1 hour.",
+    "vocOngoingTitle": "Void of Course in Progress",
+    "vocOngoingBody": "Currently in Void of Course period.",
+    "nextMoonPhaseTimePassed": "Next Moon Phase time has passed.",
+    "moonSignEndTimePassed": "Moon Sign end time has passed.",
+    "vocEndTimePassed": "VOC end time has passed.",
+    "timeToRefreshData": "Time to refresh data: {refreshReason}. Refreshing...",
+    "voidAlarmExactAlarmDeniedMessage": "Permission granted, but please enable 'Alarms & Reminders' in the app's system settings for the alarm to work correctly."
 }

@@ -16,10 +16,51 @@
     "infoScreenTitle": "정보",
     "headerSubtitle": "보이드 오브 코스 계산기",
     "whoAreWeTitle": "우리는 누구인가요?",
-    "whoAreWeSubtitle": "• 아리온아인의 사명 : \n사자의 눈으로 세상을 헤아립니다.\n",
+    "whoAreWeSubtitle": "• 아리온아인의 사명 : \n사자의 눈으로 세상을 헤아립니다.",
     "whoIsItUsefulForTitle": "누구에게 유용한가요?",
-    "whoIsItUsefulForSubtitle": "• 간단한 택일이 필요하신 분들\n• 보이드 오브 코스 계산이 필요한 분들\n• 행동의 지표성이 필요한 분들\n",
+    "whoIsItUsefulForSubtitle": "• 간단한 택일이 필요하신 분들\n• 보이드 오브 코스 계산이 필요한 분들\n• 행동의 지표성이 필요한 분들",
     "whyDidWeMakeThisAppTitle": "왜 이 앱을 만들었나요?",
-    "whyDidWeMakeThisAppSubtitle": "• 누구나 손쉽게 이 정보들에 \n  접근 가능하면 좋겠다는 마음에\n",
-    "copyrightText": "© 2025 Arion Ayin. All rights reserved."
+    "whyDidWeMakeThisAppSubtitle": "• 누구나 손쉽게 이 정보들에\n접근 가능하면 좋겠다는 마음에",
+    "copyrightText": "© 2025 Arion Ayin. All rights reserved.",
+    "newMoon": "신월",
+    "crescentMoon": "초승달",
+    "firstQuarter": "상현달",
+    "gibbousMoon": "상현망간달",
+    "fullMoon": "보름달",
+    "disseminatingMoon": "하현망간달",
+    "lastQuarter": "하현달",
+    "balsamicMoon": "그믐달",
+    "sunMoonPositionError": "태양 또는 달의 위치를 사용할 수 없습니다.",
+    "initializationError": "초기화 오류",
+    "calculationError": "계산 중 오류 발생",
+    "vocStartsInMinutes": "{minutesRemaining}분 후에 보이드가 시작됩니다.",
+    "vocStartsSoon": "보이드가 곧 시작됩니다.",
+    "vocNotificationTitle": "Void of Course 알림",
+    "vocStartsInOneHour": "1시간 후에 보이드가 시작됩니다.",
+    "vocOngoingTitle": "보이드 중",
+    "vocOngoingBody": "현재 보이드 오브 코스 기간입니다.",
+    "nextMoonPhaseTimePassed": "Next Moon Phase time has passed.",
+    "moonSignEndTimePassed": "Moon Sign end time has passed.",
+    "vocEndTimePassed": "VOC end time has passed.",
+    "timeToRefreshData": "Time to refresh data: {refreshReason}. Refreshing...",
+    "voidAlarmTimeTitle": "알림 시간",
+    "voidAlarmTimeUnit": "{count}시간 전",
+    "@voidAlarmTimeUnit": {
+        "description": "보이드 알림 시간 설정 단위",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "voidAlarmTimeSetMessage": "보이드 알림 시간이 {count}시간 전으로 설정되었습니다.",
+    "@voidAlarmTimeSetMessage": {
+        "description": "보이드 알림 시간 설정 시 표시되는 메시지",
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "voidAlarmExactAlarmDeniedMessage": "알림 권한은 허용되었지만, 정확한 알람을 위해 추가 권한이 필요합니다. 앱 설정에서 '알람 및 리마인더' 권한을 허용해주세요."
 }

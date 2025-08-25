@@ -55,8 +55,6 @@ class SettingScreen extends StatelessWidget {
         // 설정 항목들을 세로로 차곡차곡 쌓아요. Column은 위젯들을 세로로 쌓을 때 사용해요.
         child: Column(
           children: [
-
-                // 3. 보이드 알람 설정 카드
             SettingCard(
               icon: Icons.notifications_active_outlined,
               title: appLocalizations.voidAlarmTitle,
@@ -66,13 +64,31 @@ class SettingScreen extends StatelessWidget {
                   return Switch(
                     value: astroState.voidAlarmEnabled,
                     onChanged: (value) async {
-                      final bool enabled = await astroState.toggleVoidAlarm(value);
+                      final status = await astroState.toggleVoidAlarm(value);
+                      if (!context.mounted) return;
+
+                      String message = '';
+                      Duration duration = const Duration(seconds: 2);
+
+                      switch (status) {
+                        case AlarmPermissionStatus.granted:
+                          message = value 
+                              ? appLocalizations.voidAlarmEnabledMessage
+                              : appLocalizations.voidAlarmDisabledMessage;
+                          break;
+                        case AlarmPermissionStatus.notificationDenied:
+                          message = appLocalizations.voidAlarmDisabledMessage;
+                          break;
+                        case AlarmPermissionStatus.exactAlarmDenied:
+                          message = appLocalizations.voidAlarmExactAlarmDeniedMessage;
+                          duration = const Duration(seconds: 5); // Give user more time to read
+                          break;
+                      }
+
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(enabled
-                              ? appLocalizations.voidAlarmEnabledMessage
-                              : appLocalizations.voidAlarmDisabledMessage),
-                          duration: const Duration(seconds: 2),
+                          content: Text(message),
+                          duration: duration,
                         ),
                       );
                     },
