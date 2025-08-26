@@ -83,5 +83,92 @@
     "voidAlarmExactAlarmDeniedMessage": "Please allow the *Alarms & Reminders* permission in the app settings.",
     "noUpcomingVocFound": "No upcoming Void of Course period found or it has passed. No alarm scheduled.",
     "errorSchedulingAlarm": "Error scheduling alarm",
-    "errorShowingImmediateAlarm": "Error showing immediate alarm"
+    "errorShowingImmediateAlarm": "Error showing immediate alarm",
+    "calculating": "Calculating...",
+    "vocStartedTitle": "Void of Course Started",
+    "vocStartedBody": "The Void of Course period has now begun.",
+    "vocRemainingTimeHourMinute": "Time remaining: {hours}h {minutes}m",
+    "@vocRemainingTimeHourMinute": {
+        "placeholders": {
+            "hours": {
+                "type": "int"
+            },
+            "minutes": {
+                "type": "int"
+            }
+        }
+    },
+    "vocRemainingTimeMinute": "Time remaining: {minutes} minutes",
+    "@vocRemainingTimeMinute": {
+        "placeholders": {
+            "minutes": {
+                "type": "int"
+            }
+        }
+    },
+    "preVocNotificationBodyHourMinute": "{hours}h {minutes}m until Void of Course begins.",
+    "@preVocNotificationBodyHourMinute": {
+        "placeholders": {
+            "hours": {
+                "type": "int"
+            },
+            "minutes": {
+                "type": "int"
+            }
+        }
+    },
+    "preVocNotificationBodyMinute": "{minutes} minutes until Void of Course begins.",
+    "@preVocNotificationBodyMinute": {
+        "placeholders": {
+            "minutes": {
+                "type": "int"
+            }
+        }
+    },
+    "notAvailable": "N/A",
+    "vocStatusIsVoc": "There is a void Now",
+    "vocStatusHasVocToday": "Todays schedule has a void",
+    "vocStatusIsNotVoc": "It is not a void",
+    "voidOfCourse": "Void of Course",
+    "vocStartTime": "Starts: {time}",
+    "@vocStartTime": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "vocEndTime": "Ends: {time}",
+    "@vocEndTime": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "moonInSign": "Moon in {sign}",
+    "@moonInSign": {
+        "placeholders": {
+            "sign": {
+                "type": "String"
+            }
+        }
+    },
+    "nextSign": "Next Sign: {time}",
+    "@nextSign": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "moonPhaseTitle": "Moon Phase",
+    "nextPhase": "Next Phase: {time}",
+    "@nextPhase": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    }
 }
