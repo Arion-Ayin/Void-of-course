@@ -230,7 +230,7 @@ abstract class AppLocalizations {
   /// No description provided for @whyDidWeMakeThisAppTitle.
   ///
   /// In en, this message translates to:
-  /// **'Why did we make this app?'**
+  /// **'Why did we make this?'**
   String get whyDidWeMakeThisAppTitle;
 
   /// No description provided for @whyDidWeMakeThisAppSubtitle.

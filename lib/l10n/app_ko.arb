@@ -146,14 +146,6 @@
             }
         }
     },
-    "zodiacAries": "양자리",
-    "@moonInSign": {
-        "placeholders": {
-            "sign": {
-                "type": "String"
-            }
-        }
-    },
     "nextSign": "다음 싸인 : {time}",
     "@nextSign": {
         "placeholders": {

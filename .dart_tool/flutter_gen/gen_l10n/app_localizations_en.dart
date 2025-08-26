@@ -79,7 +79,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whoIsItUsefulForSubtitle => '• Those who need simple date selection\n• Those who need Void of Course calculations\n• Those who need an indicator for action';
 
   @override
-  String get whyDidWeMakeThisAppTitle => 'Why did we make this app?';
+  String get whyDidWeMakeThisAppTitle => 'Why did we make this?';
 
   @override
   String get whyDidWeMakeThisAppSubtitle => '• With the hope that anyone can easily access this information.';
