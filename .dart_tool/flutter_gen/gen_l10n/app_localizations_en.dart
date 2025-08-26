@@ -185,4 +185,76 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get errorShowingImmediateAlarm => 'Error showing immediate alarm';
+
+  @override
+  String get calculating => 'Calculating...';
+
+  @override
+  String get vocStartedTitle => 'Void of Course Started';
+
+  @override
+  String get vocStartedBody => 'The Void of Course period has now begun.';
+
+  @override
+  String vocRemainingTimeHourMinute(int hours, int minutes) {
+    return 'Time remaining: ${hours}h ${minutes}m';
+  }
+
+  @override
+  String vocRemainingTimeMinute(int minutes) {
+    return 'Time remaining: $minutes minutes';
+  }
+
+  @override
+  String preVocNotificationBodyHourMinute(int hours, int minutes) {
+    return '${hours}h ${minutes}m until Void of Course begins.';
+  }
+
+  @override
+  String preVocNotificationBodyMinute(int minutes) {
+    return '$minutes minutes until Void of Course begins.';
+  }
+
+  @override
+  String get notAvailable => 'N/A';
+
+  @override
+  String get vocStatusIsVoc => 'There is a void Now';
+
+  @override
+  String get vocStatusHasVocToday => 'Todays schedule has a void';
+
+  @override
+  String get vocStatusIsNotVoc => 'It is not a void';
+
+  @override
+  String get voidOfCourse => 'Void of Course';
+
+  @override
+  String vocStartTime(String time) {
+    return 'Starts: $time';
+  }
+
+  @override
+  String vocEndTime(String time) {
+    return 'Ends: $time';
+  }
+
+  @override
+  String moonInSign(String sign) {
+    return 'Moon in $sign';
+  }
+
+  @override
+  String nextSign(String time) {
+    return 'Next Sign: $time';
+  }
+
+  @override
+  String get moonPhaseTitle => 'Moon Phase';
+
+  @override
+  String nextPhase(String time) {
+    return 'Next Phase: $time';
+  }
 }

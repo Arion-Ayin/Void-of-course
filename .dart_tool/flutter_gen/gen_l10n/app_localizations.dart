@@ -406,6 +406,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Error showing immediate alarm'**
   String get errorShowingImmediateAlarm;
+
+  /// No description provided for @calculating.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating...'**
+  String get calculating;
+
+  /// No description provided for @vocStartedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Void of Course Started'**
+  String get vocStartedTitle;
+
+  /// No description provided for @vocStartedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The Void of Course period has now begun.'**
+  String get vocStartedBody;
+
+  /// No description provided for @vocRemainingTimeHourMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'Time remaining: {hours}h {minutes}m'**
+  String vocRemainingTimeHourMinute(int hours, int minutes);
+
+  /// No description provided for @vocRemainingTimeMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'Time remaining: {minutes} minutes'**
+  String vocRemainingTimeMinute(int minutes);
+
+  /// No description provided for @preVocNotificationBodyHourMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m until Void of Course begins.'**
+  String preVocNotificationBodyHourMinute(int hours, int minutes);
+
+  /// No description provided for @preVocNotificationBodyMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} minutes until Void of Course begins.'**
+  String preVocNotificationBodyMinute(int minutes);
+
+  /// No description provided for @notAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'N/A'**
+  String get notAvailable;
+
+  /// No description provided for @vocStatusIsVoc.
+  ///
+  /// In en, this message translates to:
+  /// **'There is a void Now'**
+  String get vocStatusIsVoc;
+
+  /// No description provided for @vocStatusHasVocToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Todays schedule has a void'**
+  String get vocStatusHasVocToday;
+
+  /// No description provided for @vocStatusIsNotVoc.
+  ///
+  /// In en, this message translates to:
+  /// **'It is not a void'**
+  String get vocStatusIsNotVoc;
+
+  /// No description provided for @voidOfCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Void of Course'**
+  String get voidOfCourse;
+
+  /// No description provided for @vocStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts: {time}'**
+  String vocStartTime(String time);
+
+  /// No description provided for @vocEndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends: {time}'**
+  String vocEndTime(String time);
+
+  /// No description provided for @moonInSign.
+  ///
+  /// In en, this message translates to:
+  /// **'Moon in {sign}'**
+  String moonInSign(String sign);
+
+  /// No description provided for @nextSign.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Sign: {time}'**
+  String nextSign(String time);
+
+  /// No description provided for @moonPhaseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moon Phase'**
+  String get moonPhaseTitle;
+
+  /// No description provided for @nextPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Phase: {time}'**
+  String nextPhase(String time);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -72,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // 앱의 전체적인 상태(데이터)를 가져와요. 데이터가 바뀌면 화면을 다시 그려요.
     final provider = Provider.of<AstroState>(context);
     // 날짜 컨트롤러에 현재 선택된 날짜를 '년-월-일' 형식으로 보여줘요.
-    _dateController.text = DateFormat('yyyy-MM-dd').format(provider.selectedDate);
+    _dateController.text = DateFormat('yyyy/MM/dd').format(provider.selectedDate);
 
     // 만약 데이터가 아직 준비 중이라면,
     if (!provider.isInitialized || provider.isLoading) {
@@ -88,8 +88,8 @@ class _HomeScreenState extends State<HomeScreen> {
     // 다음 별자리로 바뀌는 시간에 대한 글자를 만들어요.
     final nextSignTimeText = provider.nextSignTime != null
         // 만약 다음 별자리로 바뀌는 시간이 있다면, 그 시간을 예쁘게 만들어서 보여줘요.
-        ? '다음 싸인 : ${DateFormat('MM월 dd일 HH:mm').format(provider.nextSignTime!)}'
-        : '다음 싸인 : N/A';
+        ? 'Next Sign : ${DateFormat('MM월 dd일 HH:mm').format(provider.nextSignTime!)}'
+        : 'Next Sign : N/A';
 
     // 화면의 전체적인 구조를 짜요.
     return Scaffold(
@@ -136,21 +136,21 @@ class _HomeScreenState extends State<HomeScreen> {
         child: SafeArea(
           // 내용이 길어지면 스크롤 할 수 있게 만들어요.
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0), // 모든 방향으로 16만큼 여백을 줘요.
+            padding: const EdgeInsets.all(15.0), // 모든 방향으로 16만큼 여백을 줘요.
             // 화면에 보이는 위젯들을 세로로 차곡차곡 쌓아요.
             child: Column(
               children: [
                 // 1. 달의 위상 정보를 보여주는 카드를 넣어요.
                 MoonPhaseCard(provider: provider),
-                const SizedBox(height: 8), // 카드와 카드 사이에 작은 공간을 만들어요.
+                const SizedBox(height: 5), // 카드와 카드 사이에 작은 공간을 만들어요.
 
                 // 2. 달의 별자리 정보를 보여주는 카드를 넣어요.
                 MoonSignCard(provider: provider, nextSignTimeText: nextSignTimeText),
-                const SizedBox(height: 8), // 카드와 카드 사이에 작은 공간을 만들어요.
+                const SizedBox(height: 5), // 카드와 카드 사이에 작은 공간을 만들어요.
 
                 // 3. VOC(Void of Course) 정보를 보여주는 카드를 넣어요.
                 VocInfoCard(provider: provider), // provider만 넘겨주면 카드 안에서 모든 것을 처리해요.
-                const SizedBox(height: 8), // 카드와 날짜 선택기 사이에 작은 공간을 만들어요.
+                const SizedBox(height: 5), // 카드와 날짜 선택기 사이에 작은 공간을 만들어요.
 
                 // 4. 날짜를 선택하는 위젯을 넣어요.
                 DateSelector(
@@ -159,7 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onNextDay: () => _changeDate(1), // 오른쪽 화살표를 누르면 내일로 가요.
                   showCalendar: () => showCalendarDialog(context), // 날짜 부분을 누르면 달력을 보여줘요.
                 ),
-                const SizedBox(height: 15), // 날짜 선택기와 초기화 버튼 사이에 공간을 만들어요.
+                const SizedBox(height: 10), // 날짜 선택기와 초기화 버튼 사이에 공간을 만들어요.
 
                 // 5. 날짜를 오늘로 되돌리는 버튼을 넣어요.
                 ResetDateButton(onPressed: _resetDateToToday),

@@ -20,7 +20,7 @@
     "whoIsItUsefulForTitle": "누구에게 유용한가요?",
     "whoIsItUsefulForSubtitle": "• 간단한 택일이 필요하신 분들\n• 보이드 오브 코스 계산이 필요한 분들\n• 행동의 지표성이 필요한 분들",
     "whyDidWeMakeThisAppTitle": "왜 이 앱을 만들었나요?",
-    "whyDidWeMakeThisAppSubtitle": "• 누구나 손쉽게 이 정보들에\n접근 가능하면 좋겠다는 마음에",
+    "whyDidWeMakeThisAppSubtitle": "• 누구나 손쉽게 이 정보들에 접근 가능하면 좋겠다는 마음에",
     "copyrightText": "© 2025 Arion Ayin. All rights reserved.",
     "newMoon": "신월",
     "crescentMoon": "초승달",
@@ -83,5 +83,92 @@
     "voidAlarmExactAlarmDeniedMessage": "앱 설정에서 '알람 및 리마인더' 권한을 허용해주세요.",
     "noUpcomingVocFound": "선택된 날짜에 예정된 보이드 기간이 없거나 이미 지났습니다. 알람이 예약되지 않았습니다.",
     "errorSchedulingAlarm": "알람 예약 중 오류 발생",
-    "errorShowingImmediateAlarm": "즉시 알람 표시 중 오류 발생"
+    "errorShowingImmediateAlarm": "즉시 알람 표시 중 오류 발생",
+    "calculating": "계산 중...",
+    "vocStartedTitle": "보이드 시작",
+    "vocStartedBody": "지금부터 보이드 시간입니다.",
+    "vocRemainingTimeHourMinute": "남은 시간: {hours}시간 {minutes}분",
+    "@vocRemainingTimeHourMinute": {
+        "placeholders": {
+            "hours": {
+                "type": "int"
+            },
+            "minutes": {
+                "type": "int"
+            }
+        }
+    },
+    "vocRemainingTimeMinute": "남은 시간: {minutes}분",
+    "@vocRemainingTimeMinute": {
+        "placeholders": {
+            "minutes": {
+                "type": "int"
+            }
+        }
+    },
+    "preVocNotificationBodyHourMinute": "보이드 시작까지 {hours}시간 {minutes}분 남았습니다.",
+    "@preVocNotificationBodyHourMinute": {
+        "placeholders": {
+            "hours": {
+                "type": "int"
+            },
+            "minutes": {
+                "type": "int"
+            }
+        }
+    },
+    "preVocNotificationBodyMinute": "보이드 시작까지 {minutes}분 남았습니다.",
+    "@preVocNotificationBodyMinute": {
+        "placeholders": {
+            "minutes": {
+                "type": "int"
+            }
+        }
+    },
+    "notAvailable": "해당 없음",
+    "vocStatusIsVoc": "보이드 입니다",
+    "vocStatusHasVocToday": "금일 보이드가 있습니다.",
+    "vocStatusIsNotVoc": "보이드가 아닙니다",
+    "voidOfCourse": "보이드 오브 코스",
+    "vocStartTime": "시작 : {time}",
+    "@vocStartTime": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "vocEndTime": "종료 : {time}",
+    "@vocEndTime": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "zodiacAries": "양자리",
+    "@moonInSign": {
+        "placeholders": {
+            "sign": {
+                "type": "String"
+            }
+        }
+    },
+    "nextSign": "다음 싸인 : {time}",
+    "@nextSign": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "moonPhaseTitle": "달의 위상",
+    "nextPhase": "다음 상태 : {time}",
+    "@nextPhase": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    }
 }

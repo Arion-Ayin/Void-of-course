@@ -82,7 +82,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get whyDidWeMakeThisAppTitle => '왜 이 앱을 만들었나요?';
 
   @override
-  String get whyDidWeMakeThisAppSubtitle => '• 누구나 손쉽게 이 정보들에\n접근 가능하면 좋겠다는 마음에';
+  String get whyDidWeMakeThisAppSubtitle => '• 누구나 손쉽게 이 정보들에 접근 가능하면 좋겠다는 마음에';
 
   @override
   String get copyrightText => '© 2025 Arion Ayin. All rights reserved.';
@@ -185,4 +185,76 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get errorShowingImmediateAlarm => '즉시 알람 표시 중 오류 발생';
+
+  @override
+  String get calculating => '계산 중...';
+
+  @override
+  String get vocStartedTitle => '보이드 시작';
+
+  @override
+  String get vocStartedBody => '지금부터 보이드 시간입니다.';
+
+  @override
+  String vocRemainingTimeHourMinute(int hours, int minutes) {
+    return '남은 시간: $hours시간 $minutes분';
+  }
+
+  @override
+  String vocRemainingTimeMinute(int minutes) {
+    return '남은 시간: $minutes분';
+  }
+
+  @override
+  String preVocNotificationBodyHourMinute(int hours, int minutes) {
+    return '보이드 시작까지 $hours시간 $minutes분 남았습니다.';
+  }
+
+  @override
+  String preVocNotificationBodyMinute(int minutes) {
+    return '보이드 시작까지 $minutes분 남았습니다.';
+  }
+
+  @override
+  String get notAvailable => '해당 없음';
+
+  @override
+  String get vocStatusIsVoc => '보이드 입니다';
+
+  @override
+  String get vocStatusHasVocToday => '금일 보이드가 있습니다.';
+
+  @override
+  String get vocStatusIsNotVoc => '보이드가 아닙니다';
+
+  @override
+  String get voidOfCourse => '보이드 오브 코스';
+
+  @override
+  String vocStartTime(String time) {
+    return '시작 : $time';
+  }
+
+  @override
+  String vocEndTime(String time) {
+    return '종료 : $time';
+  }
+
+  @override
+  String moonInSign(String sign) {
+    return 'Moon in $sign';
+  }
+
+  @override
+  String nextSign(String time) {
+    return '다음 싸인 : $time';
+  }
+
+  @override
+  String get moonPhaseTitle => '달의 위상';
+
+  @override
+  String nextPhase(String time) {
+    return '다음 상태 : $time';
+  }
 }

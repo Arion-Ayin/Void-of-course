@@ -30,14 +30,14 @@ class MoonPhaseCard extends StatelessWidget {
         ],
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.all(8),
+        contentPadding: const EdgeInsets.all(5),
         leading: SizedBox(
-          width: 60,
-          height: 60,
+          width: 70,
+          height: 70,
           child: Center(
             child: Text(
               AstroCalculator().getMoonPhaseEmoji(provider.moonPhase),
-              style: const TextStyle(fontSize: 40),
+              style: const TextStyle(fontSize: 44),
             ),
           ),
         ),
@@ -63,7 +63,7 @@ class MoonPhaseCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               // nextSignTime 대신 nextMoonPhaseTime을 사용하도록 수정
-              '다음 상태 : ${provider.nextMoonPhaseTime != null ? DateFormat('MM월 dd일 HH:mm').format(provider.nextMoonPhaseTime!) : 'N/A'}',
+              'Next Phase : ${provider.nextMoonPhaseTime != null ? DateFormat('MM/dd HH:mm').format(provider.nextMoonPhaseTime!) : 'N/A'}',
               style: TextStyle(
                 color: Theme.of(context).textTheme.bodyMedium?.color,
                 fontSize: 17,
