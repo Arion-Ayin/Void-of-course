@@ -193,7 +193,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get vocStartedTitle => '보이드 시작';
 
   @override
-  String get vocStartedBody => '지금부터 보이드 시간입니다.';
+  String get vocStartedBody => '지금은 보이드 시간입니다.';
 
   @override
   String vocRemainingTimeHourMinute(int hours, int minutes) {

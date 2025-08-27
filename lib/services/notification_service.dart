@@ -79,8 +79,15 @@ class NotificationService {
     required String title,
     required String body,
   }) async {
-    // 진동과 소리가 없는 채널을 사용합니다.
-    const NotificationDetails notificationDetails = NotificationDetails(
+    // BigTextStyle을 사용하여 제목과 내용을 구분하고 본문 텍스트를 더 크게 표시합니다.
+    final BigTextStyleInformation bigTextStyleInformation = BigTextStyleInformation(
+      body, // 알림이 확장되었을 때 보일 전체 본문
+      contentTitle: title, // 확장된 알림의 제목
+      htmlFormatBigText: false,
+      htmlFormatContentTitle: false,
+    );
+
+    final NotificationDetails notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
         'ongoing_void_channel_id',
         'Ongoing Void Notifications',
@@ -90,9 +97,15 @@ class NotificationService {
         ongoing: true, // 지워지지 않게 고정
         autoCancel: false,
         enableVibration: false,
+        styleInformation: bigTextStyleInformation, // 여기에 스타일을 적용합니다.
       ),
     );
-    await _notificationsPlugin.show(id, title, body, notificationDetails);
+    await _notificationsPlugin.show(
+      id,
+      title,
+      body, // 알림이 축소되었을 때 보일 짧은 본문
+      notificationDetails,
+    );
   }
 
   Future<void> cancelNotification(int id) async {
