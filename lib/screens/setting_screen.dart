@@ -145,7 +145,7 @@ class SettingScreen extends StatelessWidget {
                 onChanged: (value) { // 드롭다운 메뉴에서 다른 것을 고르면 이 코드가 실행돼요.
                   if (value == null) return; // 선택된 값이 없다면 아무것도 하지 않아요.
 
-                  Locale newLocale = Locale(value); // 선택된 값으로 새로운 언어 정보를 만들어요.
+                  final newLocale = Locale(value); // 선택된 값으로 새로운 언어 정보를 만들어요.
                   String message; // 화면 아래에 잠깐 나타날 메시지를 담을 변수예요.
 
                   // 선택된 언어에 따라 다른 메시지를 정해요.
@@ -155,7 +155,18 @@ class SettingScreen extends StatelessWidget {
                     message = 'Language changed to English.';
                   }
 
-                  localeProvider.setLocale(newLocale); // 앱의 언어를 새로운 언어로 바꿔요.
+                  // 1. 먼저 UI의 언어부터 즉시 변경합니다.
+                  localeProvider.setLocale(newLocale);
+
+                  // 2. 잠시 후 (UI 변경이 완료될 시간을 준 후) 알람 업데이트를 수행합니다.
+                  // 이렇게 하면 UI 버벅임이 사라집니다.
+                  Future.delayed(const Duration(milliseconds: 200), () {
+                    if (context.mounted) {
+                      Provider.of<AstroState>(context, listen: false)
+                          .updateLocale(newLocale.languageCode);
+                    }
+                  });
+
                   // 화면 아래에 언어 변경 알림 메시지를 잠깐 띄워줘요.
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
