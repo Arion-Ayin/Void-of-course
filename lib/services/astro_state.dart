@@ -1,4 +1,4 @@
-import 'dart:async'; 
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -19,7 +19,7 @@ class AstroState with ChangeNotifier {
   Timer? _timer;
   final NotificationService _notificationService = NotificationService();
   bool _voidAlarmEnabled = false;
-  int _preVoidAlarmHours = 4;
+  int _preVoidAlarmHours = 3;
   bool _isOngoingNotificationVisible = false;
   DateTime _selectedDate = DateTime.now();
   bool _isFollowingTime = true;
@@ -36,6 +36,8 @@ class AstroState with ChangeNotifier {
   String _nextMoonPhaseName = 'calculating';
   DateTime? _nextMoonPhaseTime;
   DateTime? _lastLogTime;
+  late String _currentLocale;
+  bool _needsNotificationUpdate = false;
 
   DateTime get selectedDate => _selectedDate;
   String get moonPhase => _moonPhase;
@@ -77,6 +79,7 @@ class AstroState with ChangeNotifier {
 
     try {
       await Sweph.init();
+      _currentLocale = Intl.getCurrentLocale();
       await _notificationService.init();
       final prefs = await SharedPreferences.getInstance();
       _voidAlarmEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
@@ -91,6 +94,14 @@ class AstroState with ChangeNotifier {
     } finally {
       _isLoading = false;
       notifyListeners();
+    }
+  }
+
+  // [FIX] This function now only sets a flag and doesn't do heavy work.
+  void updateLocale(String newLocale) {
+    _currentLocale = newLocale;
+    if (_voidAlarmEnabled) {
+      _needsNotificationUpdate = true;
     }
   }
 
@@ -138,6 +149,11 @@ class AstroState with ChangeNotifier {
       return;
     }
     if (_vocStart == null || _vocStart!.isBefore(DateTime.now())) {
+      if (_vocEnd != null && _vocEnd!.isAfter(DateTime.now())) {
+        if (kDebugMode)
+          print('[VOC ALARM] In VOC, pre-void alarm time has passed.');
+        return;
+      }
       if (kDebugMode) print('[VOC ALARM] No upcoming VOC found or it has passed.');
       _lastError = 'noUpcomingVocFound';
       notifyListeners();
@@ -150,10 +166,10 @@ class AstroState with ChangeNotifier {
         _vocStart!.subtract(Duration(hours: _preVoidAlarmHours));
     final bool canScheduleExact =
         await _notificationService.checkExactAlarmPermission();
-    
+
     String notificationBody;
     String title;
-    final locale = Intl.getCurrentLocale();
+    final locale = _currentLocale;
 
     if (locale.startsWith('ko')) {
       title = 'Void of Course 알림';
@@ -190,8 +206,16 @@ class AstroState with ChangeNotifier {
     });
   }
 
+  // [FIX] The timer now checks the flag and runs the notification update safely.
   void _checkTime() {
     final now = DateTime.now();
+
+    if (_needsNotificationUpdate) {
+      _needsNotificationUpdate = false;
+      if (_voidAlarmEnabled) {
+        _schedulePreVoidAlarm();
+      }
+    }
 
     if (kDebugMode) {
       if (_lastLogTime == null || now.difference(_lastLogTime!).inMinutes >= 1) {
@@ -200,15 +224,18 @@ class AstroState with ChangeNotifier {
         print('Current Time: $now');
 
         if (_vocStart != null && _vocEnd != null) {
-          final isCurrentlyInVoc = now.isAfter(_vocStart!) && now.isBefore(_vocEnd!);
-          print('Is currently in Void of Course: $isCurrentlyInVoc (VOC Start: $_vocStart, VOC End: $_vocEnd)');
+          final isCurrentlyInVoc =
+              now.isAfter(_vocStart!) && now.isBefore(_vocEnd!);
+          print(
+              'Is currently in Void of Course: $isCurrentlyInVoc (VOC Start: $_vocStart, VOC End: $_vocEnd)');
         } else {
           print('Void of Course times not yet calculated or available.');
         }
 
         if (_nextSignTime != null) {
           final isPastNextSignTime = now.isAfter(_nextSignTime!);
-          print('Is past next Moon Sign time: $isPastNextSignTime (Next Sign Time: $_nextSignTime)');
+          print(
+              'Is past next Moon Sign time: $isPastNextSignTime (Next Sign Time: $_nextSignTime)');
         } else {
           print('Next Moon Sign time not yet calculated or available.');
         }
@@ -231,7 +258,7 @@ class AstroState with ChangeNotifier {
 
         if (isCurrentlyInVoc) {
           if (!_isOngoingNotificationVisible) {
-            final locale = Intl.getCurrentLocale();
+            final locale = _currentLocale;
             String title, body;
             if (locale.startsWith('ko')) {
               title = '보이드 시작';
@@ -247,7 +274,7 @@ class AstroState with ChangeNotifier {
               body: body,
               isVibrate: true,
             );
-            
+
             if (locale.startsWith('ko')) {
               title = '보이드 중';
               body = '지금은 보이드 시간입니다.';
@@ -265,13 +292,15 @@ class AstroState with ChangeNotifier {
           } else {
             _updateOngoingNotification();
           }
-        } else if (!isCurrentlyInVoc && now.isAfter(end) && _isOngoingNotificationVisible) {
+        } else if (!isCurrentlyInVoc &&
+            now.isAfter(end) &&
+            _isOngoingNotificationVisible) {
           _notificationService.cancelNotification(1);
           _notificationService.cancelNotification(2);
           _isOngoingNotificationVisible = false;
           if (kDebugMode) print("Cancelling ongoing VOC notification.");
 
-          final locale = Intl.getCurrentLocale();
+          final locale = _currentLocale;
           String title, body;
           if (locale.startsWith('ko')) {
             title = '보이드 종료';
@@ -326,9 +355,21 @@ class AstroState with ChangeNotifier {
     _selectedDate = newDate;
 
     final now = DateTime.now();
-    _isFollowingTime = newDate.year == now.year &&
+    final bool isNowFollowingTime = newDate.year == now.year &&
         newDate.month == now.month &&
         newDate.day == now.day;
+
+    // If we were following time, but now we are not (user selected a different date)
+    if (_isFollowingTime && !isNowFollowingTime) {
+      if (_isOngoingNotificationVisible) {
+        _notificationService.cancelNotification(1);
+        _notificationService.cancelNotification(2);
+        _isOngoingNotificationVisible = false;
+        if (kDebugMode) print("Date changed, cancelling ongoing VOC notification.");
+      }
+    }
+
+    _isFollowingTime = isNowFollowingTime;
 
     if (_isFollowingTime) {
       _selectedDate = now;
@@ -343,8 +384,8 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> _updateData() async {
-    _isLoading = true; 
-    
+    _isLoading = true;
+
     if (kDebugMode) {
       print("--- ");
       print("[AstroState] Starting data update for: $_selectedDate");
@@ -355,7 +396,8 @@ class AstroState with ChangeNotifier {
         : DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
 
     try {
-      if (kDebugMode) print("[AstroState] Calculating with dateForCalc: $dateForCalc");
+      if (kDebugMode)
+        print("[AstroState] Calculating with dateForCalc: $dateForCalc");
 
       final nextPhaseInfo = _calculator.findNextPhase(dateForCalc);
       final moonPhaseInfo = _calculator.getMoonPhaseInfo(dateForCalc);
@@ -420,7 +462,7 @@ class AstroState with ChangeNotifier {
     final minutes = remainingDuration.inMinutes.remainder(60);
 
     String remainingTimeText;
-    final locale = Intl.getCurrentLocale();
+    final locale = _currentLocale;
     if (locale.startsWith('ko')) {
       if (hours > 0) {
         remainingTimeText = '남은 시간: ${hours}시간 ${minutes}분';
@@ -465,30 +507,25 @@ class AstroState with ChangeNotifier {
     final seconds = remainingDuration.inSeconds.remainder(60);
 
     String notificationBody;
-    final locale = Intl.getCurrentLocale();
+    final locale = _currentLocale;
     if (locale.startsWith('ko')) {
       if (hours > 0) {
         notificationBody = '보이드 시작까지 ${hours}시간 ${minutes}분 남았습니다.';
       } else if (minutes > 0) {
         notificationBody = '보이드 시작까지 ${minutes}분 남았습니다.';
-      } else if(minutes >= 1){
+      } else if (minutes >= 1) {
         notificationBody = '보이드 시작까지 ${seconds}초 남았습니다.';
-      }
-      else {
+      } else {
         notificationBody = '보이드가 곧 시작됩니다.';
       }
-    } 
-    else {
+    } else {
       if (hours > 0) {
         notificationBody = '$hours h $minutes m until Void of Course begins.';
-      } 
-      else if (minutes > 0) {
+      } else if (minutes > 0) {
         notificationBody = '$minutes minutes until Void of Course begins.';
-      }
-      else if(minutes >= 1) {
+      } else if (minutes >= 1) {
         notificationBody = ' $seconds Seconds until Void of Course begins.';
-      } 
-      else {
+      } else {
         notificationBody = 'Void of Course begins soon.';
       }
     }
