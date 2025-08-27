@@ -51,7 +51,7 @@ class MoonSignCard extends StatelessWidget {
   Widget build(BuildContext context) {
     // 다음 별자리 시간 텍스트를 포맷팅합니다.
     final nextSignTime = provider.nextSignTime;
-    final formattedNextSignTime = nextSignTime != null 
+    final formattedNextSignTime = nextSignTime != null
         ? DateFormat('MM/dd HH:mm').format(nextSignTime)
         : 'N/A';
 
@@ -79,46 +79,54 @@ class MoonSignCard extends StatelessWidget {
           ),
         ],
       ),
-      // 카드 안에 들어갈 내용(아이콘, 글자 등)을 설정해요.
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(5), // 내용물 주변에 모든 방향으로 20만큼 여백을 줘요.
-        // 왼쪽에 별자리 이모티콘을 보여줄 공간을 만들어요.
-        leading: SizedBox(
-          width: 70, // 너비 60
-          height: 70, // 높이 60
-          // 공간의 가운데에 이모티콘을 놓아요.
-          child: Center(
-            child: Text(
-              getZodiacEmoji(provider.moonInSign), // 별자리 이름으로 이모티콘을 찾아서 보여줘요.
-              style: const TextStyle(fontSize: 44), // 이모티콘 크기를 40으로 해요.
+      padding: const EdgeInsets.all(5), // 전체 컨테이너에 패딩을 충분히 줘요.
+      // 카드 안에 들어갈 내용(아이콘, 글자 등)을 가로로 배열해요.
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center, // 아이콘과 텍스트를 수직 중앙 정렬해요.
+        children: [
+          // ⭐️ 이모지(아이콘)를 표시하는 부분
+          SizedBox(
+            width: 90, // 이모지 컨테이너의 너비를 충분히 확보
+            height: 100, // 이모지 컨테이너의 높이를 충분히 확보
+            child: Center(
+              child: Text(
+                getZodiacEmoji(provider.moonInSign), // 별자리 이름으로 이모티콘을 찾아서 보여줘요.
+                style: const TextStyle(
+                  fontSize: 55, // 폰트 크기를 더 크게 설정
+                  color: Colors.white, // 이모지 색상을 흰색으로 명시하여 선명하게 보이게 해요.
+                ),
+              ),
             ),
           ),
-        ),
-        // 이모티콘 오른쪽에 글자들을 세로로 쌓아서 보여줘요.
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start, // 글자들을 왼쪽부터 시작하도록 정렬해요.
-          mainAxisSize: MainAxisSize.min, // 내용물 크기만큼만 공간을 차지하게 해요.
-          children: [
-            // 달이 있는 별자리 이름을 보여줘요.
-            Text(
-              'Moon in ${provider.moonInSign}', // '달은 양자리에 있어요' 처럼 보여줘요.
-              style: TextStyle(
-                color: Theme.of(context).textTheme.titleLarge?.color, // 앱의 큰 제목 글자 색상을 사용해요.
-                fontSize: 18, // 글자 크기는 18
-                fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요.
-              ),
+          const SizedBox(width: 16), // 이모지와 텍스트 사이의 간격 추가
+          // ⭐️ 텍스트 부분을 표시하는 부분
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start, // 글자들을 왼쪽부터 시작하도록 정렬해요.
+              mainAxisSize: MainAxisSize.min, // 내용물 크기만큼만 공간을 차지하게 해요.
+              children: [
+                // 달이 있는 별자리 이름을 보여줘요.
+                Text(
+                  'Moon in ${provider.moonInSign}', // '달은 양자리에 있어요' 처럼 보여줘요.
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.titleLarge?.color, // 앱의 큰 제목 글자 색상을 사용해요.
+                    fontSize: 18, // 글자 크기는 18
+                    fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요.
+                  ),
+                ),
+                // 다음 별자리로 바뀌는 시간을 보여줘요.
+                Text(
+                  'Next Sign : $formattedNextSignTime', // 포맷팅된 시간을 보여줘요.
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
+                    fontSize: 17, // 글자 크기는 17
+                    fontWeight: FontWeight.w900, // 글자를 매우 두껍게 만들어요.
+                  ),
+                ),
+              ],
             ),
-            // 다음 별자리로 바뀌는 시간을 보여줘요.
-            Text(
-              'Next Sign : ${formattedNextSignTime}', // 포맷팅된 시간을 보여줘요.
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
-                fontSize: 17, // 글자 크기는 14
-                fontWeight: FontWeight.w900, // 글자를 매우 두껍게 만들어요.
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
