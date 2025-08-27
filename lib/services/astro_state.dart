@@ -26,8 +26,15 @@ class AstroState with ChangeNotifier {
   String _moonPhase = '';
   String _moonZodiac = '';
   String _moonInSign = '';
+
+  // VOC for the selected date
   DateTime? _vocStart;
   DateTime? _vocEnd;
+
+  // VOC for the current, real time
+  DateTime? _realtimeVocStart;
+  DateTime? _realtimeVocEnd;
+
   DateTime? _nextSignTime;
   String? _lastError;
   bool _isInitialized = false;
@@ -37,7 +44,6 @@ class AstroState with ChangeNotifier {
   DateTime? _nextMoonPhaseTime;
   DateTime? _lastLogTime;
   late String _currentLocale;
-  bool _needsNotificationUpdate = false;
 
   DateTime get selectedDate => _selectedDate;
   String get moonPhase => _moonPhase;
@@ -55,6 +61,9 @@ class AstroState with ChangeNotifier {
   String get nextMoonPhaseName => _nextMoonPhaseName;
   DateTime? get nextMoonPhaseTime => _nextMoonPhaseTime;
   bool get isFollowingTime => _isFollowingTime;
+
+  // Getter for the UI to know the real-time VOC status
+  bool get isRealtimeVoc => _isOngoingNotificationVisible;
 
   void toggleTheme() {
     _isDarkMode = !_isDarkMode;
@@ -84,7 +93,15 @@ class AstroState with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       _voidAlarmEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
       _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 3;
+
+      // This calculates for the initial date (today)
       await _updateData();
+
+      // Also find the VOC period for the current time and store it separately
+      final vocTimes = _calculator.findVoidOfCoursePeriod(DateTime.now());
+      _realtimeVocStart = vocTimes['start'];
+      _realtimeVocEnd = vocTimes['end'];
+
       _isInitialized = true;
       _startTimer();
       _lastError = null;
@@ -97,11 +114,13 @@ class AstroState with ChangeNotifier {
     }
   }
 
-  // [FIX] This function now only sets a flag and doesn't do heavy work.
-  void updateLocale(String newLocale) {
+  Future<void> updateLocale(String newLocale) async {
     _currentLocale = newLocale;
     if (_voidAlarmEnabled) {
-      _needsNotificationUpdate = true;
+      // When locale changes, we need to reschedule the pre-void alarm
+      // and update ongoing notifications if any.
+      await _schedulePreVoidAlarm();
+      _checkTime(); // Re-check to update ongoing notification text immediately
     }
   }
 
@@ -129,6 +148,7 @@ class AstroState with ChangeNotifier {
       return AlarmPermissionStatus.granted;
     } else {
       await _notificationService.cancelAllNotifications();
+      _isOngoingNotificationVisible = false; // Make sure to update state
       notifyListeners();
       return AlarmPermissionStatus.granted;
     }
@@ -148,12 +168,21 @@ class AstroState with ChangeNotifier {
       if (kDebugMode) print('[VOC ALARM] Alarm is disabled.');
       return;
     }
-    if (_vocStart == null || _vocStart!.isBefore(DateTime.now())) {
-      if (_vocEnd != null && _vocEnd!.isAfter(DateTime.now())) {
+
+    // The pre-void alarm should always be for the *next actual* VOC.
+    final vocTimes = _calculator.findVoidOfCoursePeriod(DateTime.now());
+    final vocStartForAlarm = vocTimes['start'] as DateTime?;
+    final vocEndForAlarm = vocTimes['end'] as DateTime?;
+
+    if (vocStartForAlarm == null || vocStartForAlarm.isBefore(DateTime.now())) {
+      // If we are currently in the found VOC period, it's not an error.
+      // It just means the pre-alarm time has already passed.
+      if (vocEndForAlarm != null && vocEndForAlarm.isAfter(DateTime.now())) {
         if (kDebugMode)
           print('[VOC ALARM] In VOC, pre-void alarm time has passed.');
         return;
       }
+
       if (kDebugMode) print('[VOC ALARM] No upcoming VOC found or it has passed.');
       _lastError = 'noUpcomingVocFound';
       notifyListeners();
@@ -163,7 +192,7 @@ class AstroState with ChangeNotifier {
     _lastError = null;
     final now = DateTime.now();
     final scheduledNotificationTime =
-        _vocStart!.subtract(Duration(hours: _preVoidAlarmHours));
+        vocStartForAlarm.subtract(Duration(hours: _preVoidAlarmHours));
     final bool canScheduleExact =
         await _notificationService.checkExactAlarmPermission();
 
@@ -194,7 +223,7 @@ class AstroState with ChangeNotifier {
         _lastError = 'errorSchedulingAlarm';
       }
     } else if (isToggleOn) {
-      await _updatePreVoidAlarmNotification();
+      await _updatePreVoidAlarmNotification(vocStartForAlarm);
     }
     notifyListeners();
   }
@@ -206,122 +235,71 @@ class AstroState with ChangeNotifier {
     });
   }
 
-  // [FIX] The timer now checks the flag and runs the notification update safely.
   void _checkTime() {
     final now = DateTime.now();
 
-    if (_needsNotificationUpdate) {
-      _needsNotificationUpdate = false;
-      if (_voidAlarmEnabled) {
-        _schedulePreVoidAlarm();
-      }
+    // --- Real-time VOC Management ---
+    if (_realtimeVocEnd != null && now.isAfter(_realtimeVocEnd!)) {
+      // The VOC we were tracking is over. Find the next one.
+      final vocTimes = _calculator.findVoidOfCoursePeriod(now);
+      _realtimeVocStart = vocTimes['start'];
+      _realtimeVocEnd = vocTimes['end'];
     }
 
-    if (kDebugMode) {
-      if (_lastLogTime == null || now.difference(_lastLogTime!).inMinutes >= 1) {
-        _lastLogTime = now;
-        print('--- [AstroState Log] ---');
-        print('Current Time: $now');
+    if (_voidAlarmEnabled &&
+        _realtimeVocStart != null &&
+        _realtimeVocEnd != null) {
+      final isCurrentlyInVoc =
+          now.isAfter(_realtimeVocStart!) && now.isBefore(_realtimeVocEnd!);
 
-        if (_vocStart != null && _vocEnd != null) {
-          final isCurrentlyInVoc =
-              now.isAfter(_vocStart!) && now.isBefore(_vocEnd!);
-          print(
-              'Is currently in Void of Course: $isCurrentlyInVoc (VOC Start: $_vocStart, VOC End: $_vocEnd)');
+      if (isCurrentlyInVoc && !_isOngoingNotificationVisible) {
+        // VOC period has just started
+        _isOngoingNotificationVisible = true;
+        final locale = _currentLocale;
+        String title, body;
+        if (locale.startsWith('ko')) {
+          title = '보이드 시작';
+          body = '지금부터 보이드 시간입니다.';
         } else {
-          print('Void of Course times not yet calculated or available.');
+          title = 'Void of Course Started';
+          body = 'The Void of Course period has now begun.';
         }
+        _notificationService.showImmediateNotification(
+            id: 1, title: title, body: body, isVibrate: true);
+        _updateOngoingNotification(); // Show and update the ongoing notification
+        if (kDebugMode) print("Showing ongoing VOC notification.");
+      } else if (isCurrentlyInVoc && _isOngoingNotificationVisible) {
+        // VOC is still in progress, update notification
+        _updateOngoingNotification();
+      } else if (!isCurrentlyInVoc && _isOngoingNotificationVisible) {
+        // VOC period has just ended
+        _isOngoingNotificationVisible = false;
+        _notificationService.cancelNotification(1);
+        _notificationService.cancelNotification(2);
+        if (kDebugMode) print("Cancelling ongoing VOC notification.");
 
-        if (_nextSignTime != null) {
-          final isPastNextSignTime = now.isAfter(_nextSignTime!);
-          print(
-              'Is past next Moon Sign time: $isPastNextSignTime (Next Sign Time: $_nextSignTime)');
+        final locale = _currentLocale;
+        String title, body;
+        if (locale.startsWith('ko')) {
+          title = '보이드 종료';
+          body = '보이드가 종료되었습니다.';
         } else {
-          print('Next Moon Sign time not yet calculated or available.');
+          title = 'Void of Course Ended';
+          body = 'The Void of Course period has ended.';
         }
-        print('-----------------------');
-      }
-    }
+        _notificationService.showImmediateNotification(
+            id: 3, title: title, body: body);
+        if (kDebugMode) print("Showing VOC ended notification.");
 
-    if (_voidAlarmEnabled) {
-      final start = _vocStart;
-      final end = _vocEnd;
-      if (start != null && end != null) {
-        final isCurrentlyInVoc = now.isAfter(start) && now.isBefore(end);
-        final isVocStartingSoon =
-            now.isAfter(start.subtract(Duration(hours: preVoidAlarmHours))) &&
-                now.isBefore(start);
-
-        if (isVocStartingSoon) {
-          _updatePreVoidAlarmNotification();
-        }
-
-        if (isCurrentlyInVoc) {
-          if (!_isOngoingNotificationVisible) {
-            final locale = _currentLocale;
-            String title, body;
-            if (locale.startsWith('ko')) {
-              title = '보이드 시작';
-              body = '지금부터 보이드 시간입니다.';
-            } else {
-              title = 'Void of Course Started';
-              body = 'The Void of Course period has now begun.';
-            }
-
-            _notificationService.showImmediateNotification(
-              id: 1,
-              title: title,
-              body: body,
-              isVibrate: true,
-            );
-
-            if (locale.startsWith('ko')) {
-              title = '보이드 중';
-              body = '지금은 보이드 시간입니다.';
-            } else {
-              title = 'Void of Course in Progress';
-              body = 'Currently in Void of Course period.';
-            }
-            _notificationService.showOngoingNotification(
-              id: 2,
-              title: title,
-              body: body,
-            );
-            _isOngoingNotificationVisible = true;
-            if (kDebugMode) print("Showing ongoing VOC notification.");
-          } else {
-            _updateOngoingNotification();
-          }
-        } else if (!isCurrentlyInVoc &&
-            now.isAfter(end) &&
-            _isOngoingNotificationVisible) {
-          _notificationService.cancelNotification(1);
-          _notificationService.cancelNotification(2);
-          _isOngoingNotificationVisible = false;
-          if (kDebugMode) print("Cancelling ongoing VOC notification.");
-
-          final locale = _currentLocale;
-          String title, body;
-          if (locale.startsWith('ko')) {
-            title = '보이드 종료';
-            body = '보이드가 종료되었습니다.';
-          } else {
-            title = 'Void of Course Ended';
-            body = 'The Void of Course period has ended.';
-          }
-          _notificationService.showImmediateNotification(
-            id: 3,
-            title: title,
-            body: body,
-          );
-          if (kDebugMode) print("Showing VOC ended notification.");
-          _selectedDate = now;
+        // If user is viewing today, refresh the data to show the next VOC
+        if (_isFollowingTime) {
           refreshData();
-          return;
         }
       }
     }
+    // --- End of Real-time VOC Management ---
 
+    // This part is for auto-updating the screen when the user is following time
     if (_isFollowingTime) {
       bool shouldRefresh = false;
       String refreshReason = "";
@@ -359,24 +337,16 @@ class AstroState with ChangeNotifier {
         newDate.month == now.month &&
         newDate.day == now.day;
 
-    // If we were following time, but now we are not (user selected a different date)
-    if (_isFollowingTime && !isNowFollowingTime) {
-      if (_isOngoingNotificationVisible) {
-        _notificationService.cancelNotification(1);
-        _notificationService.cancelNotification(2);
-        _isOngoingNotificationVisible = false;
-        if (kDebugMode) print("Date changed, cancelling ongoing VOC notification.");
-      }
-    }
+    // [FIX] No longer cancel ongoing notifications when changing date.
+    // The real-time VOC status is now managed independently in _checkTime.
 
     _isFollowingTime = isNowFollowingTime;
 
     if (_isFollowingTime) {
       _selectedDate = now;
-      await refreshData();
-    } else {
-      await _updateData();
     }
+    // Always update data for the selected date.
+    await _updateData();
   }
 
   Future<void> refreshData() async {
@@ -385,20 +355,11 @@ class AstroState with ChangeNotifier {
 
   Future<void> _updateData() async {
     _isLoading = true;
+    notifyListeners();
 
-    if (kDebugMode) {
-      print("--- ");
-      print("[AstroState] Starting data update for: $_selectedDate");
-    }
-
-    final dateForCalc = _isFollowingTime
-        ? _selectedDate
-        : DateTime(_selectedDate.year, _selectedDate.month, _selectedDate.day);
+    final dateForCalc = _selectedDate;
 
     try {
-      if (kDebugMode)
-        print("[AstroState] Calculating with dateForCalc: $dateForCalc");
-
       final nextPhaseInfo = _calculator.findNextPhase(dateForCalc);
       final moonPhaseInfo = _calculator.getMoonPhaseInfo(dateForCalc);
       final moonPhase = moonPhaseInfo['phaseName'];
@@ -418,20 +379,11 @@ class AstroState with ChangeNotifier {
         'nextMoonPhaseTime': nextPhaseInfo['time'],
       };
 
-      if (kDebugMode) {
-        print("[AstroState] Calculation complete. New data:");
-        result.forEach((key, value) {
-          print(" - $key: $value");
-        });
-        print("--- ");
-      }
-
       await _updateStateFromResult(result);
       _lastError = null;
     } catch (e, stack) {
       if (kDebugMode) {
         print('[AstroState] Error during calculation: $e\n$stack');
-        print("--- ");
       }
       _lastError = 'calculationError';
     } finally {
@@ -449,14 +401,14 @@ class AstroState with ChangeNotifier {
     _nextSignTime = result['nextSignTime'] as DateTime?;
     _nextMoonPhaseName = result['nextMoonPhaseName'] as String;
     _nextMoonPhaseTime = result['nextMoonPhaseTime'] as DateTime?;
-    await _schedulePreVoidAlarm(isToggleOn: false);
+    // Do not schedule pre-void alarm from here. It's managed separately.
   }
 
   Future<void> _updateOngoingNotification() async {
-    if (_vocStart == null || _vocEnd == null) return;
+    if (_realtimeVocStart == null || _realtimeVocEnd == null) return;
 
     final now = DateTime.now();
-    final remainingDuration = _vocEnd!.difference(now);
+    final remainingDuration = _realtimeVocEnd!.difference(now);
 
     final hours = remainingDuration.inHours;
     final minutes = remainingDuration.inMinutes.remainder(60);
@@ -491,16 +443,12 @@ class AstroState with ChangeNotifier {
       title: title,
       body: body,
     );
-
-    _isOngoingNotificationVisible = true;
-    if (kDebugMode) print("Updating ongoing VOC notification.");
   }
 
-  Future<void> _updatePreVoidAlarmNotification() async {
-    if (_vocStart == null) return;
+  Future<void> _updatePreVoidAlarmNotification(DateTime vocStart) async {
 
     final now = DateTime.now();
-    final remainingDuration = _vocStart!.difference(now);
+    final remainingDuration = vocStart.difference(now);
 
     final hours = remainingDuration.inHours;
     final minutes = remainingDuration.inMinutes.remainder(60);
