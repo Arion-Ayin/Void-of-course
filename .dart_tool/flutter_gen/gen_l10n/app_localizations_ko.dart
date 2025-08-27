@@ -64,7 +64,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get infoScreenTitle => '정보';
 
   @override
-  String get headerSubtitle => '보이드 오브 코스 계산기';
+  String get headerSubtitle => 'Void of Course Calculator';
 
   @override
   String get whoAreWeTitle => '우리는 누구인가요?';
@@ -88,28 +88,28 @@ class AppLocalizationsKo extends AppLocalizations {
   String get copyrightText => '© 2025 Arion Ayin. All rights reserved.';
 
   @override
-  String get newMoon => '신월';
+  String get newMoon => 'New Moon';
 
   @override
-  String get crescentMoon => '초승달';
+  String get crescentMoon => 'Crescent Moon';
 
   @override
-  String get firstQuarter => '상현달';
+  String get firstQuarter => 'First Quarter';
 
   @override
-  String get gibbousMoon => '상현망간달';
+  String get gibbousMoon => 'Gibbous Moon';
 
   @override
-  String get fullMoon => '보름달';
+  String get fullMoon => 'Full Moon';
 
   @override
-  String get disseminatingMoon => '하현망간달';
+  String get disseminatingMoon => 'Disseminating Moon';
 
   @override
-  String get lastQuarter => '하현달';
+  String get lastQuarter => 'Last Quarter';
 
   @override
-  String get balsamicMoon => '그믐달';
+  String get balsamicMoon => 'Balsamic Moon';
 
   @override
   String get sunMoonPositionError => '태양 또는 달의 위치를 사용할 수 없습니다.';

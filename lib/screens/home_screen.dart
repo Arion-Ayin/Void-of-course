@@ -63,6 +63,20 @@ class _HomeScreenState extends State<HomeScreen> {
     if (mounted) {
       final provider = Provider.of<AstroState>(context, listen: false);
       provider.updateDate(DateTime.now());
+
+      // 현재 언어 설정에 맞는 메시지를 선택합니다.
+      final locale = Localizations.localeOf(context).languageCode;
+      final message = locale == 'ko'
+          ? '오늘 날짜로 재설정되었습니다.'
+          : 'Date has been reset to today.';
+
+      // 화면 하단에 스낵바를 표시합니다.
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 1),
+        ),
+      );
     }
   }
 

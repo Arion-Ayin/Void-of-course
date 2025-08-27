@@ -11,6 +11,7 @@ class MoonPhaseCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      // ... (decoration과 padding은 동일)
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -29,48 +30,55 @@ class MoonPhaseCard extends StatelessWidget {
           ),
         ],
       ),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(5),
-        leading: SizedBox(
-          width: 70,
-          height: 70,
-          child: Center(
-            child: Text(
-              AstroCalculator().getMoonPhaseEmoji(provider.moonPhase),
-              style: const TextStyle(fontSize: 44),
+      padding: const EdgeInsets.all(5),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 90,
+            height: 100,
+            child: Center(
+              child: Text(
+                AstroCalculator().getMoonPhaseEmoji(provider.moonPhase),
+                style: const TextStyle(
+                  fontSize: 55,
+                  color: Colors.white, // ⭐️ 이모지 색상을 흰색으로 지정
+                ),
+              ),
             ),
           ),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Moon Phase',
-              style: TextStyle(
-                color: Theme.of(context).textTheme.titleLarge?.color,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Moon Phase',
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.titleLarge?.color,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  AstroCalculator().getMoonPhaseNameOnly(provider.moonPhase),
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Next Phase : ${provider.nextMoonPhaseTime != null ? DateFormat('MM/dd HH:mm').format(provider.nextMoonPhaseTime!) : 'N/A'}',
+                  style: TextStyle(
+                    color: Theme.of(context).textTheme.bodyMedium?.color,
+                    fontSize: 17,
+                  ),
+                ),
+              ],
             ),
-            Text(
-              AstroCalculator().getMoonPhaseNameOnly(provider.moonPhase),
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyLarge?.color,
-                fontSize: 18,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              // nextSignTime 대신 nextMoonPhaseTime을 사용하도록 수정
-              'Next Phase : ${provider.nextMoonPhaseTime != null ? DateFormat('MM/dd HH:mm').format(provider.nextMoonPhaseTime!) : 'N/A'}',
-              style: TextStyle(
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-                fontSize: 17,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

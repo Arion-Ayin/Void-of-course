@@ -126,10 +126,9 @@ class AstroState with ChangeNotifier {
 
   Future<AlarmPermissionStatus> toggleVoidAlarm(bool enable) async {
     final prefs = await SharedPreferences.getInstance();
-    _voidAlarmEnabled = enable;
-    await prefs.setBool('voidAlarmEnabled', _voidAlarmEnabled);
 
     if (enable) {
+      // 1. Request standard notification permission
       final bool hasNotificationPermission =
           await _notificationService.requestPermissions();
       if (!hasNotificationPermission) {
@@ -137,18 +136,35 @@ class AstroState with ChangeNotifier {
         return AlarmPermissionStatus.notificationDenied;
       }
 
-      final bool hasExactAlarmPermission =
+      // 2. Check and request exact alarm permission
+      bool hasExactAlarmPermission =
           await _notificationService.checkExactAlarmPermission();
-      await _schedulePreVoidAlarm(isToggleOn: true);
       if (!hasExactAlarmPermission) {
+        await _notificationService.requestExactAlarmPermission();
+        // Check again after user returns from settings
+        hasExactAlarmPermission =
+            await _notificationService.checkExactAlarmPermission();
+      }
+
+      // 3. Update state and schedule alarm only if permission is granted
+      if (hasExactAlarmPermission) {
+        _voidAlarmEnabled = true;
+        await prefs.setBool('voidAlarmEnabled', true);
+        await _schedulePreVoidAlarm(isToggleOn: true);
+        notifyListeners();
+        return AlarmPermissionStatus.granted;
+      } else {
+        _voidAlarmEnabled = false;
+        await prefs.setBool('voidAlarmEnabled', false);
         notifyListeners();
         return AlarmPermissionStatus.exactAlarmDenied;
       }
-      notifyListeners();
-      return AlarmPermissionStatus.granted;
     } else {
+      // Disabling alarm
+      _voidAlarmEnabled = false;
+      await prefs.setBool('voidAlarmEnabled', false);
       await _notificationService.cancelAllNotifications();
-      _isOngoingNotificationVisible = false; // Make sure to update state
+      _isOngoingNotificationVisible = false;
       notifyListeners();
       return AlarmPermissionStatus.granted;
     }
