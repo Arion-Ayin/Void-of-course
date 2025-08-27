@@ -259,7 +259,7 @@ class AstroState with ChangeNotifier {
         String title, body;
         if (locale.startsWith('ko')) {
           title = '보이드 시작';
-          body = '지금부터 보이드 시간입니다.';
+          body = '지금은 보이드 시간입니다.';
         } else {
           title = 'Void of Course Started';
           body = 'The Void of Course period has now begun.';
@@ -432,10 +432,10 @@ class AstroState with ChangeNotifier {
     String title, body;
     if (locale.startsWith('ko')) {
       title = '보이드 중';
-      body = '지금은 보이드 시간입니다. $remainingTimeText';
+      body = '지금은 보이드 시간입니다.\n$remainingTimeText';
     } else {
       title = 'Void of Course in Progress';
-      body = 'Currently in Void of Course period. $remainingTimeText';
+      body = 'Currently in Void of Course period.\n$remainingTimeText';
     }
 
     await _notificationService.showOngoingNotification(

@@ -86,7 +86,7 @@
     "errorShowingImmediateAlarm": "즉시 알람 표시 중 오류 발생",
     "calculating": "계산 중...",
     "vocStartedTitle": "보이드 시작",
-    "vocStartedBody": "지금부터 보이드 시간입니다.",
+    "vocStartedBody": "지금은 보이드 시간입니다.",
     "vocRemainingTimeHourMinute": "남은 시간: {hours}시간 {minutes}분",
     "@vocRemainingTimeHourMinute": {
         "placeholders": {
