@@ -196,8 +196,9 @@ class AstroCalculator {
       nextAngle = 315.0;
       nextName = '🌘 Balsamic Moon';
     } else { // 현재 각도가 315도 이상이라면, 다음은 다시 초승달(New Moon)이에요.
-      nextAngle = 0.0;
-      nextName = '🌑 New Moon';
+      // 사용자의 요청에 따라, 뉴문은 보이드가 끝나는 시간(달이 다음 별자리로 넘어가는 시간)과 일치시킵니다.
+      final moonSignTimes = getMoonSignTimes(now);
+      return {'name': '🌑 New Moon', 'time': moonSignTimes['end']};
     }
 
     // 3. 다음 달 모양이 나타나는 정확한 시간을 찾아봐요.
@@ -436,17 +437,18 @@ class AstroCalculator {
   // 달이 힘을 잃는 시간(Void-of-Course, 보이드 오브 코스)을 찾아주는 함수예요.
   // 이 시간은 달이 다음 별자리로 가기 전에 다른 행성들과 중요한 만남이 없는 때를 말해요.
   Map<String, dynamic> findVoidOfCoursePeriod(DateTime date) {
-    final dayStart = DateTime(date.year, date.month, date.day);
-    var searchDate = dayStart;
+    var searchDate = date; // 기준 시간부터 검색을 시작해요.
 
-    // 며칠간 반복해서 보이드 오브 코스 시간을 찾아요.
-    for (int i = 0; i < 5; i++) {
-      final moonSignTimes = getMoonSignTimes(searchDate); // 달이 별자리에 머무는 시간을 가져와요.
+    // 며칠간 반복해서 다음 보이드 오브 코스 시간을 찾아요.
+    for (int i = 0; i < 10; i++) { // 검색 횟수를 늘려 안정성을 확보해요.
+      final moonSignTimes = getMoonSignTimes(searchDate); // 달이 현재 또는 다음 별자리에 머무는 시간을 가져와요.
       final signStartTime = moonSignTimes['start'];
       final signEndTime = moonSignTimes['end'];
 
       if (signStartTime == null || signEndTime == null) {
-        return {'start': null, 'end': null}; // 시간을 찾지 못하면 포기해요.
+        // 만약 별자리 시간을 찾지 못하면, 다음 날로 넘어가서 다시 시도해요.
+        searchDate = searchDate.add(const Duration(days: 1));
+        continue;
       }
 
       final lastAspectTime = _findLastAspectTime(signStartTime, signEndTime); // 마지막 만남 시간을 찾아봐요.
@@ -459,14 +461,15 @@ class AstroCalculator {
       }
       final vocEnd = signEndTime; // 보이드 끝은 별자리에서 나가는 시간이에요.
 
-      // 만약 오늘 이후에 보이드 오브 코스 시간이 있다면, 그 시간을 알려줘요.
-      if (vocEnd.isAfter(dayStart)) {
+      // 만약 보이드 종료 시간이 기준 시간(date) 이후라면, 현재 진행 중이거나 다음에 올 보이드이므로 이 시간을 반환해요.
+      if (vocEnd.isAfter(date)) {
         return {'start': vocStart, 'end': vocEnd};
       }
-      // 오늘이 아니면 다음 별자리로 넘어가서 다시 찾아봐요.
-      searchDate = signEndTime;
+
+      // 찾은 보이드 기간이 이미 지났다면, 다음 별자리 기간에서 다시 찾아봐요.
+      searchDate = signEndTime.add(const Duration(microseconds: 1)); // 무한 루프를 방지하기 위해 아주 작은 시간을 더해 다음 검색을 시작해요.
     }
-    return {'start': null, 'end': null}; // 5일 내에 못 찾으면 '없어요'라고 알려줘요.
+    return {'start': null, 'end': null}; // 기간 내에 못 찾으면 '없어요'라고 알려줘요.
   }
 
   // 달의 모양 이름에 맞는 이모티콘을 찾아주는 함수예요.
