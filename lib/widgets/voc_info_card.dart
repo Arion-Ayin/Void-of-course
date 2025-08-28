@@ -43,8 +43,8 @@ class VocInfoCard extends StatelessWidget {
 
     if (isVocNow) {
       vocStatusText = "There's a void Now";
-      vocIcon = '🚫';
       vocColor = Colors.red;
+      vocIcon = '🚫';
     } else if (doesSelectedDateHaveVoc) {
       vocStatusText = "There's a void today";
       vocIcon = '🔔';
