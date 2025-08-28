@@ -122,6 +122,10 @@ lints
 3.6
 file:///D:/saan_studio/lioluna/build/path_provider_android/hosted/pub.dev/lints-5.1.1/
 file:///D:/saan_studio/lioluna/build/path_provider_android/hosted/pub.dev/lints-5.1.1/lib/
+logger
+2.17
+file:///D:/saan_studio/lioluna/build/path_provider_android/hosted/pub.dev/logger-2.6.1/
+file:///D:/saan_studio/lioluna/build/path_provider_android/hosted/pub.dev/logger-2.6.1/lib/
 matcher
 3.4
 file:///D:/saan_studio/lioluna/build/path_provider_android/hosted/pub.dev/matcher-0.12.17/
@@ -186,6 +190,10 @@ provider
 2.12
 file:///D:/saan_studio/lioluna/build/path_provider_android/hosted/pub.dev/provider-6.1.4/
 file:///D:/saan_studio/lioluna/build/path_provider_android/hosted/pub.dev/provider-6.1.4/lib/
+rename
+2.12
+file:///D:/saan_studio/lioluna/build/path_provider_android/hosted/pub.dev/rename-3.1.0/
+file:///D:/saan_studio/lioluna/build/path_provider_android/hosted/pub.dev/rename-3.1.0/lib/
 shared_preferences
 3.5
 file:///D:/saan_studio/lioluna/build/path_provider_android/hosted/pub.dev/shared_preferences-2.5.3/
