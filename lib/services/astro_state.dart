@@ -19,7 +19,7 @@ class AstroState with ChangeNotifier {
   Timer? _timer;
   final NotificationService _notificationService = NotificationService();
   bool _voidAlarmEnabled = false;
-  int _preVoidAlarmHours = 3;
+  int _preVoidAlarmHours = 5;
   bool _isOngoingNotificationVisible = false;
   DateTime _selectedDate = DateTime.now();
   bool _isFollowingTime = true;
@@ -179,68 +179,20 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> _schedulePreVoidAlarm({bool isToggleOn = false}) async {
+    // 1. Always cancel previous alarms to avoid conflicts
     await _notificationService.cancelNotification(0);
     if (!_voidAlarmEnabled) {
-      if (kDebugMode) print('[VOC ALARM] Alarm is disabled.');
       return;
     }
 
-    // The pre-void alarm should always be for the *next actual* VOC.
+    // 2. Find the next upcoming VOC period.
     final vocTimes = _calculator.findVoidOfCoursePeriod(DateTime.now());
-    final vocStartForAlarm = vocTimes['start'] as DateTime?;
-    final vocEndForAlarm = vocTimes['end'] as DateTime?;
+    _realtimeVocStart = vocTimes['start'];
+    _realtimeVocEnd = vocTimes['end'];
 
-    if (vocStartForAlarm == null || vocStartForAlarm.isBefore(DateTime.now())) {
-      // If we are currently in the found VOC period, it's not an error.
-      // It just means the pre-alarm time has already passed.
-      if (vocEndForAlarm != null && vocEndForAlarm.isAfter(DateTime.now())) {
-        if (kDebugMode)
-          print('[VOC ALARM] In VOC, pre-void alarm time has passed.');
-        return;
-      }
-
-      if (kDebugMode) print('[VOC ALARM] No upcoming VOC found or it has passed.');
-      _lastError = 'noUpcomingVocFound';
-      notifyListeners();
-      return;
-    }
-
-    _lastError = null;
-    final now = DateTime.now();
-    final scheduledNotificationTime =
-        vocStartForAlarm.subtract(Duration(hours: _preVoidAlarmHours));
-    final bool canScheduleExact =
-        await _notificationService.checkExactAlarmPermission();
-
-    String notificationBody;
-    String title;
-    final locale = _currentLocale;
-
-    if (locale.startsWith('ko')) {
-      title = 'Void of Course 알림';
-      notificationBody = '$_preVoidAlarmHours시간 후에 보이드가 시작됩니다.';
-    } else {
-      title = 'Void of Course Notification';
-      notificationBody = 'Void of Course begins in $_preVoidAlarmHours hours.';
-    }
-
-    if (scheduledNotificationTime.isAfter(now)) {
-      if (kDebugMode) print('[VOC ALARM] SCENARIO 1: Scheduled for the future.');
-      try {
-        await _notificationService.scheduleNotification(
-          id: 0,
-          title: title,
-          body: notificationBody,
-          scheduledTime: scheduledNotificationTime,
-          canScheduleExact: canScheduleExact,
-        );
-      } catch (e, stack) {
-        print('[VOC ALARM] ERROR scheduling notification: $e\n$stack');
-        _lastError = 'errorSchedulingAlarm';
-      }
-    } else if (isToggleOn) {
-      await _updatePreVoidAlarmNotification(vocStartForAlarm);
-    }
+    // 3. Trigger an immediate check.
+    // _checkTime() will now handle showing the pre-void or in-void notification based on the latest times.
+    _checkTime();
     notifyListeners();
   }
 
@@ -253,67 +205,6 @@ class AstroState with ChangeNotifier {
 
   void _checkTime() {
     final now = DateTime.now();
-
-    // --- Real-time VOC Management ---
-    if (_realtimeVocEnd != null && now.isAfter(_realtimeVocEnd!)) {
-      // The VOC we were tracking is over. Find the next one.
-      final vocTimes = _calculator.findVoidOfCoursePeriod(now);
-      _realtimeVocStart = vocTimes['start'];
-      _realtimeVocEnd = vocTimes['end'];
-    }
-
-    if (_voidAlarmEnabled &&
-        _realtimeVocStart != null &&
-        _realtimeVocEnd != null) {
-      final isCurrentlyInVoc =
-          now.isAfter(_realtimeVocStart!) && now.isBefore(_realtimeVocEnd!);
-
-      if (isCurrentlyInVoc && !_isOngoingNotificationVisible) {
-        // VOC period has just started
-        _isOngoingNotificationVisible = true;
-        final locale = _currentLocale;
-        String title, body;
-        if (locale.startsWith('ko')) {
-          title = '보이드 시작';
-          body = '지금은 보이드 시간입니다.';
-        } else {
-          title = 'Void of Course Started';
-          body = 'The Void of Course period has now begun.';
-        }
-        _notificationService.showImmediateNotification(
-            id: 1, title: title, body: body, isVibrate: true);
-        _updateOngoingNotification(); // Show and update the ongoing notification
-        if (kDebugMode) print("Showing ongoing VOC notification.");
-      } else if (isCurrentlyInVoc && _isOngoingNotificationVisible) {
-        // VOC is still in progress, update notification
-        _updateOngoingNotification();
-      } else if (!isCurrentlyInVoc && _isOngoingNotificationVisible) {
-        // VOC period has just ended
-        _isOngoingNotificationVisible = false;
-        _notificationService.cancelNotification(1);
-        _notificationService.cancelNotification(2);
-        if (kDebugMode) print("Cancelling ongoing VOC notification.");
-
-        final locale = _currentLocale;
-        String title, body;
-        if (locale.startsWith('ko')) {
-          title = '보이드 종료';
-          body = '보이드가 종료되었습니다.';
-        } else {
-          title = 'Void of Course Ended';
-          body = 'The Void of Course period has ended.';
-        }
-        _notificationService.showImmediateNotification(
-            id: 3, title: title, body: body);
-        if (kDebugMode) print("Showing VOC ended notification.");
-
-        // If user is viewing today, refresh the data to show the next VOC
-        if (_isFollowingTime) {
-          refreshData();
-        }
-      }
-    }
-    // --- End of Real-time VOC Management ---
 
     // This part is for auto-updating the screen when the user is following time
     if (_isFollowingTime) {
@@ -334,8 +225,118 @@ class AstroState with ChangeNotifier {
         }
         _selectedDate = now;
         refreshData();
-        return;
+        return; // Return after refresh to avoid conflicting UI updates
       }
+    }
+
+    // --- Real-time VOC Notification Management ---
+
+    // If alarms are disabled, ensure no notifications are showing and stop.
+    if (!_voidAlarmEnabled) {
+      if (_isOngoingNotificationVisible) {
+        _notificationService.cancelNotification(1);
+        _notificationService.cancelNotification(2);
+        _isOngoingNotificationVisible = false;
+      }
+      _notificationService.cancelNotification(0); // Also cancel pre-void
+      return;
+    }
+
+    // If the VOC we were tracking is long over, find the next one to be prepared.
+    if (_realtimeVocEnd != null &&
+        now.isAfter(_realtimeVocEnd!.add(const Duration(minutes: 1)))) {
+      final vocTimes = _calculator.findVoidOfCoursePeriod(now);
+      _realtimeVocStart = vocTimes['start'];
+      _realtimeVocEnd = vocTimes['end'];
+    }
+
+    // Proceed only if we have a valid upcoming VOC
+    if (_realtimeVocStart == null || _realtimeVocEnd == null) {
+      return;
+    }
+
+    final vocStart = _realtimeVocStart!;
+    final vocEnd = _realtimeVocEnd!;
+    final preAlarmTime = vocStart.subtract(Duration(hours: _preVoidAlarmHours));
+
+    final isCurrentlyInVoc = now.isAfter(vocStart) && now.isBefore(vocEnd);
+    final isCurrentlyInPreVoc = now.isAfter(preAlarmTime) && now.isBefore(vocStart);
+
+    // --- State Machine for Notifications ---
+
+    if (isCurrentlyInPreVoc) {
+      // STATE 1: Pre-VOC Countdown
+      // We are in the countdown window. Show/update the countdown notification.
+      if (_isOngoingNotificationVisible) {
+        // This can happen if date/time changes abruptly.
+        // Ensure main VOC notification is cancelled.
+        _notificationService.cancelNotification(1);
+        _notificationService.cancelNotification(2);
+        _isOngoingNotificationVisible = false;
+      }
+      _updatePreVoidAlarmNotification(vocStart);
+    } else if (isCurrentlyInVoc) {
+      // STATE 2: In-VOC Period
+      if (!_isOngoingNotificationVisible) {
+        // VOC just started
+        _notificationService.cancelNotification(0); // Clear pre-void notification
+        _isOngoingNotificationVisible = true;
+
+        // Show "VOC Started" alert
+        final locale = _currentLocale;
+        String title, body;
+        if (locale.startsWith('ko')) {
+          title = '보이드 시작';
+          body = '지금은 보이드 시간입니다.';
+        } else {
+          title = 'Void of Course Started';
+          body = 'The Void of Course period has now begun.';
+        }
+        _notificationService.showImmediateNotification(
+            id: 1, title: title, body: body, isVibrate: true);
+        if (kDebugMode) print("Showing VOC started notification.");
+
+        // REFRESH UI
+        if (_isFollowingTime) {
+          refreshData();
+        }
+      }
+      // Whether it just started or is in progress, update the ongoing notification
+      _updateOngoingNotification();
+    } else {
+      // STATE 3: Outside of Pre-VOC or In-VOC windows
+      if (_isOngoingNotificationVisible) {
+        // VOC just ended
+        _isOngoingNotificationVisible = false;
+        _notificationService.cancelNotification(1); // In case it's still there
+        _notificationService.cancelNotification(2); // The ongoing one
+        if (kDebugMode) print("Cancelling ongoing VOC notification.");
+
+        // Show "VOC Ended" alert
+        final locale = _currentLocale;
+        String title, body;
+        if (locale.startsWith('ko')) {
+          title = '보이드 종료';
+          body = '보이드가 종료되었습니다.';
+        } else {
+          title = 'Void of Course Ended';
+          body = 'The Void of Course period has ended.';
+        }
+        _notificationService.showImmediateNotification(
+            id: 3, title: title, body: body);
+        if (kDebugMode) print("Showing VOC ended notification.");
+
+        // Find the next VOC period immediately
+        final vocTimes = _calculator.findVoidOfCoursePeriod(now);
+        _realtimeVocStart = vocTimes['start'];
+        _realtimeVocEnd = vocTimes['end'];
+
+        if (_isFollowingTime) {
+          refreshData();
+        }
+      }
+      // Also make sure the pre-void notification is cancelled
+      _notificationService.cancelNotification(0);
     }
   }
 
