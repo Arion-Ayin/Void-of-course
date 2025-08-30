@@ -16,8 +16,7 @@ class LocaleProvider extends ChangeNotifier {
     if (languageCode != null) {
       _locale = Locale(languageCode);
     } else {
-      // Default to Korean if no language is saved
-      _locale = const Locale('ko');
+      _locale = const Locale('en'); // 기본 실행 언어를 영어로 설정
     }
     notifyListeners();
   }

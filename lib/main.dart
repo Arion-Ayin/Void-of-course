@@ -69,6 +69,22 @@ class _MainAppScreenState extends State<MainAppScreen> {
   // 현재 선택된 하단 내비게이션 바의 인덱스를 저장하는 변수예요. (0: 홈, 1: 설정, 2: 정보)
   int _selectedIndex = 0;
 
+  @override
+  void initState() {
+    super.initState();
+    // 위젯이 완전히 빌드된 후에 딱 한 번 실행돼요.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // 현재 설정된 앱의 언어 정보를 가져와요.
+      final initialLocale = Provider.of<LocaleProvider>(context, listen: false).locale;
+      // 만약 언어 정보가 있다면 (null이 아니라면)
+      if (initialLocale != null) {
+        // AstroState에 현재 언어 정보를 알려줘서 알람 언어를 동기화해요.
+        Provider.of<AstroState>(context, listen: false)
+            .updateLocale(initialLocale.languageCode);
+      }
+    });
+  }
+
   
   Widget build(BuildContext context) {
     // AstroState의 변화를 감지해요. Provider.of는 Provider에서 AstroState 정보를 가져와요.

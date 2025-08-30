@@ -133,14 +133,14 @@ class SettingScreen extends StatelessWidget {
               trailing: DropdownButton<String>( // 드롭다운 메뉴를 만들어요.
                 value: localeProvider.locale?.languageCode, // 현재 언어 코드를 드롭다운 메뉴의 선택 값으로 정해요.
                 items: [
+                  // 영어 옵션을 만들어요.
+                   DropdownMenuItem(
+                      value: 'en',
+                      child: Text(appLocalizations.english)), // '영어'라는 글씨를 현재 언어에 맞게 보여줘요.
                   // 한국어 옵션을 만들어요.
                   DropdownMenuItem(
                       value: 'ko',
                       child: Text(appLocalizations.korean)), // '한국어'라는 글씨를 현재 언어에 맞게 보여줘요.
-                  // 영어 옵션을 만들어요.
-                  DropdownMenuItem(
-                      value: 'en',
-                      child: Text(appLocalizations.english)), // '영어'라는 글씨를 현재 언어에 맞게 보여줘요.
                 ],
                 onChanged: (value) { // 드롭다운 메뉴에서 다른 것을 고르면 이 코드가 실행돼요.
                   if (value == null) return; // 선택된 값이 없다면 아무것도 하지 않아요.
