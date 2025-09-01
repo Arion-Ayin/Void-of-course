@@ -85,7 +85,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
     });
   }
 
-  
+  @override
   Widget build(BuildContext context) {
     // AstroState의 변화를 감지해요. Provider.of는 Provider에서 AstroState 정보를 가져와요.
     final astroState = Provider.of<AstroState>(context);
