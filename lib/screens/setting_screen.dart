@@ -37,7 +37,10 @@ class SettingScreen extends StatelessWidget {
             // 설정 아이콘을 보여줘요.
             Icon(
               Icons.settings,
-              color: Theme.of(context).colorScheme.primary, // 앱의 주요 색깔로 아이콘 색을 정해요.
+              color:
+                  Theme.of(
+                    context,
+                  ).colorScheme.primary, // 앱의 주요 색깔로 아이콘 색을 정해요.
               size: 24, // 아이콘 크기를 24로 정해요.
             ),
             const SizedBox(width: 8), // 아이콘과 글씨 사이에 작은 공간을 만들어요.
@@ -62,33 +65,50 @@ class SettingScreen extends StatelessWidget {
               icon: Icons.notifications_active_outlined, // 알림 아이콘을 보여줘요.
               title: appLocalizations.voidAlarmTitle, // '보이드 알람'이라는 제목을 보여줘요.
               iconColor: Colors.deepPurpleAccent, // 아이콘 색깔을 보라색으로 정해요.
-              trailing: Consumer<AstroState>( // 'AstroState'라는 상태 변화를 지켜볼 거예요.
+              trailing: Consumer<AstroState>(
+                // 'AstroState'라는 상태 변화를 지켜볼 거예요.
                 builder: (context, astroState, child) {
                   // 스위치 버튼을 만들어요.
                   return Switch(
-                    value: astroState.voidAlarmEnabled, // 스위치의 현재 상태(켜짐/꺼짐)를 AstroState에서 가져와요.
-                    onChanged: (value) async { // 스위치를 누르면 이 코드가 실행돼요.
+                    value:
+                        astroState
+                            .voidAlarmEnabled, // 스위치의 현재 상태(켜짐/꺼짐)를 AstroState에서 가져와요.
+                    onChanged: (value) async {
+                      // 스위치를 누르면 이 코드가 실행돼요.
                       // 보이드 알람을 켜거나 끄는 함수를 불러와요.
                       final status = await astroState.toggleVoidAlarm(value);
                       // 만약 위젯이 화면에서 사라졌다면 아무것도 하지 않아요.
                       if (!context.mounted) return;
 
                       String message = ''; // 화면 아래에 잠깐 나타날 메시지를 담을 변수예요.
-                      Duration duration = const Duration(seconds: 2); // 메시지가 2초 동안 보이게 할 거예요.
+                      Duration duration = const Duration(
+                        seconds: 2,
+                      ); // 메시지가 2초 동안 보이게 할 거예요.
 
                       // 알람 허용 상태에 따라 다른 메시지를 보여줘요.
                       switch (status) {
                         case AlarmPermissionStatus.granted: // 알람이 허용되었다면
-                          message = value // 스위치가 켜졌는지 꺼졌는지에 따라 메시지를 다르게 보여줘요.
-                              ? appLocalizations.voidAlarmEnabledMessage // 켜졌을 때 메시지
-                              : appLocalizations.voidAlarmDisabledMessage; // 꺼졌을 때 메시지
+                          message =
+                              value // 스위치가 켜졌는지 꺼졌는지에 따라 메시지를 다르게 보여줘요.
+                                  ? appLocalizations
+                                      .voidAlarmEnabledMessage // 켜졌을 때 메시지
+                                  : appLocalizations
+                                      .voidAlarmDisabledMessage; // 꺼졌을 때 메시지
                           break;
-                        case AlarmPermissionStatus.notificationDenied: // 알림 권한이 거부되었다면
-                          message = appLocalizations.voidAlarmDisabledMessage; // 알람을 끌 수밖에 없다는 메시지를 보여줘요.
+                        case AlarmPermissionStatus
+                            .notificationDenied: // 알림 권한이 거부되었다면
+                          message =
+                              appLocalizations
+                                  .voidAlarmDisabledMessage; // 알람을 끌 수밖에 없다는 메시지를 보여줘요.
                           break;
-                        case AlarmPermissionStatus.exactAlarmDenied: // 정확한 알람 권한이 거부되었다면 (안드로이드 특정 기능)
-                          message = appLocalizations.voidAlarmExactAlarmDeniedMessage; // 권한이 필요하다는 메시지를 보여줘요.
-                          duration = const Duration(seconds: 5); // 이 메시지는 5초 동안 보이게 해요.
+                        case AlarmPermissionStatus
+                            .exactAlarmDenied: // 정확한 알람 권한이 거부되었다면 (안드로이드 특정 기능)
+                          message =
+                              appLocalizations
+                                  .voidAlarmExactAlarmDeniedMessage; // 권한이 필요하다는 메시지를 보여줘요.
+                          duration = const Duration(
+                            seconds: 5,
+                          ); // 이 메시지는 5초 동안 보이게 해요.
                           break;
                       }
 
@@ -108,16 +128,23 @@ class SettingScreen extends StatelessWidget {
             SettingCard(
               icon: themeIcon, // 위에서 정한 달 또는 해 아이콘을 보여줘요.
               title: appLocalizations.darkMode, // '다크 모드'라는 제목을 보여줘요.
-              iconColor: isDarkMode ? Colors.white : Colors.pink, // 다크 모드일 땐 흰색, 아닐 땐 분홍색으로 아이콘 색을 정해요.
-              trailing: ThemeSwitcher( // 테마 변경을 위한 스위치를 만들어요.
+              iconColor:
+                  isDarkMode
+                      ? Colors.white
+                      : Colors.pink, // 다크 모드일 땐 흰색, 아닐 땐 분홍색으로 아이콘 색을 정해요.
+              trailing: ThemeSwitcher(
+                // 테마 변경을 위한 스위치를 만들어요.
                 builder: (context) {
                   // 현재 테마가 다크 모드인지 다시 확인해요.
-                  final isDarkModeSwitch = Theme.of(context).brightness == Brightness.dark;
+                  final isDarkModeSwitch =
+                      Theme.of(context).brightness == Brightness.dark;
                   return Switch(
                     value: isDarkModeSwitch, // 스위치의 현재 상태를 현재 테마에 맞게 정해요.
-                    onChanged: (value) { // 스위치를 누르면 이 코드가 실행돼요.
+                    onChanged: (value) {
+                      // 스위치를 누르면 이 코드가 실행돼요.
                       // 스위치 상태에 따라 밝은 테마 또는 어두운 테마를 정해요.
-                      final theme = value ? Themes.darkTheme : Themes.lightTheme;
+                      final theme =
+                          value ? Themes.darkTheme : Themes.lightTheme;
                       // 앱의 테마를 새로운 테마로 바꿔줘요.
                       ThemeSwitcher.of(context).changeTheme(theme: theme);
                     },
@@ -130,19 +157,26 @@ class SettingScreen extends StatelessWidget {
               icon: Icons.language, // 언어 아이콘을 보여줘요.
               title: appLocalizations.languageSettings, // '언어 설정'이라는 제목을 보여줘요.
               iconColor: Colors.blue, // 아이콘 색깔을 파란색으로 정해요.
-              trailing: DropdownButton<String>( // 드롭다운 메뉴를 만들어요.
-                value: localeProvider.locale?.languageCode, // 현재 언어 코드를 드롭다운 메뉴의 선택 값으로 정해요.
+              trailing: DropdownButton<String>(
+                // 드롭다운 메뉴를 만들어요.
+                value:
+                    localeProvider
+                        .locale
+                        ?.languageCode, // 현재 언어 코드를 드롭다운 메뉴의 선택 값으로 정해요.
                 items: [
                   // 영어 옵션을 만들어요.
-                   DropdownMenuItem(
-                      value: 'en',
-                      child: Text(appLocalizations.english)), // '영어'라는 글씨를 현재 언어에 맞게 보여줘요.
+                  DropdownMenuItem(
+                    value: 'en',
+                    child: Text(appLocalizations.english),
+                  ), // '영어'라는 글씨를 현재 언어에 맞게 보여줘요.
                   // 한국어 옵션을 만들어요.
                   DropdownMenuItem(
-                      value: 'ko',
-                      child: Text(appLocalizations.korean)), // '한국어'라는 글씨를 현재 언어에 맞게 보여줘요.
+                    value: 'ko',
+                    child: Text(appLocalizations.korean),
+                  ), // '한국어'라는 글씨를 현재 언어에 맞게 보여줘요.
                 ],
-                onChanged: (value) { // 드롭다운 메뉴에서 다른 것을 고르면 이 코드가 실행돼요.
+                onChanged: (value) {
+                  // 드롭다운 메뉴에서 다른 것을 고르면 이 코드가 실행돼요.
                   if (value == null) return; // 선택된 값이 없다면 아무것도 하지 않아요.
 
                   final newLocale = Locale(value); // 선택된 값으로 새로운 언어 정보를 만들어요.
@@ -162,8 +196,10 @@ class SettingScreen extends StatelessWidget {
                   // 이렇게 하면 UI 버벅임이 사라집니다.
                   Future.delayed(const Duration(milliseconds: 200), () {
                     if (context.mounted) {
-                      Provider.of<AstroState>(context, listen: false)
-                          .updateLocale(newLocale.languageCode);
+                      Provider.of<AstroState>(
+                        context,
+                        listen: false,
+                      ).updateLocale(newLocale.languageCode);
                     }
                   });
 
@@ -182,14 +218,20 @@ class SettingScreen extends StatelessWidget {
               icon: Icons.feedback, // 피드백 아이콘을 보여줘요.
               title: appLocalizations.feedbackTitle, // '피드백'이라는 제목을 보여줘요.
               iconColor: Colors.orange, // 아이콘 색깔을 주황색으로 정해요.
-              trailing: IconButton( // 오른쪽에 버튼을 만들어요.
-                icon: const Icon(Icons.mail, color: Colors.orange), // 메일 아이콘을 주황색으로 보여줘요.
-                onPressed: () async { // 버튼을 누르면 이 코드가 실행돼요.
+              trailing: IconButton(
+                // 오른쪽에 버튼을 만들어요.
+                icon: const Icon(
+                  Icons.mail,
+                  color: Colors.orange,
+                ), // 메일 아이콘을 주황색으로 보여줘요.
+                onPressed: () async {
+                  // 버튼을 누르면 이 코드가 실행돼요.
                   // 이메일 앱을 열기 위한 정보를 만들어요.
                   final Uri emailLaunchUri = Uri(
                     scheme: 'mailto', // 'mailto'는 이메일 앱을 뜻해요.
                     path: 'Arion.Ayin@gmail.com', // 이메일을 보낼 주소예요.
-                    query: encodeQueryParameters(<String, String>{ // 이메일 제목을 미리 정해줘요.
+                    query: encodeQueryParameters(<String, String>{
+                      // 이메일 제목을 미리 정해줘요.
                       'subject': 'Feedback for Void-of-course App',
                     }),
                   );
@@ -200,7 +242,9 @@ class SettingScreen extends StatelessWidget {
                     // 이메일 앱을 열 수 없다면, 화면 아래에 알림 메시지를 띄워줘요.
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('${appLocalizations.mailAppError}\n${appLocalizations.contactEmail}'), // 오류 메시지와 이메일 주소를 보여줘요.
+                        content: Text(
+                          '${appLocalizations.mailAppError}\n${appLocalizations.contactEmail}',
+                        ), // 오류 메시지와 이메일 주소를 보여줘요.
                       ),
                     );
                   }
@@ -218,7 +262,9 @@ class SettingScreen extends StatelessWidget {
 String? encodeQueryParameters(Map<String, String> params) {
   // 이메일 주소의 '?subject=...' 부분을 만들어주는 코드예요.
   return params.entries
-      .map((MapEntry<String, String> e) =>
-          '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}')
+      .map(
+        (MapEntry<String, String> e) =>
+            '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
+      )
       .join('&');
 }
