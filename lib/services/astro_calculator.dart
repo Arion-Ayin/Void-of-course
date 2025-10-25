@@ -69,16 +69,17 @@ class AstroCalculator {
   }
 
   // 해와 달의 위치(경도)를 동시에 찾아주는 함수예요.
-  Map<String, double> getSunMoonLongitude(DateTime date) {
-    final jd = getJulianDay(date); // 날짜를 줄리안 데이로 바꿔요.
-    final sun = Sweph.swe_calc_ut(jd, HeavenlyBody.SE_SUN, SwephFlag.SEFLG_SWIEPH); // 해의 위치를 계산해요.
-    final moon = Sweph.swe_calc_ut(jd, HeavenlyBody.SE_MOON, SwephFlag.SEFLG_SWIEPH); // 달의 위치를 계산해요.
-    // 만약 위치를 찾지 못했다면, '오류가 났어요'라고 알려줘요.
-    if (sun.longitude == null || moon.longitude == null) {
-      throw Exception('Sun or Moon position not available.');
-    }
-    return {'sun': sun.longitude!, 'moon': moon.longitude!}; // 해와 달의 위치를 알려줘요.
+ Map<String, double> getSunMoonLongitude(DateTime date) {
+  final jd = getJulianDay(date);
+  final sun = Sweph.swe_calc_ut(jd, HeavenlyBody.SE_SUN, SwephFlag.SEFLG_SWIEPH);
+  final moon = Sweph.swe_calc_ut(jd, HeavenlyBody.SE_MOON, SwephFlag.SEFLG_SWIEPH);
+  if (sun.longitude == null || moon.longitude == null) {
+    throw Exception('Sun or Moon position not available.');
   }
+  print('getSunMoonLongitude for $date: Sun Lon = ${sun.longitude}, Moon Lon = ${moon.longitude}');
+  return {'sun': sun.longitude!, 'moon': moon.longitude!};
+    }
+
 
   // 달의 현재 모양(위상)이 무엇인지 찾아주는 함수예요.
   Map<String, dynamic> getMoonPhaseInfo(DateTime date) {

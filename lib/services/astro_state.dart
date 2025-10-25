@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'astro_calculator.dart';
 import 'notification_service.dart';
 import 'package:sweph/sweph.dart';
+import 'package:workmanager/workmanager.dart';
 
 final AstroCalculator _calculator = AstroCalculator();
 
@@ -90,14 +91,12 @@ class AstroState with ChangeNotifier {
       await Sweph.init();
       _currentLocale = Intl.getCurrentLocale();
       await _notificationService.init();
+      await initializeWorkManager(); // WorkManager 초기화 추가
       final prefs = await SharedPreferences.getInstance();
       _voidAlarmEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
       _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 3;
 
-      // This calculates for the initial date (today)
       await _updateData();
-
-      // Also find the VOC period for the current time and store it separately
       final vocTimes = _calculator.findVoidOfCoursePeriod(DateTime.now());
       _realtimeVocStart = vocTimes['start'];
       _realtimeVocEnd = vocTimes['end'];
@@ -117,10 +116,8 @@ class AstroState with ChangeNotifier {
   Future<void> updateLocale(String newLocale) async {
     _currentLocale = newLocale;
     if (_voidAlarmEnabled) {
-      // When locale changes, we need to reschedule the pre-void alarm
-      // and update ongoing notifications if any.
       await _schedulePreVoidAlarm();
-      _checkTime(); // Re-check to update ongoing notification text immediately
+      _checkTime();
     }
   }
 
@@ -128,25 +125,18 @@ class AstroState with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
 
     if (enable) {
-      // 1. Request standard notification permission
-      final bool hasNotificationPermission =
-          await _notificationService.requestPermissions();
+      final bool hasNotificationPermission = await _notificationService.requestPermissions();
       if (!hasNotificationPermission) {
         notifyListeners();
         return AlarmPermissionStatus.notificationDenied;
       }
 
-      // 2. Check and request exact alarm permission
-      bool hasExactAlarmPermission =
-          await _notificationService.checkExactAlarmPermission();
+      bool hasExactAlarmPermission = await _notificationService.checkExactAlarmPermission();
       if (!hasExactAlarmPermission) {
         await _notificationService.requestExactAlarmPermission();
-        // Check again after user returns from settings
-        hasExactAlarmPermission =
-            await _notificationService.checkExactAlarmPermission();
+        hasExactAlarmPermission = await _notificationService.checkExactAlarmPermission();
       }
 
-      // 3. Update state and schedule alarm only if permission is granted
       if (hasExactAlarmPermission) {
         _voidAlarmEnabled = true;
         await prefs.setBool('voidAlarmEnabled', true);
@@ -160,7 +150,6 @@ class AstroState with ChangeNotifier {
         return AlarmPermissionStatus.exactAlarmDenied;
       }
     } else {
-      // Disabling alarm
       _voidAlarmEnabled = false;
       await prefs.setBool('voidAlarmEnabled', false);
       await _notificationService.cancelAllNotifications();
@@ -179,19 +168,80 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> _schedulePreVoidAlarm({bool isToggleOn = false}) async {
-    // 1. Always cancel previous alarms to avoid conflicts
-    await _notificationService.cancelNotification(0);
+    await _notificationService.cancelAllNotifications();
+
     if (!_voidAlarmEnabled) {
+      _isOngoingNotificationVisible = false;
+      notifyListeners();
       return;
     }
 
-    // 2. Find the next upcoming VOC period.
-    final vocTimes = _calculator.findVoidOfCoursePeriod(DateTime.now());
+    final now = DateTime.now();
+    final vocTimes = _calculator.findVoidOfCoursePeriod(now);
     _realtimeVocStart = vocTimes['start'];
     _realtimeVocEnd = vocTimes['end'];
 
-    // 3. Trigger an immediate check.
-    // _checkTime() will now handle showing the pre-void or in-void notification based on the latest times.
+    if (_realtimeVocStart == null || _realtimeVocEnd == null) {
+      if (kDebugMode) print("No upcoming VOC period found.");
+      return;
+    }
+
+    final locale = _currentLocale;
+    final preAlarmTime = _realtimeVocStart!.subtract(Duration(hours: _preVoidAlarmHours));
+
+    bool hasExactAlarmPermission = await _notificationService.checkExactAlarmPermission();
+    if (!hasExactAlarmPermission) {
+      await _notificationService.requestExactAlarmPermission();
+      hasExactAlarmPermission = await _notificationService.checkExactAlarmPermission();
+      if (!hasExactAlarmPermission) {
+        if (kDebugMode) print("Exact alarm permission denied, cannot schedule notifications.");
+        return;
+      }
+    }
+
+    // Pre-VOC 알림
+    String preTitle = locale.startsWith('ko') ? '보이드 시작 알림' : 'Void of Course Upcoming';
+    String preBody = locale.startsWith('ko')
+        ? '보이드가 $_preVoidAlarmHours시간 후 시작됩니다.'
+        : 'Void of Course begins in $_preVoidAlarmHours hours.';
+    await _notificationService.scheduleNotification(
+      id: 0,
+      title: preTitle,
+      body: preBody,
+      scheduledTime: preAlarmTime,
+      canScheduleExact: hasExactAlarmPermission,
+    );
+
+    // VOC 시작 알림
+    String startTitle = locale.startsWith('ko') ? '보이드 시작' : 'Void of Course Started';
+    String startBody = locale.startsWith('ko')
+        ? '지금 보이드 시간이 시작되었습니다.'
+        : 'The Void of Course period has now begun.';
+    await _notificationService.scheduleNotification(
+      id: 1,
+      title: startTitle,
+      body: startBody,
+      scheduledTime: _realtimeVocStart!,
+      canScheduleExact: hasExactAlarmPermission,
+    );
+
+    // VOC 종료 알림
+    String endTitle = locale.startsWith('ko') ? '보이드 종료' : 'Void of Course Ended';
+    String endBody = locale.startsWith('ko')
+        ? '보이드 시간이 종료되었습니다.'
+        : 'The Void of Course period has ended.';
+    await _notificationService.scheduleNotification(
+      id: 2,
+      title: endTitle,
+      body: endBody,
+      scheduledTime: _realtimeVocEnd!,
+      canScheduleExact: hasExactAlarmPermission,
+    );
+
+    if (kDebugMode) {
+      print("Scheduled notifications: Pre-VOC at $preAlarmTime, Start at $_realtimeVocStart, End at $_realtimeVocEnd");
+    }
+
     _checkTime();
     notifyListeners();
   }
@@ -206,7 +256,6 @@ class AstroState with ChangeNotifier {
   void _checkTime() {
     final now = DateTime.now();
 
-    // This part is for auto-updating the screen when the user is following time
     if (_isFollowingTime) {
       bool shouldRefresh = false;
       String refreshReason = "";
@@ -225,118 +274,13 @@ class AstroState with ChangeNotifier {
         }
         _selectedDate = now;
         refreshData();
-        return; // Return after refresh to avoid conflicting UI updates
       }
     }
 
-    // --- Real-time VOC Notification Management ---
-
-    // If alarms are disabled, ensure no notifications are showing and stop.
-    if (!_voidAlarmEnabled) {
-      if (_isOngoingNotificationVisible) {
-        _notificationService.cancelNotification(1);
-        _notificationService.cancelNotification(2);
-        _isOngoingNotificationVisible = false;
-      }
-      _notificationService.cancelNotification(0); // Also cancel pre-void
-      return;
-    }
-
-    // If the VOC we were tracking is long over, find the next one to be prepared.
-    if (_realtimeVocEnd != null &&
-        now.isAfter(_realtimeVocEnd!.add(const Duration(minutes: 1)))) {
-      final vocTimes = _calculator.findVoidOfCoursePeriod(now);
-      _realtimeVocStart = vocTimes['start'];
-      _realtimeVocEnd = vocTimes['end'];
-    }
-
-    // Proceed only if we have a valid upcoming VOC
-    if (_realtimeVocStart == null || _realtimeVocEnd == null) {
-      return;
-    }
-
-    final vocStart = _realtimeVocStart!;
-    final vocEnd = _realtimeVocEnd!;
-    final preAlarmTime = vocStart.subtract(Duration(hours: _preVoidAlarmHours));
-
-    final isCurrentlyInVoc = now.isAfter(vocStart) && now.isBefore(vocEnd);
-    final isCurrentlyInPreVoc = now.isAfter(preAlarmTime) && now.isBefore(vocStart);
-
-    // --- State Machine for Notifications ---
-
-    if (isCurrentlyInPreVoc) {
-      // STATE 1: Pre-VOC Countdown
-      // We are in the countdown window. Show/update the countdown notification.
-      if (_isOngoingNotificationVisible) {
-        // This can happen if date/time changes abruptly.
-        // Ensure main VOC notification is cancelled.
-        _notificationService.cancelNotification(1);
-        _notificationService.cancelNotification(2);
-        _isOngoingNotificationVisible = false;
-      }
-      _updatePreVoidAlarmNotification(vocStart);
-    } else if (isCurrentlyInVoc) {
-      // STATE 2: In-VOC Period
-      if (!_isOngoingNotificationVisible) {
-        // VOC just started
-        _notificationService.cancelNotification(0); // Clear pre-void notification
-        _isOngoingNotificationVisible = true;
-
-        // Show "VOC Started" alert
-        final locale = _currentLocale;
-        String title, body;
-        if (locale.startsWith('ko')) {
-          title = '보이드 시작';
-          body = '지금은 보이드 시간입니다.';
-        } else {
-          title = 'Void of Course Started';
-          body = 'The Void of Course period has now begun.';
-        }
-        _notificationService.showImmediateNotification(
-            id: 1, title: title, body: body, isVibrate: true);
-        if (kDebugMode) print("Showing VOC started notification.");
-
-        // REFRESH UI
-        if (_isFollowingTime) {
-          refreshData();
-        }
-      }
-      // Whether it just started or is in progress, update the ongoing notification
-      _updateOngoingNotification();
-    } else {
-      // STATE 3: Outside of Pre-VOC or In-VOC windows
-      if (_isOngoingNotificationVisible) {
-        // VOC just ended
-        _isOngoingNotificationVisible = false;
-        _notificationService.cancelNotification(1); // In case it's still there
-        _notificationService.cancelNotification(2); // The ongoing one
-        if (kDebugMode) print("Cancelling ongoing VOC notification.");
-
-        // Show "VOC Ended" alert
-        final locale = _currentLocale;
-        String title, body;
-        if (locale.startsWith('ko')) {
-          title = '보이드 종료';
-          body = '보이드가 종료되었습니다.';
-        } else {
-          title = 'Void of Course Ended';
-          body = 'The Void of Course period has ended.';
-        }
-        _notificationService.showImmediateNotification(
-            id: 3, title: title, body: body);
-        if (kDebugMode) print("Showing VOC ended notification.");
-
-        // Find the next VOC period immediately
-        final vocTimes = _calculator.findVoidOfCoursePeriod(now);
-        _realtimeVocStart = vocTimes['start'];
-        _realtimeVocEnd = vocTimes['end'];
-
-        if (_isFollowingTime) {
-          refreshData();
-        }
-      }
-      // Also make sure the pre-void notification is cancelled
-      _notificationService.cancelNotification(0);
+    if (_realtimeVocStart != null && _realtimeVocEnd != null) {
+      final isCurrentlyInVoc = now.isAfter(_realtimeVocStart!) && now.isBefore(_realtimeVocEnd!);
+      _isOngoingNotificationVisible = isCurrentlyInVoc;
+      notifyListeners();
     }
   }
 
@@ -354,15 +298,11 @@ class AstroState with ChangeNotifier {
         newDate.month == now.month &&
         newDate.day == now.day;
 
-    // [FIX] No longer cancel ongoing notifications when changing date.
-    // The real-time VOC status is now managed independently in _checkTime.
-
     _isFollowingTime = isNowFollowingTime;
 
     if (_isFollowingTime) {
       _selectedDate = now;
     }
-    // Always update data for the selected date.
     await _updateData();
   }
 
@@ -418,7 +358,6 @@ class AstroState with ChangeNotifier {
     _nextSignTime = result['nextSignTime'] as DateTime?;
     _nextMoonPhaseName = result['nextMoonPhaseName'] as String;
     _nextMoonPhaseTime = result['nextMoonPhaseTime'] as DateTime?;
-    // Do not schedule pre-void alarm from here. It's managed separately.
   }
 
   Future<void> _updateOngoingNotification() async {
@@ -463,7 +402,6 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> _updatePreVoidAlarmNotification(DateTime vocStart) async {
-
     final now = DateTime.now();
     final remainingDuration = vocStart.difference(now);
 
@@ -478,7 +416,7 @@ class AstroState with ChangeNotifier {
         notificationBody = '보이드 시작까지 ${hours}시간 ${minutes}분 남았습니다.';
       } else if (minutes > 0) {
         notificationBody = '보이드 시작까지 ${minutes}분 남았습니다.';
-      } else if (minutes >= 1) {
+      } else if (seconds >= 1) {
         notificationBody = '보이드 시작까지 ${seconds}초 남았습니다.';
       } else {
         notificationBody = '보이드가 곧 시작됩니다.';
@@ -488,8 +426,8 @@ class AstroState with ChangeNotifier {
         notificationBody = '$hours h $minutes m until Void of Course begins.';
       } else if (minutes > 0) {
         notificationBody = '$minutes minutes until Void of Course begins.';
-      } else if (minutes >= 1) {
-        notificationBody = ' $seconds Seconds until Void of Course begins.';
+      } else if (seconds >= 1) {
+        notificationBody = '$seconds seconds until Void of Course begins.';
       } else {
         notificationBody = 'Void of Course begins soon.';
       }
@@ -508,4 +446,90 @@ class AstroState with ChangeNotifier {
       body: notificationBody,
     );
   }
+
+  // WorkManager 초기화
+  Future<void> initializeWorkManager() async {
+    await Workmanager().initialize(
+      callbackDispatcher,
+      isInDebugMode: kDebugMode,
+    );
+
+    if (_voidAlarmEnabled) {
+      await Workmanager().registerPeriodicTask(
+        "voc-check-task",
+        vocCheckTask,
+        frequency: Duration(minutes: 15),
+        inputData: {
+          'preVoidAlarmHours': _preVoidAlarmHours,
+        },
+        constraints: Constraints(
+          networkType: NetworkType.not_required,
+          requiresBatteryNotLow: false,
+          requiresCharging: false,
+          requiresDeviceIdle: false,
+          requiresStorageNotLow: false,
+        ),
+      );
+    }
+  }
+}
+
+// WorkManager 콜백
+const String vocCheckTask = "dev.lioluna.voidofcourse.vocCheckTask";
+
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    try {
+      await Sweph.init();
+      final calculator = AstroCalculator();
+      final now = DateTime.now();
+      final vocTimes = calculator.findVoidOfCoursePeriod(now);
+
+      final notificationService = NotificationService();
+      await notificationService.init();
+
+      final vocStart = vocTimes['start'];
+      final vocEnd = vocTimes['end'];
+
+      if (vocStart != null && vocEnd != null) {
+        final preVoidAlarmHours = inputData?['preVoidAlarmHours'] ?? 3;
+        final preAlarmTime = vocStart.subtract(Duration(hours: preVoidAlarmHours));
+
+        bool hasExactAlarmPermission = await notificationService.checkExactAlarmPermission();
+        if (!hasExactAlarmPermission) {
+          await notificationService.requestExactAlarmPermission();
+          hasExactAlarmPermission = await notificationService.checkExactAlarmPermission();
+          if (!hasExactAlarmPermission) {
+            return false;
+          }
+        }
+
+        await notificationService.scheduleNotification(
+          id: 0,
+          title: 'Void of Course Upcoming',
+          body: 'Void of Course begins in $preVoidAlarmHours hours.',
+          scheduledTime: preAlarmTime,
+          canScheduleExact: hasExactAlarmPermission,
+        );
+        await notificationService.scheduleNotification(
+          id: 1,
+          title: 'Void of Course Started',
+          body: 'The Void of Course period has now begun.',
+          scheduledTime: vocStart,
+          canScheduleExact: hasExactAlarmPermission,
+        );
+        await notificationService.scheduleNotification(
+          id: 2,
+          title: 'Void of Course Ended',
+          body: 'The Void of Course period has ended.',
+          scheduledTime: vocEnd,
+          canScheduleExact: hasExactAlarmPermission,
+        );
+      }
+      return true;
+    } catch (e) {
+      print("WorkManager error: $e");
+      return false;
+    }
+  });
 }
