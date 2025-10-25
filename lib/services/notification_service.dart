@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:android_intent_plus/android_intent.dart';
 
 class NotificationService {
   static final NotificationService _instance = NotificationService._internal();
@@ -15,13 +16,36 @@ class NotificationService {
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'void_channel_id',
+      'Void Notifications',
+      description: 'Notifications for Void of Course periods',
+      importance: Importance.max,
+    );
+
     const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
     );
 
     tz.initializeTimeZones();
 
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
     await _notificationsPlugin.initialize(initializationSettings);
+    await requestBatteryOptimizationPermission();
+  }
+
+  Future<void> requestBatteryOptimizationPermission() async {
+    if (Platform.isAndroid) {
+      const intent = AndroidIntent(
+        action: 'android.settings.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS',
+        data: 'package:dev.lioluna.voidofcourse',
+      );
+      await intent.launch();
+    }
   }
 
   Future<bool> requestPermissions() async {
@@ -56,42 +80,54 @@ class NotificationService {
   }
 
   Future<void> scheduleNotification({
-    required int id,
-    required String title,
-    required String body,
-    required DateTime scheduledTime,
-    required bool canScheduleExact,
-  }) async {
-    await _notificationsPlugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tz.TZDateTime.from(scheduledTime, tz.local),
-      const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'void_channel_id',
-          'Void Notifications',
-          channelDescription: 'Notifications for Void of Course periods',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-      ),
-      androidScheduleMode: canScheduleExact
-          ? AndroidScheduleMode.exactAllowWhileIdle
-          : AndroidScheduleMode.inexact,
-    );
+  required int id,
+  required String title,
+  required String body,
+  required DateTime scheduledTime,
+  required bool canScheduleExact,
+}) async {
+  if (Platform.isAndroid && canScheduleExact) {
+    final bool hasExactAlarmPermission = await checkExactAlarmPermission();
+    if (!hasExactAlarmPermission) {
+      await requestExactAlarmPermission();
+      if (!await checkExactAlarmPermission()) {
+        print('Exact alarm permission denied');
+        return;
+      }
+    }
   }
 
-  // 화면에 계속 떠 있는 알람을 보여주는 함수예요. (진동 없음)
+  final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
+  print('Scheduling notification for: $tzScheduledTime (Local time: $scheduledTime)');
+
+  await _notificationsPlugin.zonedSchedule(
+    id,
+    title,
+    body,
+    tzScheduledTime,
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'void_channel_id',
+        'Void Notifications',
+        channelDescription: 'Notifications for Void of Course periods',
+        importance: Importance.max,
+        priority: Priority.high,
+      ),
+    ),
+    androidScheduleMode: canScheduleExact
+        ? AndroidScheduleMode.exactAllowWhileIdle
+        : AndroidScheduleMode.inexact,
+  );
+}
+
   Future<void> showOngoingNotification({
     required int id,
     required String title,
     required String body,
   }) async {
-    // BigTextStyle을 사용하여 제목과 내용을 구분하고 본문 텍스트를 더 크게 표시합니다.
     final BigTextStyleInformation bigTextStyleInformation = BigTextStyleInformation(
-      body, // 알림이 확장되었을 때 보일 전체 본문
-      contentTitle: title, // 확장된 알림의 제목
+      body,
+      contentTitle: title,
       htmlFormatBigText: false,
       htmlFormatContentTitle: false,
     );
@@ -101,18 +137,18 @@ class NotificationService {
         'ongoing_void_channel_id',
         'Ongoing Void Notifications',
         channelDescription: 'Persistent notification during Void of Course',
-        importance: Importance.low, // 진동 없이 조용히
+        importance: Importance.low,
         priority: Priority.low,
-        ongoing: true, // 지워지지 않게 고정
+        ongoing: true,
         autoCancel: false,
         enableVibration: false,
-        styleInformation: bigTextStyleInformation, // 여기에 스타일을 적용합니다.
+        styleInformation: bigTextStyleInformation,
       ),
     );
     await _notificationsPlugin.show(
       id,
       title,
-      body, // 알림이 축소되었을 때 보일 짧은 본문
+      body,
       notificationDetails,
     );
   }
@@ -125,14 +161,12 @@ class NotificationService {
     await _notificationsPlugin.cancelAll();
   }
 
-  // 즉시 알람을 보여주는 함수예요. (스케줄링 없이)
   Future<void> showImmediateNotification({
     required int id,
     required String title,
     required String body,
     bool isVibrate = false,
   }) async {
-    // isVibrate 값에 따라 채널을 다르게 사용
     final NotificationDetails notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
         isVibrate ? 'alert_void_channel' : 'void_channel_id',
