@@ -26,13 +26,10 @@ dependencies:
   cupertino_icons: ^1.0.8
   another_flushbar: ^1.12.32
   flutter_local_notifications: ^19.5.0
+  url_launcher: ^6.0.0 
   android_intent_plus: ^6.0.0
   timezone: ^0.10.1
   workmanager: ^0.6.0
-  package_info_plus: ^8.0.0
-  upgrader: ^10.0.0
-  url_launcher: ^6.3.0
-
 
 dev_dependencies:
   flutter_test:
