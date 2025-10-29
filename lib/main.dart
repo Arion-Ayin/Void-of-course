@@ -196,6 +196,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   bool _isAdLoaded = false;
 
   // 실제 광고 단위 ID
+  
   final String _adUnitId = 'ca-app-pub-7332476431820224/6217062207';
 
   @override
