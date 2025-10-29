@@ -146,7 +146,7 @@ abstract class AppLocalizations {
   /// No description provided for @voidAlarmEnabledMessage.
   ///
   /// In en, this message translates to:
-  /// **'Void alarm has been activated.'**
+  /// **'Void alarm has been activated.\nThe alarm will sound 6 hours before.'**
   String get voidAlarmEnabledMessage;
 
   /// No description provided for @voidAlarmDisabledMessage.

@@ -16,7 +16,63 @@ class SettingScreen extends StatelessWidget {
   // 이 위젯은 변하지 않는 내용을 보여줘서 StatelessWidget으로 만들었어요.
   const SettingScreen({super.key}); // 위젯을 만들 때 필요한 기본 정보예요.
 
+  // URL을 열기 전에 사용자에게 확인을 받는 대화상자를 표시하는 함수예요.
+  Future<void> _showUrlConfirmationDialog(
+    BuildContext context, {
+    required String url,
+    required String serviceNameKo,
+    required String serviceNameEn,
+  }) async {
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+    final isKorean = localeProvider.locale?.languageCode == 'ko';
+
+    final String title = isKorean ? '$serviceNameKo로 이동' : 'Go to $serviceNameEn';
+    final String content = isKorean
+        ? '$serviceNameKo으로 이동하시겠습니까?'
+        : 'Do you want to go to $serviceNameEn?';
+    final String yesButton = isKorean ? '예' : 'Yes';
+    final String noButton = isKorean ? '아니오' : 'No';
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
+          content: Text(content),
+          actions: <Widget>[
+            TextButton(
+              child: Text(noButton),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: Text(yesButton),
+              onPressed: () async {
+                Navigator.of(context).pop();
+                final Uri uri = Uri.parse(url);
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } else {
+                  // URL을 열 수 없을 때 화면 아래에 알림 메시지를 띄워줘요.
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Could not launch $url'),
+                      ),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   // 이 함수는 화면에 무엇을 그릴지 정해줘요.
+  @override
   Widget build(BuildContext context) {
     // 현재 앱이 어두운 모드인지 아닌지 확인해요.
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
@@ -218,37 +274,32 @@ class SettingScreen extends StatelessWidget {
               icon: Icons.feedback, // 피드백 아이콘을 보여줘요.
               title: appLocalizations.feedbackTitle, // '피드백'이라는 제목을 보여줘요.
               iconColor: Colors.orange, // 아이콘 색깔을 주황색으로 정해요.
-              trailing: IconButton(
-                // 오른쪽에 버튼을 만들어요.
-                icon: const Icon(
-                  Icons.mail,
-                  color: Colors.orange,
-                ), // 메일 아이콘을 주황색으로 보여줘요.
-                onPressed: () async {
-                  // 버튼을 누르면 이 코드가 실행돼요.
-                  // 이메일 앱을 열기 위한 정보를 만들어요.
-                  final Uri emailLaunchUri = Uri(
-                    scheme: 'mailto', // 'mailto'는 이메일 앱을 뜻해요.
-                    path: 'Arion.Ayin@gmail.com', // 이메일을 보낼 주소예요.
-                    query: encodeQueryParameters(<String, String>{
-                      // 이메일 제목을 미리 정해줘요.
-                      'subject': 'Feedback for Void-of-course App',
-                    }),
-                  );
-                  // 이메일 앱을 열 수 있는지 확인해요.
-                  if (await canLaunchUrl(emailLaunchUri)) {
-                    await launchUrl(emailLaunchUri); // 이메일 앱을 열어요.
-                  } else {
-                    // 이메일 앱을 열 수 없다면, 화면 아래에 알림 메시지를 띄워줘요.
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          '${appLocalizations.mailAppError}\n${appLocalizations.contactEmail}',
-                        ), // 오류 메시지와 이메일 주소를 보여줘요.
-                      ),
-                    );
-                  }
-                },
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chat, color: Color(0xFF5865F2)), // Discord 색상
+                    onPressed: () {
+                      _showUrlConfirmationDialog(
+                        context,
+                        url: 'https://discord.gg/F7Z3MZdC',
+                        serviceNameKo: '디스코드',
+                        serviceNameEn: 'Discord',
+                      );
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.coffee, color: Color(0xFF03C75A)), // Naver 색상
+                    onPressed: () {
+                      _showUrlConfirmationDialog(
+                        context,
+                        url: 'https://cafe.naver.com/shootingstarter',
+                        serviceNameKo: '네이버 카페',
+                        serviceNameEn: 'Naver Cafe',
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ],
@@ -256,15 +307,4 @@ class SettingScreen extends StatelessWidget {
       ),
     );
   }
-}
-
-// 이 함수는 이메일 제목처럼 복잡한 글자들을 웹 주소에 맞게 바꿔줘요.
-String? encodeQueryParameters(Map<String, String> params) {
-  // 이메일 주소의 '?subject=...' 부분을 만들어주는 코드예요.
-  return params.entries
-      .map(
-        (MapEntry<String, String> e) =>
-            '${Uri.encodeComponent(e.key)}=${Uri.encodeComponent(e.value)}',
-      )
-      .join('&');
 }
