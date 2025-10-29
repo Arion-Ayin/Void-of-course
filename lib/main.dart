@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 // 앱의 상태(데이터)를 쉽게 관리하게 도와주는 라이브러리를 가져와요. (provider)
 import 'package:provider/provider.dart';
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
@@ -7,7 +8,6 @@ import 'screens/info_screen.dart';
 import 'screens/setting_screen.dart';
 import 'services/astro_state.dart';
 import 'themes.dart';
-import 'services/notification_service.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:lioluna/services/locale_provider.dart';
 import 'package:lioluna/l10n/app_localizations.dart';
@@ -15,6 +15,8 @@ import 'package:lioluna/l10n/app_localizations.dart';
 void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요. (앱이 시작하기 전에 필요한 준비를 해요)
   WidgetsFlutterBinding.ensureInitialized();
+  // Google Mobile Ads SDK를 초기화해요.
+  MobileAds.instance.initialize();
   // 우리 앱을 실행해요. runApp은 화면에 위젯을 보여주는 함수예요.
   runApp(
     MultiProvider(
@@ -114,10 +116,19 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
     // 화면의 뼈대를 만들어요. Scaffold는 기본적인 앱 디자인을 제공하는 위젯이에요.
     return Scaffold(
-      // 여러 화면을 겹쳐 놓고, _selectedIndex에 따라 보여줄 화면을 바꿔요. IndexedStack은 여러 위젯을 겹쳐 놓고 하나만 보여줄 때 사용해요.
-      body: IndexedStack(
-        index: _selectedIndex, // 현재 선택된 인덱스에 해당하는 화면을 보여줘요.
-        children: _buildScreens(), // 보여줄 화면들의 목록이에요.
+      // 화면 내용과 배너 광고를 위아래로 배치해요.
+      body: Column(
+        children: [
+          // 기존 화면 내용이 광고에 가려지지 않도록 Expanded로 감싸요.
+          Expanded(
+            child: IndexedStack(
+              index: _selectedIndex, // 현재 선택된 인덱스에 해당하는 화면을 보여줘요.
+              children: _buildScreens(), // 보여줄 화면들의 목록이에요.
+            ),
+          ),
+          // 배너 광고를 보여주는 위젯이에요.
+          const BannerAdWidget(),
+        ],
       ),
       // 화면 하단에 내비게이션 바를 만들어요. bottomNavigationBar는 화면 아래에 있는 메뉴 바예요.
       bottomNavigationBar: Container(
@@ -169,5 +180,66 @@ class _MainAppScreenState extends State<MainAppScreen> {
       const SettingScreen(), // 설정 화면
       const InfoScreen(), // 정보 화면
     ];
+  }
+}
+
+// 배너 광고를 표시하는 위젯이에요.
+class BannerAdWidget extends StatefulWidget {
+  const BannerAdWidget({super.key});
+
+  @override
+  State<BannerAdWidget> createState() => _BannerAdWidgetState();
+}
+
+class _BannerAdWidgetState extends State<BannerAdWidget> {
+  BannerAd? _bannerAd;
+  bool _isAdLoaded = false;
+
+  // 실제 광고 단위 ID
+  final String _adUnitId = 'ca-app-pub-7332476431820224/6217062207';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadAd();
+  }
+
+  void _loadAd() {
+    _bannerAd = BannerAd(
+      adUnitId: _adUnitId,
+      request: const AdRequest(),
+      size: AdSize.banner,
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          setState(() {
+            _isAdLoaded = true;
+          });
+        },
+        onAdFailedToLoad: (ad, err) {
+          print('BannerAd failed to load: $err');
+          ad.dispose();
+        },
+      ),
+    )..load();
+  }
+
+  @override
+  void dispose() {
+    _bannerAd?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isAdLoaded) {
+      return SizedBox(
+        width: _bannerAd!.size.width.toDouble(),
+        height: _bannerAd!.size.height.toDouble(),
+        child: AdWidget(ad: _bannerAd!),
+      );
+    } else {
+      // 광고가 로드되지 않았을 때는 아무것도 표시하지 않아요.
+      return const SizedBox.shrink();
+    }
   }
 }
