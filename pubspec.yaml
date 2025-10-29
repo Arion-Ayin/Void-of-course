@@ -29,6 +29,7 @@ dependencies:
   url_launcher: ^6.0.0 
   android_intent_plus: ^6.0.0
   timezone: ^0.10.1
+  google_mobile_ads: ^5.0.0
 
 
 dev_dependencies:

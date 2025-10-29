@@ -29,7 +29,6 @@
             }
         }
     },
-    "feedbackTitle": "Feedback",
     "mailAppError": "Cannot open mail app. Please check your default mail app settings.",
     "contactEmail": "Arion.Ayin@gmail.com",
     "infoScreenTitle": "Info",
