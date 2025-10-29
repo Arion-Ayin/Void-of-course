@@ -269,38 +269,52 @@ class SettingScreen extends StatelessWidget {
                 },
               ),
             ),
-            // 네 번째 설정 카드: 피드백 보내기
-            SettingCard(
-              icon: Icons.feedback, // 피드백 아이콘을 보여줘요.
-              title: appLocalizations.feedbackTitle, // '피드백'이라는 제목을 보여줘요.
-              iconColor: Colors.orange, // 아이콘 색깔을 주황색으로 정해요.
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chat, color: Color(0xFF5865F2)), // Discord 색상
-                    onPressed: () {
-                      _showUrlConfirmationDialog(
-                        context,
-                        url: 'https://discord.gg/F7Z3MZdC',
-                        serviceNameKo: '디스코드',
-                        serviceNameEn: 'Discord',
-                      );
-                    },
+            const SizedBox(height: 16), // 카드 사이에 간격을 추가해요.
+            // 디스코드와 네이버 카페 링크를 보여주는 새로운 행이에요.
+            Row(
+              children: [
+                // 디스코드 카드
+                Expanded(
+                  child: Card(
+                    clipBehavior: Clip.antiAlias, // 카드 모양대로 내용이 잘리도록 해요.
+                    child: InkWell(
+                      onTap: () {
+                        _showUrlConfirmationDialog(
+                          context,
+                          url: 'https://discord.gg/F7Z3MZdC',
+                          serviceNameKo: '디스코드',
+                          serviceNameEn: 'Discord',
+                        );
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: Icon(Icons.chat, color: Color(0xFF5865F2), size: 32),
+                      ),
+                    ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.coffee, color: Color(0xFF03C75A)), // Naver 색상
-                    onPressed: () {
-                      _showUrlConfirmationDialog(
-                        context,
-                        url: 'https://cafe.naver.com/shootingstarter',
-                        serviceNameKo: '네이버 카페',
-                        serviceNameEn: 'Naver Cafe',
-                      );
-                    },
+                ),
+                const SizedBox(width: 16), // 카드 사이에 간격을 만들어요.
+                // 네이버 카페 카드
+                Expanded(
+                  child: Card(
+                    clipBehavior: Clip.antiAlias,
+                    child: InkWell(
+                      onTap: () {
+                        _showUrlConfirmationDialog(
+                          context,
+                          url: 'https://cafe.naver.com/shootingstarter',
+                          serviceNameKo: '네이버 카페',
+                          serviceNameEn: 'Naver Cafe',
+                        );
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 16.0),
+                        child: Icon(Icons.coffee, color: Color(0xFF03C75A), size: 32),
+                      ),
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ],
         ),

@@ -52,9 +52,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get feedbackTitle => 'Feedback';
-
-  @override
   String get mailAppError => 'Cannot open mail app. Please check your default mail app settings.';
 
   @override

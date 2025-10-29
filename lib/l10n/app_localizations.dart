@@ -173,12 +173,6 @@ abstract class AppLocalizations {
   /// **'Void alarm time set to {count} hours before.'**
   String voidAlarmTimeSetMessage(int count);
 
-  /// No description provided for @feedbackTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Feedback'**
-  String get feedbackTitle;
-
   /// No description provided for @mailAppError.
   ///
   /// In en, this message translates to:

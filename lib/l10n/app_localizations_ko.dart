@@ -52,9 +52,6 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get feedbackTitle => '피드백';
-
-  @override
   String get mailAppError => '메일 앱을 열 수 없습니다. 기본 메일 앱 설정을 확인해주세요.';
 
   @override
