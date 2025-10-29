@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart'; // Flutter 앱의 기본 위젯들을 가져와요.
 import '../widgets/info_card.dart'; // 정보 화면에 보이는 카드 모양 위젯을 가져와요.
-import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // 앱의 언어(한국어, 영어 등)를 쉽게 바꾸기 위한 파일을 가져와요.
+import 'package:lioluna/l10n/app_localizations.dart'; // 앱의 언어(한국어, 영어 등)를 쉽게 바꾸기 위한 파일을 가져와요.
 
 // 정보 화면을 보여주는 위젯이에요.
 class InfoScreen extends StatelessWidget {
@@ -67,7 +67,7 @@ class InfoScreen extends StatelessWidget {
                 InfoCard(
                   icon: Icons.people, // 사람 아이콘을 보여줘요.
                   title: appLocalizations.whoAreWeTitle, // '우리는 누구인가요?'라는 제목을 보여줘요.
-                  subtitle: appLocalizations.whoAreWeSubtitle, // 이 앱을 만든 사람에 대한 설명을 보여줘요.
+                  subtitle: appLocalizations.whoAreWeSubtitle.replaceAll('|||', '\n'), // 이 앱을 만든 사람에 대한 설명을 보여줘요.
                   iconColor: Colors.amber, // 아이콘 색깔을 호박색으로 정해요.
                 ),
                 const SizedBox(height: 20), // 카드 사이에 20만큼의 공간을 만들어요.
@@ -75,7 +75,7 @@ class InfoScreen extends StatelessWidget {
                 InfoCard(
                   icon: Icons.timer_sharp, // 시계 아이콘을 보여줘요.
                   title: appLocalizations.whoIsItUsefulForTitle, // '이 앱이 유용한 사람은?'이라는 제목을 보여줘요.
-                  subtitle: appLocalizations.whoIsItUsefulForSubtitle, // 이 앱을 쓰면 좋은 사람에 대한 설명을 보여줘요.
+                  subtitle: appLocalizations.whoIsItUsefulForSubtitle.replaceAll('|||', '\n'), // 이 앱을 쓰면 좋은 사람에 대한 설명을 보여줘요.
                   iconColor: Colors.green, // 아이콘 색깔을 초록색으로 정해요.
                 ),
                 const SizedBox(height: 20), // 카드 사이에 20만큼의 공간을 만들어요.

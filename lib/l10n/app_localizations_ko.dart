@@ -64,19 +64,19 @@ class AppLocalizationsKo extends AppLocalizations {
   String get infoScreenTitle => '정보';
 
   @override
-  String get headerSubtitle => 'Void of Course Calculator';
+  String get headerSubtitle => '보이드 오브 코스 계산기';
 
   @override
   String get whoAreWeTitle => '우리는 누구인가요?';
 
   @override
-  String get whoAreWeSubtitle => '• 아리온아인의 사명 : \n사자의 눈으로 세상을 헤아립니다.';
+  String get whoAreWeSubtitle => '• 아리온아인의 사명 : |||사자의 눈으로 세상을 헤아립니다.';
 
   @override
   String get whoIsItUsefulForTitle => '누구에게 유용한가요?';
 
   @override
-  String get whoIsItUsefulForSubtitle => '• 간단한 택일이 필요하신 분들\n• 보이드 오브 코스 계산이 필요한 분들\n• 행동의 지표성이 필요한 분들';
+  String get whoIsItUsefulForSubtitle => '• 간단한 택일이 필요하신 분들|||• 보이드 오브 코스 계산이 필요한 분들|||• 행동의 지표성이 필요한 분들';
 
   @override
   String get whyDidWeMakeThisAppTitle => '왜 이 앱을 만들었나요?';
@@ -88,28 +88,28 @@ class AppLocalizationsKo extends AppLocalizations {
   String get copyrightText => '© 2025 Arion Ayin. All rights reserved.';
 
   @override
-  String get newMoon => 'New Moon';
+  String get newMoon => '신월';
 
   @override
-  String get crescentMoon => 'Crescent Moon';
+  String get crescentMoon => '초승달';
 
   @override
-  String get firstQuarter => 'First Quarter';
+  String get firstQuarter => '상현달';
 
   @override
-  String get gibbousMoon => 'Gibbous Moon';
+  String get gibbousMoon => '기울어진 달';
 
   @override
-  String get fullMoon => 'Full Moon';
+  String get fullMoon => '보름달';
 
   @override
-  String get disseminatingMoon => 'Disseminating Moon';
+  String get disseminatingMoon => '기울어가는 달';
 
   @override
-  String get lastQuarter => 'Last Quarter';
+  String get lastQuarter => '하현달';
 
   @override
-  String get balsamicMoon => 'Balsamic Moon';
+  String get balsamicMoon => '그믐달';
 
   @override
   String get sunMoonPositionError => '태양 또는 달의 위치를 사용할 수 없습니다.';
@@ -242,7 +242,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String moonInSign(String sign) {
-    return 'Moon in $sign';
+    return '달, $sign에 위치';
   }
 
   @override
