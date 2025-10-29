@@ -1,0 +1,549 @@
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:intl/intl.dart' as intl;
+
+import 'app_localizations_en.dart';
+import 'app_localizations_ko.dart';
+
+// ignore_for_file: type=lint
+
+/// Callers can lookup localized strings with an instance of AppLocalizations
+/// returned by `AppLocalizations.of(context)`.
+///
+/// Applications need to include `AppLocalizations.delegate()` in their app's
+/// `localizationDelegates` list, and the locales they support in the app's
+/// `supportedLocales` list. For example:
+///
+/// ```dart
+/// import 'l10n/app_localizations.dart';
+///
+/// return MaterialApp(
+///   localizationsDelegates: AppLocalizations.localizationsDelegates,
+///   supportedLocales: AppLocalizations.supportedLocales,
+///   home: MyApplicationHome(),
+/// );
+/// ```
+///
+/// ## Update pubspec.yaml
+///
+/// Please make sure to update your pubspec.yaml to include the following
+/// packages:
+///
+/// ```yaml
+/// dependencies:
+///   # Internationalization support.
+///   flutter_localizations:
+///     sdk: flutter
+///   intl: any # Use the pinned version from flutter_localizations
+///
+///   # Rest of dependencies
+/// ```
+///
+/// ## iOS Applications
+///
+/// iOS applications define key application metadata, including supported
+/// locales, in an Info.plist file that is built into the application bundle.
+/// To configure the locales supported by your app, you’ll need to edit this
+/// file.
+///
+/// First, open your project’s ios/Runner.xcworkspace Xcode workspace file.
+/// Then, in the Project Navigator, open the Info.plist file under the Runner
+/// project’s Runner folder.
+///
+/// Next, select the Information Property List item, select Add Item from the
+/// Editor menu, then select Localizations from the pop-up menu.
+///
+/// Select and expand the newly-created Localizations item then, for each
+/// locale your application supports, add a new item and select the locale
+/// you wish to add from the pop-up menu in the Value field. This list should
+/// be consistent with the languages listed in the AppLocalizations.supportedLocales
+/// property.
+abstract class AppLocalizations {
+  AppLocalizations(String locale) : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+
+  final String localeName;
+
+  static AppLocalizations? of(BuildContext context) {
+    return Localizations.of<AppLocalizations>(context, AppLocalizations);
+  }
+
+  static const LocalizationsDelegate<AppLocalizations> delegate = _AppLocalizationsDelegate();
+
+  /// A list of this localizations delegate along with the default localizations
+  /// delegates.
+  ///
+  /// Returns a list of localizations delegates containing this delegate along with
+  /// GlobalMaterialLocalizations.delegate, GlobalCupertinoLocalizations.delegate,
+  /// and GlobalWidgetsLocalizations.delegate.
+  ///
+  /// Additional delegates can be added by appending to this list in
+  /// MaterialApp. This list does not have to be used at all if a custom list
+  /// of delegates is preferred or required.
+  static const List<LocalizationsDelegate<dynamic>> localizationsDelegates = <LocalizationsDelegate<dynamic>>[
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
+
+  /// A list of this localizations delegate's supported locales.
+  static const List<Locale> supportedLocales = <Locale>[
+    Locale('en'),
+    Locale('ko')
+  ];
+
+  /// No description provided for @home.
+  ///
+  /// In en, this message translates to:
+  /// **'Home'**
+  String get home;
+
+  /// No description provided for @settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings;
+
+  /// No description provided for @info.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get info;
+
+  /// No description provided for @languageSettings.
+  ///
+  /// In en, this message translates to:
+  /// **'Language Settings'**
+  String get languageSettings;
+
+  /// No description provided for @korean.
+  ///
+  /// In en, this message translates to:
+  /// **'Korean'**
+  String get korean;
+
+  /// No description provided for @english.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get english;
+
+  /// No description provided for @darkMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark Mode'**
+  String get darkMode;
+
+  /// No description provided for @voidAlarmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Void Alarm'**
+  String get voidAlarmTitle;
+
+  /// No description provided for @voidAlarmEnabledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Void alarm has been activated.'**
+  String get voidAlarmEnabledMessage;
+
+  /// No description provided for @voidAlarmDisabledMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Void alarm has been deactivated.'**
+  String get voidAlarmDisabledMessage;
+
+  /// No description provided for @voidAlarmTimeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Alarm Time'**
+  String get voidAlarmTimeTitle;
+
+  /// Unit for void alarm time setting
+  ///
+  /// In en, this message translates to:
+  /// **'{count} hours before'**
+  String voidAlarmTimeUnit(int count);
+
+  /// Message shown when void alarm time is set
+  ///
+  /// In en, this message translates to:
+  /// **'Void alarm time set to {count} hours before.'**
+  String voidAlarmTimeSetMessage(int count);
+
+  /// No description provided for @feedbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Feedback'**
+  String get feedbackTitle;
+
+  /// No description provided for @mailAppError.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot open mail app. Please check your default mail app settings.'**
+  String get mailAppError;
+
+  /// No description provided for @contactEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Arion.Ayin@gmail.com'**
+  String get contactEmail;
+
+  /// No description provided for @infoScreenTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get infoScreenTitle;
+
+  /// No description provided for @headerSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Void of Course Calculator'**
+  String get headerSubtitle;
+
+  /// No description provided for @whoAreWeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who are we?'**
+  String get whoAreWeTitle;
+
+  /// No description provided for @whoAreWeSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'• Arion Ayin\'s Mission : Fathoming the world with the eyes of a lion'**
+  String get whoAreWeSubtitle;
+
+  /// No description provided for @whoIsItUsefulForTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is it useful for?'**
+  String get whoIsItUsefulForTitle;
+
+  /// No description provided for @whoIsItUsefulForSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'• Those who need simple date selection\n• Those who need Void of Course calculations\n• Those who need an indicator for action'**
+  String get whoIsItUsefulForSubtitle;
+
+  /// No description provided for @whyDidWeMakeThisAppTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why did we make this?'**
+  String get whyDidWeMakeThisAppTitle;
+
+  /// No description provided for @whyDidWeMakeThisAppSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'• With the hope that anyone can easily access this information.'**
+  String get whyDidWeMakeThisAppSubtitle;
+
+  /// No description provided for @copyrightText.
+  ///
+  /// In en, this message translates to:
+  /// **'© 2025 Arion Ayin. All rights reserved.'**
+  String get copyrightText;
+
+  /// No description provided for @newMoon.
+  ///
+  /// In en, this message translates to:
+  /// **'New Moon'**
+  String get newMoon;
+
+  /// No description provided for @crescentMoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Crescent Moon'**
+  String get crescentMoon;
+
+  /// No description provided for @firstQuarter.
+  ///
+  /// In en, this message translates to:
+  /// **'First Quarter'**
+  String get firstQuarter;
+
+  /// No description provided for @gibbousMoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Gibbous Moon'**
+  String get gibbousMoon;
+
+  /// No description provided for @fullMoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Full Moon'**
+  String get fullMoon;
+
+  /// No description provided for @disseminatingMoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Disseminating Moon'**
+  String get disseminatingMoon;
+
+  /// No description provided for @lastQuarter.
+  ///
+  /// In en, this message translates to:
+  /// **'Last Quarter'**
+  String get lastQuarter;
+
+  /// No description provided for @balsamicMoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Balsamic Moon'**
+  String get balsamicMoon;
+
+  /// No description provided for @sunMoonPositionError.
+  ///
+  /// In en, this message translates to:
+  /// **'Sun or Moon position not available.'**
+  String get sunMoonPositionError;
+
+  /// No description provided for @initializationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Initialization Error'**
+  String get initializationError;
+
+  /// No description provided for @calculationError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error during calculation'**
+  String get calculationError;
+
+  /// No description provided for @vocStartsInMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutesRemaining} minutes until Void of Course begins.'**
+  String vocStartsInMinutes(int minutesRemaining);
+
+  /// No description provided for @vocStartsInHours.
+  ///
+  /// In en, this message translates to:
+  /// **'Void of Course begins in {count} hours.'**
+  String vocStartsInHours(int count);
+
+  /// No description provided for @vocStartsSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Void of Course begins soon.'**
+  String get vocStartsSoon;
+
+  /// No description provided for @vocNotificationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Void of Course Notification'**
+  String get vocNotificationTitle;
+
+  /// No description provided for @vocOngoingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Void of Course in Progress'**
+  String get vocOngoingTitle;
+
+  /// No description provided for @vocOngoingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Currently in Void of Course period.'**
+  String get vocOngoingBody;
+
+  /// No description provided for @vocEndedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Void of Course Ended'**
+  String get vocEndedTitle;
+
+  /// No description provided for @vocEndedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The Void of Course period has ended.'**
+  String get vocEndedBody;
+
+  /// No description provided for @nextMoonPhaseTimePassed.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Moon Phase time has passed.'**
+  String get nextMoonPhaseTimePassed;
+
+  /// No description provided for @moonSignEndTimePassed.
+  ///
+  /// In en, this message translates to:
+  /// **'Moon Sign end time has passed.'**
+  String get moonSignEndTimePassed;
+
+  /// No description provided for @vocEndTimePassed.
+  ///
+  /// In en, this message translates to:
+  /// **'VOC end time has passed.'**
+  String get vocEndTimePassed;
+
+  /// No description provided for @timeToRefreshData.
+  ///
+  /// In en, this message translates to:
+  /// **'Time to refresh data: {refreshReason}. Refreshing...'**
+  String timeToRefreshData(Object refreshReason);
+
+  /// No description provided for @voidAlarmExactAlarmDeniedMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please allow the *Alarms & Reminders* permission in the app settings.'**
+  String get voidAlarmExactAlarmDeniedMessage;
+
+  /// No description provided for @noUpcomingVocFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No upcoming Void of Course period found or it has passed. No alarm scheduled.'**
+  String get noUpcomingVocFound;
+
+  /// No description provided for @errorSchedulingAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Error scheduling alarm'**
+  String get errorSchedulingAlarm;
+
+  /// No description provided for @errorShowingImmediateAlarm.
+  ///
+  /// In en, this message translates to:
+  /// **'Error showing immediate alarm'**
+  String get errorShowingImmediateAlarm;
+
+  /// No description provided for @calculating.
+  ///
+  /// In en, this message translates to:
+  /// **'Calculating...'**
+  String get calculating;
+
+  /// No description provided for @vocStartedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Void of Course Started'**
+  String get vocStartedTitle;
+
+  /// No description provided for @vocStartedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The Void of Course period has now begun.'**
+  String get vocStartedBody;
+
+  /// No description provided for @vocRemainingTimeHourMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'Time remaining: {hours}h {minutes}m'**
+  String vocRemainingTimeHourMinute(int hours, int minutes);
+
+  /// No description provided for @vocRemainingTimeMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'Time remaining: {minutes} minutes'**
+  String vocRemainingTimeMinute(int minutes);
+
+  /// No description provided for @preVocNotificationBodyHourMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours}h {minutes}m until Void of Course begins.'**
+  String preVocNotificationBodyHourMinute(int hours, int minutes);
+
+  /// No description provided for @preVocNotificationBodyMinute.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} minutes until Void of Course begins.'**
+  String preVocNotificationBodyMinute(int minutes);
+
+  /// No description provided for @notAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'N/A'**
+  String get notAvailable;
+
+  /// No description provided for @vocStatusIsVoc.
+  ///
+  /// In en, this message translates to:
+  /// **'There is a void Now'**
+  String get vocStatusIsVoc;
+
+  /// No description provided for @vocStatusHasVocToday.
+  ///
+  /// In en, this message translates to:
+  /// **'Todays schedule has a void'**
+  String get vocStatusHasVocToday;
+
+  /// No description provided for @vocStatusIsNotVoc.
+  ///
+  /// In en, this message translates to:
+  /// **'It is not a void'**
+  String get vocStatusIsNotVoc;
+
+  /// No description provided for @voidOfCourse.
+  ///
+  /// In en, this message translates to:
+  /// **'Void of Course'**
+  String get voidOfCourse;
+
+  /// No description provided for @vocStartTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Starts: {time}'**
+  String vocStartTime(String time);
+
+  /// No description provided for @vocEndTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Ends: {time}'**
+  String vocEndTime(String time);
+
+  /// No description provided for @moonInSign.
+  ///
+  /// In en, this message translates to:
+  /// **'Moon in {sign}'**
+  String moonInSign(String sign);
+
+  /// No description provided for @nextSign.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Sign: {time}'**
+  String nextSign(String time);
+
+  /// No description provided for @moonPhaseTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Moon Phase'**
+  String get moonPhaseTitle;
+
+  /// No description provided for @nextPhase.
+  ///
+  /// In en, this message translates to:
+  /// **'Next Phase: {time}'**
+  String nextPhase(String time);
+}
+
+class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
+  const _AppLocalizationsDelegate();
+
+  @override
+  Future<AppLocalizations> load(Locale locale) {
+    return SynchronousFuture<AppLocalizations>(lookupAppLocalizations(locale));
+  }
+
+  @override
+  bool isSupported(Locale locale) => <String>['en', 'ko'].contains(locale.languageCode);
+
+  @override
+  bool shouldReload(_AppLocalizationsDelegate old) => false;
+}
+
+AppLocalizations lookupAppLocalizations(Locale locale) {
+
+
+  // Lookup logic when only language code is specified.
+  switch (locale.languageCode) {
+    case 'en': return AppLocalizationsEn();
+    case 'ko': return AppLocalizationsKo();
+  }
+
+  throw FlutterError(
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.'
+  );
+}

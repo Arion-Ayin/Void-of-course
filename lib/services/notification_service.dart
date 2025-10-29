@@ -35,7 +35,7 @@ class NotificationService {
         ?.createNotificationChannel(channel);
 
     await _notificationsPlugin.initialize(initializationSettings);
-    await requestBatteryOptimizationPermission();
+
   }
 
   Future<void> requestBatteryOptimizationPermission() async {

@@ -15,13 +15,12 @@
     "contactEmail": "Arion.Ayin@gmail.com",
     "infoScreenTitle": "정보",
     "whoAreWeTitle": "우리는 누구인가요?",
-    "whoAreWeSubtitle": "• 아리온아인의 사명 : \n사자의 눈으로 세상을 헤아립니다.",
+    "whoAreWeSubtitle": "• 아리온아인의 사명 : |||사자의 눈으로 세상을 헤아립니다.",
     "whoIsItUsefulForTitle": "누구에게 유용한가요?",
-    "whoIsItUsefulForSubtitle": "• 간단한 택일이 필요하신 분들\n• 보이드 오브 코스 계산이 필요한 분들\n• 행동의 지표성이 필요한 분들",
+    "whoIsItUsefulForSubtitle": "• 간단한 택일이 필요하신 분들|||• 보이드 오브 코스 계산이 필요한 분들|||• 행동의 지표성이 필요한 분들",
     "whyDidWeMakeThisAppTitle": "왜 이 앱을 만들었나요?",
     "whyDidWeMakeThisAppSubtitle": "• 누구나 손쉽게 이 정보들에 접근 가능하면 좋겠다는 마음에",
     "copyrightText": "© 2025 Arion Ayin. All rights reserved.",
-    
     "sunMoonPositionError": "태양 또는 달의 위치를 사용할 수 없습니다.",
     "initializationError": "초기화 오류",
     "calculationError": "계산 중 오류 발생",
@@ -154,5 +153,15 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "headerSubtitle": "보이드 오브 코스 계산기",
+    "newMoon": "신월",
+    "crescentMoon": "초승달",
+    "firstQuarter": "상현달",
+    "gibbousMoon": "기울어진 달",
+    "fullMoon": "보름달",
+    "disseminatingMoon": "기울어가는 달",
+    "lastQuarter": "하현달",
+    "balsamicMoon": "그믐달",
+    "moonInSign": "달, {sign}에 위치"
 }

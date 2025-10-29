@@ -7,7 +7,7 @@ import 'package:provider/provider.dart'; // 앱의 상태(데이터)를 여러 �
 import '../services/astro_state.dart'; // 천문학 관련 상태를 관리하는 파일을 가져와요. (예: 보이드 알람 켜고 끄기)
 import '../themes.dart'; // 앱의 밝은 테마와 어두운 테마 정보를 가져와요.
 import '../widgets/setting_card.dart'; // 설정 화면에 보이는 카드 모양 위젯을 가져와요.
-import 'package:flutter_gen/gen_l10n/app_localizations.dart'; // 앱의 언어(한국어, 영어 등)를 쉽게 바꾸기 위한 파일을 가져와요.
+import 'package:lioluna/l10n/app_localizations.dart'; // 앱의 언어(한국어, 영어 등)를 쉽게 바꾸기 위한 파일을 가져와요.
 import 'package:lioluna/services/locale_provider.dart'; // 앱의 현재 언어 설정을 관리하는 파일을 가져와요.
 import 'package:url_launcher/url_launcher.dart'; // 웹사이트나 이메일 앱을 열어주는 라이브러리예요.
 

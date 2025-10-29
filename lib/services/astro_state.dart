@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'astro_calculator.dart';
 import 'notification_service.dart';
 import 'package:sweph/sweph.dart';
-import 'package:workmanager/workmanager.dart';
 
 final AstroCalculator _calculator = AstroCalculator();
 
@@ -91,7 +90,6 @@ class AstroState with ChangeNotifier {
       await Sweph.init();
       _currentLocale = Intl.getCurrentLocale();
       await _notificationService.init();
-      await initializeWorkManager(); // WorkManager 초기화 추가
       final prefs = await SharedPreferences.getInstance();
       _voidAlarmEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
       _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 3;
@@ -446,90 +444,4 @@ class AstroState with ChangeNotifier {
       body: notificationBody,
     );
   }
-
-  // WorkManager 초기화
-  Future<void> initializeWorkManager() async {
-    await Workmanager().initialize(
-      callbackDispatcher,
-      isInDebugMode: kDebugMode,
-    );
-
-    if (_voidAlarmEnabled) {
-      await Workmanager().registerPeriodicTask(
-        "voc-check-task",
-        vocCheckTask,
-        frequency: Duration(minutes: 15),
-        inputData: {
-          'preVoidAlarmHours': _preVoidAlarmHours,
-        },
-        constraints: Constraints(
-          networkType: NetworkType.not_required,
-          requiresBatteryNotLow: false,
-          requiresCharging: false,
-          requiresDeviceIdle: false,
-          requiresStorageNotLow: false,
-        ),
-      );
-    }
-  }
-}
-
-// WorkManager 콜백
-const String vocCheckTask = "dev.lioluna.voidofcourse.vocCheckTask";
-
-void callbackDispatcher() {
-  Workmanager().executeTask((task, inputData) async {
-    try {
-      await Sweph.init();
-      final calculator = AstroCalculator();
-      final now = DateTime.now();
-      final vocTimes = calculator.findVoidOfCoursePeriod(now);
-
-      final notificationService = NotificationService();
-      await notificationService.init();
-
-      final vocStart = vocTimes['start'];
-      final vocEnd = vocTimes['end'];
-
-      if (vocStart != null && vocEnd != null) {
-        final preVoidAlarmHours = inputData?['preVoidAlarmHours'] ?? 3;
-        final preAlarmTime = vocStart.subtract(Duration(hours: preVoidAlarmHours));
-
-        bool hasExactAlarmPermission = await notificationService.checkExactAlarmPermission();
-        if (!hasExactAlarmPermission) {
-          await notificationService.requestExactAlarmPermission();
-          hasExactAlarmPermission = await notificationService.checkExactAlarmPermission();
-          if (!hasExactAlarmPermission) {
-            return false;
-          }
-        }
-
-        await notificationService.scheduleNotification(
-          id: 0,
-          title: 'Void of Course Upcoming',
-          body: 'Void of Course begins in $preVoidAlarmHours hours.',
-          scheduledTime: preAlarmTime,
-          canScheduleExact: hasExactAlarmPermission,
-        );
-        await notificationService.scheduleNotification(
-          id: 1,
-          title: 'Void of Course Started',
-          body: 'The Void of Course period has now begun.',
-          scheduledTime: vocStart,
-          canScheduleExact: hasExactAlarmPermission,
-        );
-        await notificationService.scheduleNotification(
-          id: 2,
-          title: 'Void of Course Ended',
-          body: 'The Void of Course period has ended.',
-          scheduledTime: vocEnd,
-          canScheduleExact: hasExactAlarmPermission,
-        );
-      }
-      return true;
-    } catch (e) {
-      print("WorkManager error: $e");
-      return false;
-    }
-  });
 }
