@@ -19,7 +19,7 @@ class AstroState with ChangeNotifier {
   Timer? _timer;
   final NotificationService _notificationService = NotificationService();
   bool _voidAlarmEnabled = false;
-  int _preVoidAlarmHours = 5;
+  int _preVoidAlarmHours = 6;
   bool _isOngoingNotificationVisible = false;
   DateTime _selectedDate = DateTime.now();
   bool _isFollowingTime = true;
@@ -125,6 +125,7 @@ class AstroState with ChangeNotifier {
     if (enable) {
       final bool hasNotificationPermission = await _notificationService.requestPermissions();
       if (!hasNotificationPermission) {
+        _voidAlarmEnabled = false;
         notifyListeners();
         return AlarmPermissionStatus.notificationDenied;
       }
@@ -198,43 +199,49 @@ class AstroState with ChangeNotifier {
     }
 
     // Pre-VOC 알림
-    String preTitle = locale.startsWith('ko') ? '보이드 시작 알림' : 'Void of Course Upcoming';
-    String preBody = locale.startsWith('ko')
-        ? '보이드가 $_preVoidAlarmHours시간 후 시작됩니다.'
-        : 'Void of Course begins in $_preVoidAlarmHours hours.';
-    await _notificationService.scheduleNotification(
-      id: 0,
-      title: preTitle,
-      body: preBody,
-      scheduledTime: preAlarmTime,
-      canScheduleExact: hasExactAlarmPermission,
-    );
+    if (preAlarmTime.isAfter(now)) {
+      String preTitle = locale.startsWith('ko') ? '보이드 시작 알림' : 'Void of Course Upcoming';
+      String preBody = locale.startsWith('ko')
+          ? '보이드가 $_preVoidAlarmHours시간 후 시작됩니다.'
+          : 'Void of Course begins in $_preVoidAlarmHours hours.';
+      await _notificationService.scheduleNotification(
+        id: 0,
+        title: preTitle,
+        body: preBody,
+        scheduledTime: preAlarmTime,
+        canScheduleExact: hasExactAlarmPermission,
+      );
+    }
 
     // VOC 시작 알림
-    String startTitle = locale.startsWith('ko') ? '보이드 시작' : 'Void of Course Started';
-    String startBody = locale.startsWith('ko')
-        ? '지금 보이드 시간이 시작되었습니다.'
-        : 'The Void of Course period has now begun.';
-    await _notificationService.scheduleNotification(
-      id: 1,
-      title: startTitle,
-      body: startBody,
-      scheduledTime: _realtimeVocStart!,
-      canScheduleExact: hasExactAlarmPermission,
-    );
+    if (_realtimeVocStart!.isAfter(now)) {
+      String startTitle = locale.startsWith('ko') ? '보이드 시작' : 'Void of Course Started';
+      String startBody = locale.startsWith('ko')
+          ? '지금 보이드 시간이 시작되었습니다.'
+          : 'The Void of Course period has now begun.';
+      await _notificationService.scheduleNotification(
+        id: 1,
+        title: startTitle,
+        body: startBody,
+        scheduledTime: _realtimeVocStart!,
+        canScheduleExact: hasExactAlarmPermission,
+      );
+    }
 
     // VOC 종료 알림
-    String endTitle = locale.startsWith('ko') ? '보이드 종료' : 'Void of Course Ended';
-    String endBody = locale.startsWith('ko')
-        ? '보이드 시간이 종료되었습니다.'
-        : 'The Void of Course period has ended.';
-    await _notificationService.scheduleNotification(
-      id: 2,
-      title: endTitle,
-      body: endBody,
-      scheduledTime: _realtimeVocEnd!,
-      canScheduleExact: hasExactAlarmPermission,
-    );
+    if (_realtimeVocEnd!.isAfter(now)) {
+      String endTitle = locale.startsWith('ko') ? '보이드 종료' : 'Void of Course Ended';
+      String endBody = locale.startsWith('ko')
+          ? '보이드 시간이 종료되었습니다.'
+          : 'The Void of Course period has ended.';
+      await _notificationService.scheduleNotification(
+        id: 2,
+        title: endTitle,
+        body: endBody,
+        scheduledTime: _realtimeVocEnd!,
+        canScheduleExact: hasExactAlarmPermission,
+      );
+    }
 
     if (kDebugMode) {
       print("Scheduled notifications: Pre-VOC at $preAlarmTime, Start at $_realtimeVocStart, End at $_realtimeVocEnd");

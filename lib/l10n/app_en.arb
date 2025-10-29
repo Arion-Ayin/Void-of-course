@@ -8,7 +8,7 @@
     "english": "English",
     "darkMode": "Dark Mode",
     "voidAlarmTitle": "Void Alarm",
-    "voidAlarmEnabledMessage": "Void alarm has been activated.",
+    "voidAlarmEnabledMessage": "Void alarm has been activated.\nThe alarm will sound 6 hours before.",
     "voidAlarmDisabledMessage": "Void alarm has been deactivated.",
     "voidAlarmTimeTitle": "Alarm Time",
     "voidAlarmTimeUnit": "{count} hours before",
