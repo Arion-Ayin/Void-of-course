@@ -92,7 +92,7 @@ class AstroState with ChangeNotifier {
       await _notificationService.init();
       final prefs = await SharedPreferences.getInstance();
       _voidAlarmEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
-      _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 3;
+      _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 6;
 
       await _updateData();
       final vocTimes = _calculator.findVoidOfCoursePeriod(DateTime.now());
@@ -261,6 +261,7 @@ class AstroState with ChangeNotifier {
   void _checkTime() {
     final now = DateTime.now();
 
+    // 1. (기존 로직) 현재 시간을 따르는 중일 때 데이터 자동 새로고침
     if (_isFollowingTime) {
       bool shouldRefresh = false;
       String refreshReason = "";
@@ -279,13 +280,62 @@ class AstroState with ChangeNotifier {
         }
         _selectedDate = now;
         refreshData();
+        // 데이터를 새로고칠 때, 알람 스케줄도 다시 잡아야 합니다.
+        if (_voidAlarmEnabled) {
+          _schedulePreVoidAlarm();
+        }
       }
     }
 
-    if (_realtimeVocStart != null && _realtimeVocEnd != null) {
-      final isCurrentlyInVoc = now.isAfter(_realtimeVocStart!) && now.isBefore(_realtimeVocEnd!);
-      _isOngoingNotificationVisible = isCurrentlyInVoc;
-      notifyListeners();
+    // ▼▼▼ 2. (새로 추가된 핵심 로직) 지속적인 알림 상태 관리 ▼▼▼
+
+    // 알람 기능이 꺼져있으면, 보이던 알림을 끄고 함수 종료
+    if (!_voidAlarmEnabled) {
+      if (_isOngoingNotificationVisible) {
+        _notificationService.cancelNotification(0); // Pre-VOC 알림(ID 0) 취소
+        _notificationService.cancelNotification(2); // In-VOC 알림(ID 2) 취소
+        _isOngoingNotificationVisible = false;
+        notifyListeners();
+      }
+      return;
+    }
+
+    // 실시간 VOC 정보가 없으면 관리할 수 없음
+    if (_realtimeVocStart == null || _realtimeVocEnd == null) {
+      return;
+    }
+
+    // 3. 현재 상태 정의
+    final preAlarmTime =
+        _realtimeVocStart!.subtract(Duration(hours: _preVoidAlarmHours));
+    final isCurrentlyInVoc =
+        now.isAfter(_realtimeVocStart!) && now.isBefore(_realtimeVocEnd!);
+    final isCurrentlyInPreVoc =
+        now.isAfter(preAlarmTime) && now.isBefore(_realtimeVocStart!);
+
+    // 4. 상태에 따라 지속적인 알림 표시 또는 취소
+    if (isCurrentlyInVoc) {
+      // "보이드 중" 알림 표시 (ID: 2)
+      _updateOngoingNotification();
+      if (!_isOngoingNotificationVisible) {
+        _isOngoingNotificationVisible = true;
+        notifyListeners();
+      }
+    } else if (isCurrentlyInPreVoc) {
+      // "보이드 전" 알림 표시 (ID: 0)
+      _updatePreVoidAlarmNotification(_realtimeVocStart!);
+      if (!_isOngoingNotificationVisible) {
+        _isOngoingNotificationVisible = true;
+        notifyListeners();
+      }
+    } else {
+      // 알림 기간이 아님 (모든 지속 알림 취소)
+      _notificationService.cancelNotification(0); // Pre-VOC
+      _notificationService.cancelNotification(2); // In-VOC
+      if (_isOngoingNotificationVisible) {
+        _isOngoingNotificationVisible = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -440,13 +490,13 @@ class AstroState with ChangeNotifier {
 
     String title;
     if (locale.startsWith('ko')) {
-      title = 'Void of Course 알림';
+      title = '보이드 오브 코스 알림';
     } else {
       title = 'Void of Course Notification';
     }
 
     await _notificationService.showOngoingNotification(
-      id: 0,
+      id: 0, // "보이드 전" 알림 ID는 0
       title: title,
       body: notificationBody,
     );
