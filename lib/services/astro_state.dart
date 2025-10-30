@@ -42,7 +42,6 @@ class AstroState with ChangeNotifier {
   bool _isDarkMode = false;
   String _nextMoonPhaseName = 'calculating';
   DateTime? _nextMoonPhaseTime;
-  DateTime? _lastLogTime;
   late String _currentLocale;
 
   DateTime get selectedDate => _selectedDate;
@@ -92,7 +91,7 @@ class AstroState with ChangeNotifier {
       await _notificationService.init();
       final prefs = await SharedPreferences.getInstance();
       _voidAlarmEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
-      _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 6;
+      _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 40;
 
       await _updateData();
       final vocTimes = _calculator.findVoidOfCoursePeriod(DateTime.now());
@@ -358,7 +357,7 @@ class AstroState with ChangeNotifier {
     if (_isFollowingTime) {
       _selectedDate = now;
     }
-    await _updateData();
+    await refreshData();
   }
 
   Future<void> refreshData() async {
@@ -379,6 +378,15 @@ class AstroState with ChangeNotifier {
       final moonInSign = _calculator.getMoonZodiacName(dateForCalc);
       final vocTimes = _calculator.findVoidOfCoursePeriod(dateForCalc);
       final moonSignTimes = _calculator.getMoonSignTimes(dateForCalc);
+
+      if (kDebugMode) {
+        print('[DEBUG] moonPhaseInfo: $moonPhaseInfo');
+        print('[DEBUG] moonZodiac: $moonZodiac');
+        print('[DEBUG] moonInSign: $moonInSign');
+        print('[DEBUG] vocTimes: $vocTimes');
+        print('[DEBUG] moonSignTimes: $moonSignTimes');
+        print('[DEBUG] nextPhaseInfo: $nextPhaseInfo');
+      }
 
       final Map<String, dynamic> result = {
         'moonPhase': moonPhase,
