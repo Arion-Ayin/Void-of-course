@@ -28,7 +28,7 @@ class SettingScreen extends StatelessWidget {
 
     final String title = isKorean ? '$serviceNameKo로 이동' : 'Go to $serviceNameEn';
     final String content = isKorean
-        ? '$serviceNameKo으로 이동하시겠습니까?'
+        ? '$serviceNameKo(으)로 이동하시겠습니까?' // (조사 '으' 추가)
         : 'Do you want to go to $serviceNameEn?';
     final String yesButton = isKorean ? '예' : 'Yes';
     final String noButton = isKorean ? '아니오' : 'No';
@@ -93,10 +93,9 @@ class SettingScreen extends StatelessWidget {
             // 설정 아이콘을 보여줘요.
             Icon(
               Icons.settings,
-              color:
-                  Theme.of(
-                    context,
-                  ).colorScheme.primary, // 앱의 주요 색깔로 아이콘 색을 정해요.
+              color: Theme.of(
+                context,
+              ).colorScheme.primary, // 앱의 주요 색깔로 아이콘 색을 정해요.
               size: 24, // 아이콘 크기를 24로 정해요.
             ),
             const SizedBox(width: 8), // 아이콘과 글씨 사이에 작은 공간을 만들어요.
@@ -126,9 +125,8 @@ class SettingScreen extends StatelessWidget {
                 builder: (context, astroState, child) {
                   // 스위치 버튼을 만들어요.
                   return Switch(
-                    value:
-                        astroState
-                            .voidAlarmEnabled, // 스위치의 현재 상태(켜짐/꺼짐)를 AstroState에서 가져와요.
+                    value: astroState
+                        .voidAlarmEnabled, // 스위치의 현재 상태(켜짐/꺼짐)를 AstroState에서 가져와요.
                     onChanged: (value) async {
                       // 스위치를 누르면 이 코드가 실행돼요.
                       // 보이드 알람을 켜거나 끄는 함수를 불러와요.
@@ -153,15 +151,13 @@ class SettingScreen extends StatelessWidget {
                           break;
                         case AlarmPermissionStatus
                             .notificationDenied: // 알림 권한이 거부되었다면
-                          message =
-                              appLocalizations
-                                  .voidAlarmDisabledMessage; // 알람을 끌 수밖에 없다는 메시지를 보여줘요.
+                          message = appLocalizations
+                              .voidAlarmDisabledMessage; // 알람을 끌 수밖에 없다는 메시지를 보여줘요.
                           break;
                         case AlarmPermissionStatus
                             .exactAlarmDenied: // 정확한 알람 권한이 거부되었다면 (안드로이드 특정 기능)
-                          message =
-                              appLocalizations
-                                  .voidAlarmExactAlarmDeniedMessage; // 권한이 필요하다는 메시지를 보여줘요.
+                          message = appLocalizations
+                              .voidAlarmExactAlarmDeniedMessage; // 권한이 필요하다는 메시지를 보여줘요.
                           duration = const Duration(
                             seconds: 5,
                           ); // 이 메시지는 5초 동안 보이게 해요.
@@ -215,10 +211,9 @@ class SettingScreen extends StatelessWidget {
               iconColor: Colors.blue, // 아이콘 색깔을 파란색으로 정해요.
               trailing: DropdownButton<String>(
                 // 드롭다운 메뉴를 만들어요.
-                value:
-                    localeProvider
-                        .locale
-                        ?.languageCode, // 현재 언어 코드를 드롭다운 메뉴의 선택 값으로 정해요.
+                value: localeProvider
+                    .locale
+                    ?.languageCode, // 현재 언어 코드를 드롭다운 메뉴의 선택 값으로 정해요.
                 items: [
                   // 영어 옵션을 만들어요.
                   DropdownMenuItem(
@@ -269,53 +264,34 @@ class SettingScreen extends StatelessWidget {
                 },
               ),
             ),
-            const SizedBox(height: 16), // 카드 사이에 간격을 추가해요.
-            // 디스코드와 네이버 카페 링크를 보여주는 새로운 행이에요.
-            Row(
-              children: [
-                // 디스코드 카드
-                Expanded(
-                  child: Card(
-                    clipBehavior: Clip.antiAlias, // 카드 모양대로 내용이 잘리도록 해요.
-                    child: InkWell(
-                      onTap: () {
-                        _showUrlConfirmationDialog(
-                          context,
-                          url: 'https://discord.gg/F7Z3MZdC',
-                          serviceNameKo: '디스코드',
-                          serviceNameEn: 'Discord',
-                        );
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16.0),
-                        child: Icon(Icons.chat, color: Color(0xFF5865F2), size: 32),
-                      ),
-                    ),
-                  ),
+
+            // ▼▼▼ 여기가 수정된 네 번째 설정 카드입니다 ▼▼▼
+            SettingCard(
+              icon: Icons.coffee_outlined, // 네이버 카페를 상징하는 커피 아이콘
+              // ⭐️ 'community'를 l10n/app_localizations.dart와 하위 arb 파일들에 추가해주세요!
+              // (예: app_ko.arb -> "community": "커뮤니티")
+              // (예: app_en.arb -> "community": "Community")
+              title: appLocalizations.community, // '커뮤니티' 제목
+              iconColor: const Color(0xFF03C75A), // 네이버 녹색
+              trailing: IconButton(
+                // 오른쪽 끝에 버튼을 추가
+                icon: const Icon(
+                  Icons.arrow_forward_ios, // 오른쪽 화살표 아이콘
+                  size: 18,
+                  color: Colors.grey,
                 ),
-                const SizedBox(width: 16), // 카드 사이에 간격을 만들어요.
-                // 네이버 카페 카드
-                Expanded(
-                  child: Card(
-                    clipBehavior: Clip.antiAlias,
-                    child: InkWell(
-                      onTap: () {
-                        _showUrlConfirmationDialog(
-                          context,
-                          url: 'https://cafe.naver.com/shootingstarter',
-                          serviceNameKo: '네이버 카페',
-                          serviceNameEn: 'Naver Cafe',
-                        );
-                      },
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 16.0),
-                        child: Icon(Icons.coffee, color: Color(0xFF03C75A), size: 32),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+                onPressed: () {
+                  // 버튼을 누르면 기존에 만드신 확인 대화상자를 띄웁니다.
+                  _showUrlConfirmationDialog(
+                    context,
+                    url: 'https://cafe.naver.com/shootingstarter',
+                    serviceNameKo: '네이버 카페',
+                    serviceNameEn: 'Naver Cafe',
+                  );
+                },
+              ),
             ),
+            // ▲▲▲ 여기까지 수정되었습니다 ▲▲▲
           ],
         ),
       ),

@@ -27,6 +27,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get english => 'English';
 
   @override
+  String get community => 'Community';
+
+  @override
   String get darkMode => 'Dark Mode';
 
   @override
