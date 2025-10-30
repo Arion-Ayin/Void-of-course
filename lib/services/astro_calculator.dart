@@ -64,7 +64,7 @@ class AstroCalculator {
   double getLongitude(HeavenlyBody body, DateTime date) {
     final jd = getJulianDay(date); // 먼저 날짜를 줄리안 데이로 바꿔요.
     final pos = Sweph.swe_calc_ut(jd, body, SwephFlag.SEFLG_SWIEPH); // 'sweph' 도구로 위치를 계산해요.
-    return pos.longitude!; // 계산된 경도(위치)를 알려줘요.
+    return pos.longitude!; // 계산된 경도(위치)를 알려줘요。
   }
 
   // 해와 달의 위치(경도)를 동시에 찾아주는 함수예요.
@@ -259,38 +259,36 @@ class AstroCalculator {
     return {'start': signStartTime, 'end': signEndTime}; // 들어오고 나가는 시간을 알려줘요.
   }
 
-  // 달 모양(위상)이 정확히 언제 나타나는지 찾아주는 숨겨진 함수예요. (다른 함수에서만 사용)
-  // '이분법'이라는 똑똑한 방법으로 시간을 아주 정확하게 찾아요.
   DateTime? _findSpecificPhaseTime(DateTime date, double targetAngle, {int daysRange = 14}) {
     DateTime utcStart = date.subtract(Duration(days: daysRange)).toUtc(); // 찾기 시작하는 시간
     DateTime utcEnd = date.add(Duration(days: daysRange)).toUtc(); // 찾기 끝나는 시간
     
-    // 100번 반복해서 아주 정확한 시간을 찾을 때까지 범위를 반씩 줄여나가요.
+    // 100번 반복해서 아주 정확한 시간을 찾을 때까지 범위를 반씩 줄여나가요。
     for (int i = 0; i < 100; i++) {
       if (utcStart.isAtSameMomentAs(utcEnd)) break;
-      final mid = utcStart.add(Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2)); // 중간 시간을 찾아요.
+      final mid = utcStart.add(Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2)); // 중간 시간을 찾아요。
       if (mid.isAtSameMomentAs(utcStart) || mid.isAtSameMomentAs(utcEnd)) break;
 
       final positions = getSunMoonLongitude(mid);
       final sunLon = positions['sun']!;
       final moonLon = positions['moon']!;
-      final angle = Sweph.swe_degnorm(moonLon - sunLon); // 중간 시간의 해와 달 각도를 계산해요.
+      final angle = Sweph.swe_degnorm(moonLon - sunLon); // 중간 시간의 해와 달 각도를 계산해요。
 
       final delta = Sweph.swe_degnorm(angle - targetAngle);
 
-      // 만약 찾은 각도가 목표 각도와 아주 비슷하면 시간을 알려주고 끝내요.
+      // 만약 찾은 각도가 목표 각도와 아주 비슷하면 시간을 알려주고 끝내요。
       if (delta < 0.0005 || delta > 359.9995) {
         return mid.toLocal();
       }
 
-      // 만약 각도가 목표보다 앞서면 끝나는 시간을 중간으로 바꿔서 범위를 줄여요.
+      // 만약 각도가 목표보다 앞서면 끝나는 시간을 중간으로 바꿔서 범위를 줄여요。
       if (delta < 180) {
         utcEnd = mid;
-      } else { // 각도가 목표보다 뒤에 있으면 시작 시간을 중간으로 바꿔서 범위를 줄여요.
+      } else { // 각도가 목표보다 뒤에 있으면 시작 시간을 중간으로 바꿔서 범위를 줄여요。
         utcStart = mid;
       }
     }
-    return null; // 못 찾으면 '없어요'라고 알려줘요.
+    return null; // 못 찾으면 '없어요'라고 알려줘요。
   }
 
   // 달이 특정 위치(경도)에 도착하는 시간을 찾아주는 숨겨진 함수예요.
@@ -323,7 +321,7 @@ class AstroCalculator {
       return null;
     }
 
-    // 100번 반복해서 시간을 아주 정확하게 찾아요.
+    // 100번 반복해서 시간을 아주 정확하게 찾아요。
     for (int i = 0; i < 100; i++) {
       if (utcStart.isAtSameMomentAs(utcEnd)) break;
       final mid = utcStart.add(Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2));
@@ -376,7 +374,7 @@ class AstroCalculator {
       return null;
     }
 
-    // 100번 반복해서 시간을 아주 정확하게 찾아요.
+    // 100번 반복해서 시간을 아주 정확하게 찾아요。
     for (int i = 0; i < 100; i++) {
       if (utcStart.isAtSameMomentAs(utcEnd)) break;
       final mid = utcStart.add(Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2));
