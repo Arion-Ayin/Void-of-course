@@ -1,7 +1,6 @@
 // 이 파일은 별자리와 달의 움직임 같은 것을 계산하는 '점성술 계산기'예요.
 // 달이 어떤 별자리에 있는지, 달의 모양(위상)은 어떤지 같은 것을 알려줘요.
 // 'sweph'라는 아주 정확한 계산을 해주는 도구를 사용해요.
-
 import 'package:sweph/sweph.dart'; // 천문학 계산을 위한 'sweph' 도구를 가져와요.
 import 'package:intl/intl.dart'; // 날짜와 시간을 보기 좋게 바꾸는 도구를 가져와요.
 
@@ -19,14 +18,14 @@ class AstroCalculator {
 
   // 달의 모양(위상)을 이름과 함께 적어놓은 목록이에요.
   static const List<String> moonPhaseNames = [
-    '🌑 New Moon',
-    '🌒 Crescent Moon',
-    '🌓 First Quarter',
-    '🌔 Gibbous Moon',
-    '🌕 Full Moon',
-    '🌖 Disseminating Moon',
-    '🌗 Last Quarter',
-    '🌘 Balsamic Moon',
+    '🌑 New Moon', //뉴문
+    '🌒 Crescent Moon', // 초승달
+    '🌓 First Quarter', // 상현달
+    '🌔 Gibbous Moon', // 지보스문
+    '🌕 Full Moon', // 보름달
+    '🌖 Disseminating Moon', //디세미네이팅 문
+    '🌗 Last Quarter', // 하현달
+    '🌘 Balsamic Moon', // 그믐달
   ];
 
   // 해와 달을 제외한 주요 행성들을 목록으로 만들었어요.
