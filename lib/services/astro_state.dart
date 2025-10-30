@@ -91,7 +91,7 @@ class AstroState with ChangeNotifier {
       await _notificationService.init();
       final prefs = await SharedPreferences.getInstance();
       _voidAlarmEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
-      _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 40;
+      _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 6;
 
       await _updateData();
       final vocTimes = _calculator.findVoidOfCoursePeriod(DateTime.now());

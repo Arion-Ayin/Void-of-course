@@ -129,7 +129,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
             // 3-2. Upgrader 인스턴스를 만듭니다.
             final upgrader = Upgrader(
               messages: AppUpgraderMessages(languageCode),
-              debugDisplayAlways: true, //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ업데이트 하시겠습니까? 테스트용 
+              //debugDisplayAlways: true,  //ㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡㅡ업데이트 하시겠습니까? 테스트용 
             );
 
             // 3-3. UpgradeAlert가 포함된 실제 앱 화면을 반환합니다.
@@ -318,14 +318,6 @@ class AppUpgraderMessages extends UpgraderMessages {
     }
     // 기본값 (영어)
     return 'Update Now';
-  }
-
-  String get buttonTitleLater {
-    if (languageCode == 'ko') {
-      return '나중에 할래요';
-    }
-    // 기본값 (영어)
-    return 'Later';
   }
 
   @override
