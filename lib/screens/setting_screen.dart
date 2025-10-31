@@ -159,8 +159,8 @@ class SettingScreen extends StatelessWidget {
                           message = appLocalizations
                               .voidAlarmExactAlarmDeniedMessage; // 권한이 필요하다는 메시지를 보여줘요.
                           duration = const Duration(
-                            seconds: 5,
-                          ); // 이 메시지는 5초 동안 보이게 해요.
+                            seconds: 2,
+                          );
                           break;
                       }
 
@@ -168,7 +168,7 @@ class SettingScreen extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(message), // 위에서 정한 메시지를 보여줘요.
-                          duration: duration, // 위에서 정한 시간 동안 보여줘요.
+                           duration: const Duration(seconds: 2), // 2초 동안 보여줘요.
                         ),
                       );
                     },
@@ -258,7 +258,7 @@ class SettingScreen extends StatelessWidget {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text(message), // 위에서 정한 메시지를 보여줘요.
-                      duration: const Duration(seconds: 2), // 2초 동안 보여줘요.
+                      duration: const Duration(seconds: 1), // 2초 동안 보여줘요.
                     ),
                   );
                 },
@@ -268,16 +268,13 @@ class SettingScreen extends StatelessWidget {
             // ▼▼▼ 여기가 수정된 네 번째 설정 카드입니다 ▼▼▼
             SettingCard(
               icon: Icons.coffee_outlined, // 네이버 카페를 상징하는 커피 아이콘
-              // ⭐️ 'community'를 l10n/app_localizations.dart와 하위 arb 파일들에 추가해주세요!
-              // (예: app_ko.arb -> "community": "커뮤니티")
-              // (예: app_en.arb -> "community": "Community")
               title: appLocalizations.community, // '커뮤니티' 제목
               iconColor: const Color(0xFF03C75A), // 네이버 녹색
               trailing: IconButton(
                 // 오른쪽 끝에 버튼을 추가
                 icon: const Icon(
                   Icons.arrow_forward_ios, // 오른쪽 화살표 아이콘
-                  size: 18,
+                  size: 30,
                   color: Colors.grey,
                 ),
                 onPressed: () {
