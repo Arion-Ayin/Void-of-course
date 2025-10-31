@@ -9,6 +9,7 @@ import 'screens/setting_screen.dart';
 import 'services/astro_state.dart';
 import 'themes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:lioluna/screens/splash_screen.dart';
 import 'package:lioluna/services/locale_provider.dart';
 import 'package:lioluna/l10n/app_localizations.dart';
 import 'package:upgrader/upgrader.dart';
@@ -47,7 +48,7 @@ class MyApp extends StatelessWidget {
           title: 'Void of Course',
           debugShowCheckedModeBanner: false,
           theme: myTheme,
-          home: MainAppScreen(),
+          home: const SplashScreen(),
           locale: localeProvider.locale,
           localizationsDelegates: const [
             AppLocalizations.delegate,
