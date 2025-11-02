@@ -22,7 +22,7 @@ void showCalendarDialog(BuildContext context) {
           padding: const EdgeInsets.all(16), // 모든 방향으로 16만큼 여백을 줘요.
           // 달력을 만들어요.
           child: TableCalendar(
-            focusedDay: provider.selectedDate, // 달력에서 처음 보여줄 날짜를 정해요. (현재 선택된 날짜)
+            focusedDay: provider.selectedDate.toLocal(), // 달력에서 처음 보여줄 날짜를 정해요. (현재 선택된 날짜)
             firstDay: DateTime(1900), // 달력에서 선택할 수 있는 가장 빠른 날짜예요.
             lastDay: DateTime(2100), // 달력에서 선택할 수 있는 가장 늦은 날짜예요.
             calendarFormat: CalendarFormat.month, // 달력을 '월' 단위로 보여줘요.
@@ -35,11 +35,12 @@ void showCalendarDialog(BuildContext context) {
               titleCentered: true, // '2025년 8월' 같은 제목을 가운데 정렬해요.
             ),
             // 어떤 날짜가 선택되었는지 알려주는 함수예요.
-            selectedDayPredicate: (day) => isSameDay(provider.selectedDate, day),
+            selectedDayPredicate: (day) => isSameDay(provider.selectedDate.toLocal(), day),
             // 사용자가 날짜를 선택했을 때 실행될 함수예요.
             onDaySelected: (selectedDay, focusedDay) {
+              final newDate = DateTime.utc(selectedDay.year, selectedDay.month, selectedDay.day, 12);
               // 선택된 날짜로 앱의 날짜 정보를 업데이트해요.
-              provider.updateDate(selectedDay);
+              provider.updateDate(newDate);
               // 날짜를 선택했으니, 달력 창을 닫아요.
               Navigator.of(context).pop();
             },

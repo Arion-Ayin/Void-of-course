@@ -10,6 +10,7 @@ class ResetDateButton extends StatefulWidget {
   // 이 위젯을 만들 때, 버튼을 누르면 실행될 함수를 꼭 받아야 해요. super.key는 위젯을 구분하는 이름표 같은 거예요.
   const ResetDateButton({super.key, required this.onPressed});
 
+
   @override
   // StatefulWidget은 상태를 관리하는 별도의 클래스를 만들어요.
   State<ResetDateButton> createState() => _ResetDateButtonState();
@@ -28,8 +29,6 @@ class _ResetDateButtonState extends State<ResetDateButton> {
 
   @override
   void dispose() {
-    // 위젯이 사라질 때 광고 관련 자원을 정리해요.
-    _adService.dispose();
     super.dispose();
   }
 
