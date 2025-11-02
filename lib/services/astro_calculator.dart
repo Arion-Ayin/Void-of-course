@@ -243,7 +243,7 @@ class AstroCalculator {
       currentSignLon,
     );
     if (utcStartTime != null) {
-      signStartTime = utcStartTime.toLocal(); // 시간을 우리나라 시간으로 바꿔요.
+      signStartTime = utcStartTime;
     }
 
     // 달이 다음 별자리로 나가는 시간을 찾아봐요.
@@ -253,7 +253,7 @@ class AstroCalculator {
       nextSignLon,
     );
     if (utcEndTime != null) {
-      signEndTime = utcEndTime.toLocal(); // 시간을 우리나라 시간으로 바꿔요.
+      signEndTime = utcEndTime;
     }
 
     return {'start': signStartTime, 'end': signEndTime}; // 들어오고 나가는 시간을 알려줘요.
@@ -278,7 +278,7 @@ class AstroCalculator {
 
       // 만약 찾은 각도가 목표 각도와 아주 비슷하면 시간을 알려주고 끝내요。
       if (delta < 0.0005 || delta > 359.9995) {
-        return mid.toLocal();
+        return mid;
       }
 
       // 만약 각도가 목표보다 앞서면 끝나는 시간을 중간으로 바꿔서 범위를 줄여요。
@@ -331,7 +331,7 @@ class AstroCalculator {
       final delta = Sweph.swe_degnorm(midLon - targetLon);
 
       if (delta < 0.0001 || delta > 359.9999) {
-        return mid.toLocal();
+        return mid;
       }
 
       if (((midLon - startLon + 360) % 360) < targetFromStart) {
@@ -386,7 +386,7 @@ class AstroCalculator {
 
       final delta = Sweph.swe_degnorm(midDiff - targetDiff);
       if (delta < 0.001 || delta > 359.999) {
-        return mid.toLocal();
+        return mid;
       }
 
       if (((midDiff - startDiff + 360) % 360) < targetFromStart) {
@@ -434,7 +434,7 @@ class AstroCalculator {
   // 달이 힘을 잃는 시간(Void-of-Course, 보이드 오브 코스)을 찾아주는 함수예요.
   // 이 시간은 달이 다음 별자리로 가기 전에 다른 행성들과 중요한 만남이 없는 때를 말해요.
   Map<String, dynamic> findVoidOfCoursePeriod(DateTime date) {
-    final dayStart = DateTime(date.year, date.month, date.day);
+    final dayStart = DateTime.utc(date.year, date.month, date.day);
     var searchDate = dayStart;
 
     // 며칠간 반복해서 보이드 오브 코스 시간을 찾아요.

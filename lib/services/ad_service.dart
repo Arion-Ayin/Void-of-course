@@ -3,6 +3,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// 전면 광고 및 광고 정책을 관리하는 서비스 클래스입니다.
 class AdService {
+  static final AdService _instance = AdService._internal();
+
+  factory AdService() {
+    return _instance;
+  }
+
+  AdService._internal();
+
+  bool _isInitialized = false;
+
   InterstitialAd? _interstitialAd;
   int _calculateClickCount = 0;
   final int _adFrequency = 7; // 광고 표시 빈도 (7번 클릭마다)
@@ -12,8 +22,13 @@ class AdService {
 
   /// 서비스 초기화 시 광고와 클릭 횟수를 로드합니다.
   Future<void> initialize() async {
+    if (_isInitialized) {
+      return;
+    }
     await _loadCalculateClickCount();
+    print('AdService initialized. Click count: $_calculateClickCount');
     _loadInterstitialAd();
+    _isInitialized = true;
   }
 
   /// 전면 광고를 로드합니다.
@@ -23,9 +38,11 @@ class AdService {
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
+          print('Interstitial ad loaded.');
           _interstitialAd = ad;
         },
         onAdFailedToLoad: (error) {
+          print('Interstitial ad failed to load: $error');
           _interstitialAd?.dispose();
           _interstitialAd = null;
         },
@@ -38,8 +55,10 @@ class AdService {
   Future<bool> showAdIfNeeded(Function onAdDismissed) async {
     _calculateClickCount++;
     await _saveCalculateClickCount();
+    print('showAdIfNeeded called. Click count: $_calculateClickCount');
 
     if (_calculateClickCount % _adFrequency == 0 && _interstitialAd != null) {
+      print('Showing interstitial ad.');
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
           onAdDismissed();
@@ -55,12 +74,12 @@ class AdService {
       _interstitialAd!.show();
       return true; // 광고가 표시됨
     }
+    print('Interstitial ad not shown.');
     return false; // 광고가 표시되지 않음
   }
 
-  /// 스플래시 화면에서 사용할 전면 광고를 로드하고 표시합니다.
-  Future<void> loadAndShowSplashAd({
-    required String adUnitId,
+  /// 스플래시 화면에 미리 로드된 전면 광고를 표시합니다.
+  Future<void> showSplashAd({
     required Function onAdDismissed,
     required Function onAdFailed,
   }) async {
@@ -71,37 +90,38 @@ class AdService {
     // 30분 (밀리초 단위)
     const thirtyMinutesInMillis = 30 * 60 * 1000;
 
+    // 30분 이내에 광고를 본 경우, 바로 onAdFailed를 호출하여 다음 화면으로 넘어갑니다.
     if (currentTimeMillis - lastAdShowTimeMillis < thirtyMinutesInMillis) {
-      onAdFailed(); // 30분 이내에는 광고를 보여주지 않음
+      print("스플래시 광고: 마지막 광고 표시 후 30분이 지나지 않았습니다.");
+      onAdFailed();
       return;
     }
 
-    InterstitialAd? splashAd;
-    await InterstitialAd.load(
-      adUnitId: adUnitId,
-      request: const AdRequest(),
-      adLoadCallback: InterstitialAdLoadCallback(
-        onAdLoaded: (ad) async {
-          // 광고가 성공적으로 로드되면, 현재 시간을 저장
-          await prefs.setInt(_lastSplashAdShowTimeKey, currentTimeMillis);
-          splashAd = ad;
-          splashAd!.fullScreenContentCallback = FullScreenContentCallback(
-            onAdDismissedFullScreenContent: (ad) {
-              onAdDismissed(); // 광고가 닫히면 콜백 실행
-              ad.dispose();
-            },
-            onAdFailedToShowFullScreenContent: (ad, error) {
-              onAdFailed(); // 광고 표시에 실패하면 콜백 실행
-              ad.dispose();
-            },
-          );
-          splashAd!.show(); // 광고 표시
+    // 미리 로드된 광고가 있는지 확인합니다.
+    if (_interstitialAd != null) {
+      print("미리 로드된 스플래시 광고를 표시합니다.");
+      // 광고 표시 시간을 지금으로 기록합니다.
+      await prefs.setInt(_lastSplashAdShowTimeKey, currentTimeMillis);
+
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          onAdDismissed(); // 광고가 닫히면 콜백 실행
+          ad.dispose();
+          _loadInterstitialAd(); // 다음 광고를 미리 로드합니다.
         },
-        onAdFailedToLoad: (error) {
-          onAdFailed(); // 광고 로드에 실패하면 콜백 실행
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          print("스플래시 광고 표시에 실패했습니다: $error");
+          onAdFailed(); // 광고 표시에 실패하면 콜백 실행
+          ad.dispose();
+          _loadInterstitialAd(); // 다음 광고를 미리 로드합니다.
         },
-      ),
-    );
+      );
+      await _interstitialAd!.show();
+    } else {
+      // 광고가 아직 로드되지 않은 경우, 바로 onAdFailed를 호출합니다.
+      print("스플래시 광고: 미리 로드된 광고가 없습니다.");
+      onAdFailed();
+    }
   }
 
   Future<void> _loadCalculateClickCount() async {
@@ -114,7 +134,5 @@ class AdService {
     await prefs.setInt(_clickCountKey, _calculateClickCount);
   }
 
-  void dispose() {
-    _interstitialAd?.dispose();
-  }
+
 }

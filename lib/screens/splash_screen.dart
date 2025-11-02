@@ -36,8 +36,7 @@ class _SplashScreenState extends State<SplashScreen> {
       _navigateToMainScreen();
     } else {
       final adService = AdService();
-      await adService.loadAndShowSplashAd(
-        adUnitId: 'ca-app-pub-7332476431820224/9337504089',
+      await adService.showSplashAd(
         onAdDismissed: _navigateToMainScreen,
         onAdFailed: _navigateToMainScreen,
       );

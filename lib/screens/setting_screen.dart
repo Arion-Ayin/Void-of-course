@@ -10,66 +10,131 @@ import '../widgets/setting_card.dart'; // 설정 화면에 보이는 카드 모�
 import 'package:lioluna/l10n/app_localizations.dart'; // 앱의 언어(한국어, 영어 등)를 쉽게 바꾸기 위한 파일을 가져와요.
 import 'package:lioluna/services/locale_provider.dart'; // 앱의 현재 언어 설정을 관리하는 파일을 가져와요.
 import 'package:url_launcher/url_launcher.dart'; // 웹사이트나 이메일 앱을 열어주는 라이브러리예요.
+import '../widgets/reusable_native_ad_widget.dart';
+import '../services/ad_service.dart';
 
 // 설정 화면을 보여주는 위젯이에요.
 class SettingScreen extends StatelessWidget {
   // 이 위젯은 변하지 않는 내용을 보여줘서 StatelessWidget으로 만들었어요.
   const SettingScreen({super.key}); // 위젯을 만들 때 필요한 기본 정보예요.
 
-  // URL을 열기 전에 사용자에게 확인을 받는 대화상자를 표시하는 함수예요.
-  Future<void> _showUrlConfirmationDialog(
-    BuildContext context, {
-    required String url,
-    required String serviceNameKo,
-    required String serviceNameEn,
-  }) async {
-    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
-    final isKorean = localeProvider.locale?.languageCode == 'ko';
+    Future<void> _showUrlConfirmationDialog(
 
-    final String title = isKorean ? '$serviceNameKo로 이동' : 'Go to $serviceNameEn';
-    final String content = isKorean
-        ? '$serviceNameKo(으)로 이동하시겠습니까?' // (조사 '으' 추가)
-        : 'Do you want to go to $serviceNameEn?';
-    final String yesButton = isKorean ? '예' : 'Yes';
-    final String noButton = isKorean ? '아니오' : 'No';
+      BuildContext context, {
 
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(content),
-          actions: <Widget>[
-            TextButton(
-              child: Text(noButton),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+      required String url,
+
+      required String serviceNameKo,
+
+      required String serviceNameEn,
+
+    }) async {
+
+      final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+
+      final isKorean = localeProvider.locale?.languageCode == 'ko';
+
+  
+
+      final String title = isKorean ? '$serviceNameKo로 이동' : 'Go to $serviceNameEn';
+
+      final String contentText =
+
+          isKorean ? '$serviceNameKo(으)로 이동하시겠습니까?' : '';
+
+      final String yesButton = isKorean ? '예' : 'Yes';
+
+      final String noButton = isKorean ? '아니오' : 'No';
+
+  
+
+      return showDialog<void>(
+
+        context: context,
+
+        builder: (BuildContext context) {
+
+          return AlertDialog(
+
+            title: Text(title),
+
+            content: Column(
+
+              mainAxisSize: MainAxisSize.min,
+
+              children: [
+
+                Text(contentText),
+
+                const SizedBox(height: 16),
+
+                const ReusableNativeAdWidget(),
+
+              ],
+
             ),
-            TextButton(
-              child: Text(yesButton),
-              onPressed: () async {
-                Navigator.of(context).pop();
-                final Uri uri = Uri.parse(url);
-                if (await canLaunchUrl(uri)) {
-                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                } else {
-                  // URL을 열 수 없을 때 화면 아래에 알림 메시지를 띄워줘요.
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Could not launch $url'),
-                      ),
-                    );
+
+            actions: <Widget>[
+
+              TextButton(
+
+                child: Text(noButton),
+
+                onPressed: () {
+
+                  Navigator.of(context).pop();
+
+                },
+
+              ),
+
+              TextButton(
+
+                child: Text(yesButton),
+
+                onPressed: () async {
+
+                  Navigator.of(context).pop();
+
+                  final Uri uri = Uri.parse(url);
+
+                  if (await canLaunchUrl(uri)) {
+
+                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+
+                  } else {
+
+                    // URL을 열 수 없을 때 화면 아래에 알림 메시지를 띄워줘요.
+
+                    if (context.mounted) {
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+
+                        SnackBar(
+
+                          content: Text('Could not launch $url'),
+
+                        ),
+
+                      );
+
+                    }
+
                   }
-                }
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+
+                },
+
+              ),
+
+            ],
+
+          );
+
+        },
+
+      );
+
+    }
 
   // 이 함수는 화면에 무엇을 그릴지 정해줘요.
   @override

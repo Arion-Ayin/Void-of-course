@@ -21,7 +21,7 @@ class AstroState with ChangeNotifier {
   bool _voidAlarmEnabled = false;
   int _preVoidAlarmHours = 6;
   bool _isOngoingNotificationVisible = false;
-  DateTime _selectedDate = DateTime.now();
+  DateTime _selectedDate = DateTime.now().toUtc();
   bool _isFollowingTime = true;
   String _moonPhase = '';
   String _moonZodiac = '';
@@ -77,7 +77,7 @@ class AstroState with ChangeNotifier {
   Future<void> followTime() async {
     if (_isFollowingTime) return;
     _isFollowingTime = true;
-    _selectedDate = DateTime.now();
+    _selectedDate = DateTime.now().toUtc();
     await refreshData();
   }
 
@@ -94,7 +94,7 @@ class AstroState with ChangeNotifier {
       _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 6;
 
       await _updateData();
-      final vocTimes = _calculator.findVoidOfCoursePeriod(DateTime.now());
+      final vocTimes = _calculator.findVoidOfCoursePeriod(DateTime.now().toUtc());
       _realtimeVocStart = vocTimes['start'];
       _realtimeVocEnd = vocTimes['end'];
 
@@ -174,7 +174,7 @@ class AstroState with ChangeNotifier {
       return;
     }
 
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final vocTimes = _calculator.findVoidOfCoursePeriod(now);
     _realtimeVocStart = vocTimes['start'];
     _realtimeVocEnd = vocTimes['end'];
@@ -258,7 +258,7 @@ class AstroState with ChangeNotifier {
   }
 
   void _checkTime() {
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
 
     // 1. (기존 로직) 현재 시간을 따르는 중일 때 데이터 자동 새로고침
     if (_isFollowingTime) {
@@ -347,7 +347,7 @@ class AstroState with ChangeNotifier {
   Future<void> updateDate(DateTime newDate) async {
     _selectedDate = newDate;
 
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final bool isNowFollowingTime = newDate.year == now.year &&
         newDate.month == now.month &&
         newDate.day == now.day;
@@ -426,7 +426,7 @@ class AstroState with ChangeNotifier {
   Future<void> _updateOngoingNotification() async {
     if (_realtimeVocStart == null || _realtimeVocEnd == null) return;
 
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final remainingDuration = _realtimeVocEnd!.difference(now);
 
     final hours = remainingDuration.inHours;
@@ -465,7 +465,7 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> _updatePreVoidAlarmNotification(DateTime vocStart) async {
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final remainingDuration = vocStart.difference(now);
 
     final hours = remainingDuration.inHours;

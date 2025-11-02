@@ -62,7 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _resetDateToToday() {
     if (mounted) {
       final provider = Provider.of<AstroState>(context, listen: false);
-      provider.updateDate(DateTime.now());
+      provider.updateDate(DateTime.now().toUtc());
 
       // 현재 언어 설정에 맞는 메시지를 선택합니다.
       final locale = Localizations.localeOf(context).languageCode;
@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // 앱의 전체적인 상태(데이터)를 가져와요. 데이터가 바뀌면 화면을 다시 그려요.
     final provider = Provider.of<AstroState>(context);
     // 날짜 컨트롤러에 현재 선택된 날짜를 '년-월-일' 형식으로 보여줘요.
-    _dateController.text = DateFormat('yyyy/MM/dd').format(provider.selectedDate);
+    _dateController.text = DateFormat('yyyy/MM/dd').format(provider.selectedDate.toLocal());
 
     // 만약 데이터가 아직 준비 중이라면,
     if (!provider.isInitialized || provider.isLoading) {
@@ -102,7 +102,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // 다음 별자리로 바뀌는 시간에 대한 글자를 만들어요.
     final nextSignTimeText = provider.nextSignTime != null
         // 만약 다음 별자리로 바뀌는 시간이 있다면, 그 시간을 예쁘게 만들어서 보여줘요.
-        ? 'Next Sign : ${DateFormat('MM월 dd일 HH:mm').format(provider.nextSignTime!)}'
+        ? 'Next Sign : ${DateFormat('MM월 dd일 HH:mm').format(provider.nextSignTime!.toLocal())}'
         : 'Next Sign : N/A';
 
     // 화면의 전체적인 구조를 짜요.

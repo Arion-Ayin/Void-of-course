@@ -12,14 +12,14 @@ class VocInfoCard extends StatelessWidget {
 
   String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return 'N/A';
-    return DateFormat('MM/dd HH:mm').format(dateTime);
+    return DateFormat('MM/dd HH:mm').format(dateTime.toLocal());
   }
 
   @override
   Widget build(BuildContext context) {
     final vocStart = provider.vocStart;
     final vocEnd = provider.vocEnd;
-    final now = DateTime.now();
+    final now = DateTime.now().toUtc();
     final selectedDate = provider.selectedDate;
 
     bool isVocNow = false;
@@ -29,7 +29,7 @@ class VocInfoCard extends StatelessWidget {
 
     bool doesSelectedDateHaveVoc = false;
     if (vocStart != null && vocEnd != null) {
-      final selectedDayStart = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+      final selectedDayStart = DateTime.utc(selectedDate.year, selectedDate.month, selectedDate.day);
       final selectedDayEnd = selectedDayStart.add(const Duration(days: 1));
 
       if (vocStart.isBefore(selectedDayEnd) && vocEnd.isAfter(selectedDayStart)) {

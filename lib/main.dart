@@ -16,11 +16,15 @@ import 'package:upgrader/upgrader.dart';
 import 'package:lioluna/widgets/exit_confirmation_dialog.dart';
 
 
+import 'package:lioluna/services/ad_service.dart';
+
 void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요. (앱이 시작하기 전에 필요한 준비를 해요)
   WidgetsFlutterBinding.ensureInitialized();
-  // Google Mobile Ads SDK를 초기화해요.
-  MobileAds.instance.initialize();
+  // Google Mobile Ads SDK와 AdService를 초기화해요.
+  await MobileAds.instance.initialize();
+  await AdService().initialize();
+
   // 우리 앱을 실행해요. runApp은 화면에 위젯을 보여주는 함수예요.
   runApp(
     MultiProvider(
@@ -244,7 +248,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
   bool _isAdLoaded = false;
 
   // 실제 광고 단위 ID
-  final String _adUnitId = 'ca-app-pub-7332476431820224/3843192065';
+  final String _adUnitId = 'ca-app-pub-7332476431820224/6217062207';
 
   @override
   void initState() {

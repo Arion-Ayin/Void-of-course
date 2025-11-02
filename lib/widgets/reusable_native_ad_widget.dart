@@ -14,7 +14,7 @@ class _ReusableNativeAdWidgetState extends State<ReusableNativeAdWidget> {
   bool _isAdLoaded = false;
 
   // Using Google's test ID for native ads on Android.
-  final String _adUnitId = 'ca-app-pub-3940256099942544/2247696110';
+  final String _adUnitId = 'ca-app-pub-7332476431820224/3843192065';
 
   @override
   void initState() {
