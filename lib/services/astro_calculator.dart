@@ -8,12 +8,48 @@ import 'package:intl/intl.dart'; // 날짜와 시간을 보기 좋게 바꾸는 
 class AstroCalculator {
   // 열두 별자리의 기호를 순서대로 적어놓은 목록이에요.
   static const List<String> zodiacSigns = [
-    '♈︎', '♉︎', '♊︎', '♋︎', '♌︎', '♍︎', '♎︎', '♏︎', '♐︎', '♑︎', '♒︎', '♓︎',
+    '♈︎',
+    '♉︎',
+    '♊︎',
+    '♋︎',
+    '♌︎',
+    '♍︎',
+    '♎︎',
+    '♏︎',
+    '♐︎',
+    '♑︎',
+    '♒︎',
+    '♓︎',
+  ];
+
+  static const List<String> aspectSigns = ['☌', '✶', '□', '△', '☍'];
+
+  static const List<String> planetSigns = [
+    '☉',
+    '☿',
+    '♀',
+    '♂',
+    '♃',
+    '♄',
+    '♅',
+    '♆',
+    '⯓',
   ];
 
   // 열두 별자리의 영어 이름을 순서대로 적어놓은 목록이에요.
   static const List<String> zodiacNames = [
-    'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces',
+    'Aries',
+    'Taurus',
+    'Gemini',
+    'Cancer',
+    'Leo',
+    'Virgo',
+    'Libra',
+    'Scorpio',
+    'Sagittarius',
+    'Capricorn',
+    'Aquarius',
+    'Pisces',
   ];
 
   // 달의 모양(위상)을 이름과 함께 적어놓은 목록이에요.
@@ -48,7 +84,8 @@ class AstroCalculator {
   // 천문학자들은 이 숫자로 날짜를 더 쉽게 계산해요.
   double getJulianDay(DateTime date) {
     final utcDate = date.toUtc(); // 시간을 모든 나라에서 똑같은 'UTC' 시간으로 바꿔요.
-    final jdList = Sweph.swe_utc_to_jd( // 'sweph' 도구를 써서 줄리안 데이를 계산해요.
+    final jdList = Sweph.swe_utc_to_jd(
+      // 'sweph' 도구를 써서 줄리안 데이를 계산해요.
       utcDate.year,
       utcDate.month,
       utcDate.day,
@@ -63,22 +100,35 @@ class AstroCalculator {
   // 어떤 별이나 행성의 위치(경도)를 찾아주는 함수예요.
   double getLongitude(HeavenlyBody body, DateTime date) {
     final jd = getJulianDay(date); // 먼저 날짜를 줄리안 데이로 바꿔요.
-    final pos = Sweph.swe_calc_ut(jd, body, SwephFlag.SEFLG_SWIEPH); // 'sweph' 도구로 위치를 계산해요.
+    final pos = Sweph.swe_calc_ut(
+      jd,
+      body,
+      SwephFlag.SEFLG_SWIEPH,
+    ); // 'sweph' 도구로 위치를 계산해요.
     return pos.longitude!; // 계산된 경도(위치)를 알려줘요。
   }
 
   // 해와 달의 위치(경도)를 동시에 찾아주는 함수예요.
- Map<String, double> getSunMoonLongitude(DateTime date) {
-  final jd = getJulianDay(date);
-  final sun = Sweph.swe_calc_ut(jd, HeavenlyBody.SE_SUN, SwephFlag.SEFLG_SWIEPH);
-  final moon = Sweph.swe_calc_ut(jd, HeavenlyBody.SE_MOON, SwephFlag.SEFLG_SWIEPH);
-  if (sun.longitude == null || moon.longitude == null) {
-    throw Exception('Sun or Moon position not available.');
-  }
-  print('getSunMoonLongitude for $date: Sun Lon = ${sun.longitude}, Moon Lon = ${moon.longitude}');
-  return {'sun': sun.longitude!, 'moon': moon.longitude!};
+  Map<String, double> getSunMoonLongitude(DateTime date) {
+    final jd = getJulianDay(date);
+    final sun = Sweph.swe_calc_ut(
+      jd,
+      HeavenlyBody.SE_SUN,
+      SwephFlag.SEFLG_SWIEPH,
+    );
+    final moon = Sweph.swe_calc_ut(
+      jd,
+      HeavenlyBody.SE_MOON,
+      SwephFlag.SEFLG_SWIEPH,
+    );
+    if (sun.longitude == null || moon.longitude == null) {
+      throw Exception('Sun or Moon position not available.');
     }
-
+    print(
+      'getSunMoonLongitude for $date: Sun Lon = ${sun.longitude}, Moon Lon = ${moon.longitude}',
+    );
+    return {'sun': sun.longitude!, 'moon': moon.longitude!};
+  }
 
   // 달의 현재 모양(위상)이 무엇인지 찾아주는 함수예요.
   Map<String, dynamic> getMoonPhaseInfo(DateTime date) {
@@ -105,7 +155,7 @@ class AstroCalculator {
     } else {
       phaseName = '🌘 Balsamic Moon';
     }
-    
+
     return {'phaseName': phaseName}; // 달의 모양 이름을 알려줘요.
   }
 
@@ -130,7 +180,9 @@ class AstroCalculator {
       final name = entry.value;
 
       final positions = getSunMoonLongitude(now);
-      final currentAngle = Sweph.swe_degnorm(positions['moon']! - positions['sun']!);
+      final currentAngle = Sweph.swe_degnorm(
+        positions['moon']! - positions['sun']!,
+      );
 
       // 목표 각도까지 얼마나 남았는지 계산해요.
       var deg_to_go = (targetAngle - currentAngle + 360) % 360;
@@ -140,14 +192,24 @@ class AstroCalculator {
 
       // 달은 하루에 약 12.19도씩 움직여요. 이걸로 대략적인 시간을 계산해요.
       var days_to_go = deg_to_go / 12.19;
-      DateTime estimated_time = now.add(Duration(microseconds: (days_to_go * 24 * 3600 * 1000000).round()));
+      DateTime estimated_time = now.add(
+        Duration(microseconds: (days_to_go * 24 * 3600 * 1000000).round()),
+      );
 
       // 정확한 시간을 다시 찾아봐요.
-      var time = _findSpecificPhaseTime(estimated_time, targetAngle, daysRange: 2);
+      var time = _findSpecificPhaseTime(
+        estimated_time,
+        targetAngle,
+        daysRange: 2,
+      );
 
       // 만약 찾은 시간이 지금보다 전이라면, 다음 달 주기로 넘어가서 다시 찾아봐요.
       if (time != null && time.isBefore(now)) {
-        time = _findSpecificPhaseTime(estimated_time.add(const Duration(days: 28)), targetAngle, daysRange: 3);
+        time = _findSpecificPhaseTime(
+          estimated_time.add(const Duration(days: 28)),
+          targetAngle,
+          daysRange: 3,
+        );
       }
 
       // 가장 가까운 시간을 찾아서 저장해요.
@@ -168,7 +230,9 @@ class AstroCalculator {
 
     // 1. 현재 해와 달의 각도를 계산해요.
     final positions = getSunMoonLongitude(now);
-    final currentAngle = Sweph.swe_degnorm(positions['moon']! - positions['sun']!);
+    final currentAngle = Sweph.swe_degnorm(
+      positions['moon']! - positions['sun']!,
+    );
 
     // 2. 현재 각도에 따라 다음 달 모양의 각도와 이름을 정해요.
     double nextAngle;
@@ -195,7 +259,8 @@ class AstroCalculator {
     } else if (currentAngle < 315) {
       nextAngle = 315.0;
       nextName = '🌘 Balsamic Moon';
-    } else { // 현재 각도가 315도 이상이라면, 다음은 다시 초승달(New Moon)이에요.
+    } else {
+      // 현재 각도가 315도 이상이라면, 다음은 다시 초승달(New Moon)이에요.
       nextAngle = 0.0;
       nextName = '🌑 New Moon';
     }
@@ -203,12 +268,19 @@ class AstroCalculator {
     // 3. 다음 달 모양이 나타나는 정확한 시간을 찾아봐요.
     var deg_to_go = (nextAngle - currentAngle + 360) % 360;
     if (deg_to_go == 0) deg_to_go = 360; // 안전을 위한 코드예요.
-    
-    var days_to_go = deg_to_go / (360 / 29.530588861); // 달 주기를 이용해 대략적인 시간을 계산해요.
-    DateTime estimated_time = now.add(Duration(microseconds: (days_to_go * 24 * 3600 * 1000000).round()));
+
+    var days_to_go =
+        deg_to_go / (360 / 29.530588861); // 달 주기를 이용해 대략적인 시간을 계산해요.
+    DateTime estimated_time = now.add(
+      Duration(microseconds: (days_to_go * 24 * 3600 * 1000000).round()),
+    );
 
     // 대략적인 시간을 기준으로 정확한 시간을 다시 찾아봐요.
-    DateTime? final_time = _findSpecificPhaseTime(estimated_time, nextAngle, daysRange: 2);
+    DateTime? final_time = _findSpecificPhaseTime(
+      estimated_time,
+      nextAngle,
+      daysRange: 2,
+    );
 
     return {'name': nextName, 'time': final_time}; // 다음 달 모양과 시간을 알려줘요.
   }
@@ -259,20 +331,29 @@ class AstroCalculator {
     return {'start': signStartTime, 'end': signEndTime}; // 들어오고 나가는 시간을 알려줘요.
   }
 
-  DateTime? _findSpecificPhaseTime(DateTime date, double targetAngle, {int daysRange = 14}) {
-    DateTime utcStart = date.subtract(Duration(days: daysRange)).toUtc(); // 찾기 시작하는 시간
+  DateTime? _findSpecificPhaseTime(
+    DateTime date,
+    double targetAngle, {
+    int daysRange = 14,
+  }) {
+    DateTime utcStart =
+        date.subtract(Duration(days: daysRange)).toUtc(); // 찾기 시작하는 시간
     DateTime utcEnd = date.add(Duration(days: daysRange)).toUtc(); // 찾기 끝나는 시간
-    
+
     // 100번 반복해서 아주 정확한 시간을 찾을 때까지 범위를 반씩 줄여나가요。
     for (int i = 0; i < 100; i++) {
       if (utcStart.isAtSameMomentAs(utcEnd)) break;
-      final mid = utcStart.add(Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2)); // 중간 시간을 찾아요。
+      final mid = utcStart.add(
+        Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2),
+      ); // 중간 시간을 찾아요。
       if (mid.isAtSameMomentAs(utcStart) || mid.isAtSameMomentAs(utcEnd)) break;
 
       final positions = getSunMoonLongitude(mid);
       final sunLon = positions['sun']!;
       final moonLon = positions['moon']!;
-      final angle = Sweph.swe_degnorm(moonLon - sunLon); // 중간 시간의 해와 달 각도를 계산해요。
+      final angle = Sweph.swe_degnorm(
+        moonLon - sunLon,
+      ); // 중간 시간의 해와 달 각도를 계산해요。
 
       final delta = Sweph.swe_degnorm(angle - targetAngle);
 
@@ -284,7 +365,8 @@ class AstroCalculator {
       // 만약 각도가 목표보다 앞서면 끝나는 시간을 중간으로 바꿔서 범위를 줄여요。
       if (delta < 180) {
         utcEnd = mid;
-      } else { // 각도가 목표보다 뒤에 있으면 시작 시간을 중간으로 바꿔서 범위를 줄여요。
+      } else {
+        // 각도가 목표보다 뒤에 있으면 시작 시간을 중간으로 바꿔서 범위를 줄여요。
         utcStart = mid;
       }
     }
@@ -303,7 +385,9 @@ class AstroCalculator {
 
     double startLon;
     try {
-      startLon = Sweph.swe_degnorm(getLongitude(HeavenlyBody.SE_MOON, utcStart));
+      startLon = Sweph.swe_degnorm(
+        getLongitude(HeavenlyBody.SE_MOON, utcStart),
+      );
     } catch (e) {
       return null;
     }
@@ -324,7 +408,9 @@ class AstroCalculator {
     // 100번 반복해서 시간을 아주 정확하게 찾아요。
     for (int i = 0; i < 100; i++) {
       if (utcStart.isAtSameMomentAs(utcEnd)) break;
-      final mid = utcStart.add(Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2));
+      final mid = utcStart.add(
+        Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2),
+      );
       if (mid.isAtSameMomentAs(utcStart) || mid.isAtSameMomentAs(utcEnd)) break;
 
       final midLon = Sweph.swe_degnorm(getLongitude(HeavenlyBody.SE_MOON, mid));
@@ -377,7 +463,9 @@ class AstroCalculator {
     // 100번 반복해서 시간을 아주 정확하게 찾아요。
     for (int i = 0; i < 100; i++) {
       if (utcStart.isAtSameMomentAs(utcEnd)) break;
-      final mid = utcStart.add(Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2));
+      final mid = utcStart.add(
+        Duration(milliseconds: utcEnd.difference(utcStart).inMilliseconds ~/ 2),
+      );
       if (mid.isAtSameMomentAs(utcStart) || mid.isAtSameMomentAs(utcEnd)) break;
 
       final moonLon = getLongitude(HeavenlyBody.SE_MOON, mid);
@@ -399,14 +487,20 @@ class AstroCalculator {
   }
 
   // 달이 특정 별자리를 지나기 전에 마지막으로 행성들과 '좋은 만남'을 갖는 시간을 찾아주는 함수예요.
-  DateTime? _findLastAspectTime(DateTime moonSignEntryTime, DateTime moonSignExitTime) {
+  Map<String, dynamic>? _findLastAspectTime(
+    DateTime moonSignEntryTime,
+    DateTime moonSignExitTime,
+  ) {
     DateTime? lastAspectTime;
+    HeavenlyBody? lastAspectPlanet;
+    double? lastAspectAngle;
 
     // 모든 중요한 행성과 중요한 각도를 하나씩 확인해요.
     for (final planet in majorPlanets) {
       for (final aspect in majorAspects) {
         List<double> targets = [aspect];
-        if (aspect > 0 && aspect < 180) { // 0도, 180도 외에 다른 각도도 반대쪽 각도를 추가해요.
+        if (aspect > 0 && aspect < 180) {
+          // 0도, 180도 외에 다른 각도도 반대쪽 각도를 추가해요.
           targets.add(360 - aspect);
         }
 
@@ -423,12 +517,22 @@ class AstroCalculator {
             // 가장 마지막에 나타난 각도의 시간을 저장해요.
             if (lastAspectTime == null || aspectTime.isAfter(lastAspectTime)) {
               lastAspectTime = aspectTime;
+              lastAspectPlanet = planet;
+              lastAspectAngle = aspect; // 원래 각도(0, 60, 90...)를 저장해요.
             }
           }
         }
       }
     }
-    return lastAspectTime;
+
+    if (lastAspectTime != null) {
+      return {
+        'time': lastAspectTime,
+        'planet': lastAspectPlanet,
+        'aspect': lastAspectAngle,
+      };
+    }
+    return null;
   }
 
   // 달이 힘을 잃는 시간(Void-of-Course, 보이드 오브 코스)을 찾아주는 함수예요.
@@ -439,7 +543,9 @@ class AstroCalculator {
 
     // 며칠간 반복해서 보이드 오브 코스 시간을 찾아요.
     for (int i = 0; i < 5; i++) {
-      final moonSignTimes = getMoonSignTimes(searchDate); // 달이 별자리에 머무는 시간을 가져와요.
+      final moonSignTimes = getMoonSignTimes(
+        searchDate,
+      ); // 달이 별자리에 머무는 시간을 가져와요.
       final signStartTime = moonSignTimes['start'];
       final signEndTime = moonSignTimes['end'];
 
@@ -447,11 +553,19 @@ class AstroCalculator {
         return {'start': null, 'end': null}; // 시간을 찾지 못하면 포기해요.
       }
 
-      final lastAspectTime = _findLastAspectTime(signStartTime, signEndTime); // 마지막 만남 시간을 찾아봐요.
+      final lastAspectInfo = _findLastAspectTime(
+        signStartTime,
+        signEndTime,
+      ); // 마지막 만남 정보를 찾아봐요.
 
       DateTime? vocStart;
-      if (lastAspectTime != null) {
-        vocStart = lastAspectTime; // 마지막 만남 이후부터 보이드 시작이에요.
+      String? vocPlanet;
+      String? vocAspect;
+
+      if (lastAspectInfo != null) {
+        vocStart = lastAspectInfo['time'] as DateTime; // 마지막 만남 이후부터 보이드 시작이에요.
+        vocPlanet = getPlanetEmoji(lastAspectInfo['planet'] as HeavenlyBody);
+        vocAspect = getAspectEmoji(lastAspectInfo['aspect'] as double);
       } else {
         vocStart = signStartTime; // 만약 마지막 만남이 없으면 별자리에 들어온 순간부터 보이드 시작이에요.
       }
@@ -459,12 +573,37 @@ class AstroCalculator {
 
       // 만약 오늘 이후에 보이드 오브 코스 시간이 있다면, 그 시간을 알려줘요.
       if (vocEnd.isAfter(dayStart)) {
-        return {'start': vocStart, 'end': vocEnd};
+        return {
+          'start': vocStart,
+          'end': vocEnd,
+          'planet': vocPlanet,
+          'aspect': vocAspect,
+        };
       }
       // 오늘이 아니면 다음 별자리로 넘어가서 다시 찾아봐요.
       searchDate = signEndTime;
     }
     return {'start': null, 'end': null}; // 5일 내에 못 찾으면 '없어요'라고 알려줘요.
+  }
+
+  // 행성 기호를 알려주는 함수예요.
+  String getPlanetEmoji(HeavenlyBody planet) {
+    final index = majorPlanets.indexOf(planet);
+    if (index != -1 && index < planetSigns.length) {
+      return planetSigns[index];
+    }
+    return '';
+  }
+
+  // 각도(어스펙트) 기호를 알려주는 함수예요.
+  String getAspectEmoji(double aspect) {
+    // 360도 넘어가거나 음수인 경우 정규화 (혹시 몰라서)
+    // 하지만 여기서는 majorAspects에 있는 값(0, 60, 90, 120, 180)만 들어올 거예요.
+    final index = majorAspects.indexOf(aspect);
+    if (index != -1 && index < aspectSigns.length) {
+      return aspectSigns[index];
+    }
+    return '';
   }
 
   // 달의 모양 이름에 맞는 이모티콘을 찾아주는 함수예요.
