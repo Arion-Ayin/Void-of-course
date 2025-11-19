@@ -23,19 +23,18 @@ class NotificationService {
       importance: Importance.max,
     );
 
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
+    const InitializationSettings initializationSettings =
+        InitializationSettings(android: initializationSettingsAndroid);
 
     tz.initializeTimeZones();
 
     await _notificationsPlugin
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>()
+          AndroidFlutterLocalNotificationsPlugin
+        >()
         ?.createNotificationChannel(channel);
 
     await _notificationsPlugin.initialize(initializationSettings);
-
   }
 
   Future<void> requestBatteryOptimizationPermission() async {
@@ -50,10 +49,12 @@ class NotificationService {
 
   Future<bool> requestPermissions() async {
     if (Platform.isAndroid) {
-      final bool? androidResult = await _notificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.requestNotificationsPermission();
+      final bool? androidResult =
+          await _notificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >()
+              ?.requestNotificationsPermission();
       return androidResult ?? false;
     }
     return false;
@@ -61,10 +62,12 @@ class NotificationService {
 
   Future<bool> checkExactAlarmPermission() async {
     if (Platform.isAndroid) {
-      final bool? canSchedule = await _notificationsPlugin
-          .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
-          ?.canScheduleExactNotifications();
+      final bool? canSchedule =
+          await _notificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >()
+              ?.canScheduleExactNotifications();
       return canSchedule ?? false;
     }
     return true;
@@ -74,63 +77,68 @@ class NotificationService {
     if (Platform.isAndroid) {
       await _notificationsPlugin
           .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin>()
+            AndroidFlutterLocalNotificationsPlugin
+          >()
           ?.requestExactAlarmsPermission();
     }
   }
 
   Future<void> scheduleNotification({
-  required int id,
-  required String title,
-  required String body,
-  required DateTime scheduledTime,
-  required bool canScheduleExact,
-}) async {
-  if (Platform.isAndroid && canScheduleExact) {
-    final bool hasExactAlarmPermission = await checkExactAlarmPermission();
-    if (!hasExactAlarmPermission) {
-      await requestExactAlarmPermission();
-      if (!await checkExactAlarmPermission()) {
-        print('Exact alarm permission denied');
-        return;
+    required int id,
+    required String title,
+    required String body,
+    required DateTime scheduledTime,
+    required bool canScheduleExact,
+  }) async {
+    if (Platform.isAndroid && canScheduleExact) {
+      final bool hasExactAlarmPermission = await checkExactAlarmPermission();
+      if (!hasExactAlarmPermission) {
+        await requestExactAlarmPermission();
+        if (!await checkExactAlarmPermission()) {
+          print('Exact alarm permission denied');
+          return;
+        }
       }
     }
-  }
 
-  final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
-  print('Scheduling notification for: $tzScheduledTime (Local time: $scheduledTime)');
+    final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
+    print(
+      'Scheduling notification for: $tzScheduledTime (Local time: $scheduledTime)',
+    );
 
-  await _notificationsPlugin.zonedSchedule(
-    id,
-    title,
-    body,
-    tzScheduledTime,
-    const NotificationDetails(
-      android: AndroidNotificationDetails(
-        'void_channel_id',
-        'Void Notifications',
-        channelDescription: 'Notifications for Void of Course periods',
-        importance: Importance.max,
-        priority: Priority.high,
+    await _notificationsPlugin.zonedSchedule(
+      id,
+      title,
+      body,
+      tzScheduledTime,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'void_channel_id',
+          'Void Notifications',
+          channelDescription: 'Notifications for Void of Course periods',
+          importance: Importance.max,
+          priority: Priority.high,
+        ),
       ),
-    ),
-    androidScheduleMode: canScheduleExact
-        ? AndroidScheduleMode.exactAllowWhileIdle
-        : AndroidScheduleMode.inexact,
-  );
-}
+      androidScheduleMode:
+          canScheduleExact
+              ? AndroidScheduleMode.exactAllowWhileIdle
+              : AndroidScheduleMode.inexact,
+    );
+  }
 
   Future<void> showOngoingNotification({
     required int id,
     required String title,
     required String body,
   }) async {
-    final BigTextStyleInformation bigTextStyleInformation = BigTextStyleInformation(
-      body,
-      contentTitle: title,
-      htmlFormatBigText: false,
-      htmlFormatContentTitle: false,
-    );
+    final BigTextStyleInformation bigTextStyleInformation =
+        BigTextStyleInformation(
+          body,
+          contentTitle: title,
+          htmlFormatBigText: false,
+          htmlFormatContentTitle: false,
+        );
 
     final NotificationDetails notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
@@ -145,12 +153,7 @@ class NotificationService {
         styleInformation: bigTextStyleInformation,
       ),
     );
-    await _notificationsPlugin.show(
-      id,
-      title,
-      body,
-      notificationDetails,
-    );
+    await _notificationsPlugin.show(id, title, body, notificationDetails);
   }
 
   Future<void> cancelNotification(int id) async {

@@ -9,11 +9,7 @@ import 'package:sweph/sweph.dart';
 
 final AstroCalculator _calculator = AstroCalculator();
 
-enum AlarmPermissionStatus {
-  granted,
-  notificationDenied,
-  exactAlarmDenied,
-}
+enum AlarmPermissionStatus { granted, notificationDenied, exactAlarmDenied }
 
 class AstroState with ChangeNotifier {
   Timer? _timer;
@@ -35,6 +31,10 @@ class AstroState with ChangeNotifier {
   DateTime? _realtimeVocStart;
   DateTime? _realtimeVocEnd;
 
+  // VOC Aspect Info
+  String? _vocPlanet;
+  String? _vocAspect;
+
   DateTime? _nextSignTime;
   String? _lastError;
   bool _isInitialized = false;
@@ -50,6 +50,8 @@ class AstroState with ChangeNotifier {
   String get moonInSign => _moonInSign;
   DateTime? get vocStart => _vocStart;
   DateTime? get vocEnd => _vocEnd;
+  String? get vocPlanet => _vocPlanet;
+  String? get vocAspect => _vocAspect;
   DateTime? get nextSignTime => _nextSignTime;
   String? get lastError => _lastError;
   bool get isInitialized => _isInitialized;
@@ -94,7 +96,9 @@ class AstroState with ChangeNotifier {
       _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 6;
 
       await _updateData();
-      final vocTimes = _calculator.findVoidOfCoursePeriod(DateTime.now().toUtc());
+      final vocTimes = _calculator.findVoidOfCoursePeriod(
+        DateTime.now().toUtc(),
+      );
       _realtimeVocStart = vocTimes['start'];
       _realtimeVocEnd = vocTimes['end'];
 
@@ -122,17 +126,20 @@ class AstroState with ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
 
     if (enable) {
-      final bool hasNotificationPermission = await _notificationService.requestPermissions();
+      final bool hasNotificationPermission =
+          await _notificationService.requestPermissions();
       if (!hasNotificationPermission) {
         _voidAlarmEnabled = false;
         notifyListeners();
         return AlarmPermissionStatus.notificationDenied;
       }
 
-      bool hasExactAlarmPermission = await _notificationService.checkExactAlarmPermission();
+      bool hasExactAlarmPermission =
+          await _notificationService.checkExactAlarmPermission();
       if (!hasExactAlarmPermission) {
         await _notificationService.requestExactAlarmPermission();
-        hasExactAlarmPermission = await _notificationService.checkExactAlarmPermission();
+        hasExactAlarmPermission =
+            await _notificationService.checkExactAlarmPermission();
       }
 
       if (hasExactAlarmPermission) {
@@ -185,24 +192,33 @@ class AstroState with ChangeNotifier {
     }
 
     final locale = _currentLocale;
-    final preAlarmTime = _realtimeVocStart!.subtract(Duration(hours: _preVoidAlarmHours));
+    final preAlarmTime = _realtimeVocStart!.subtract(
+      Duration(hours: _preVoidAlarmHours),
+    );
 
-    bool hasExactAlarmPermission = await _notificationService.checkExactAlarmPermission();
+    bool hasExactAlarmPermission =
+        await _notificationService.checkExactAlarmPermission();
     if (!hasExactAlarmPermission) {
       await _notificationService.requestExactAlarmPermission();
-      hasExactAlarmPermission = await _notificationService.checkExactAlarmPermission();
+      hasExactAlarmPermission =
+          await _notificationService.checkExactAlarmPermission();
       if (!hasExactAlarmPermission) {
-        if (kDebugMode) print("Exact alarm permission denied, cannot schedule notifications.");
+        if (kDebugMode)
+          print(
+            "Exact alarm permission denied, cannot schedule notifications.",
+          );
         return;
       }
     }
 
     // Pre-VOC 알림
     if (preAlarmTime.isAfter(now)) {
-      String preTitle = locale.startsWith('ko') ? '보이드 시작 알림' : 'Void of Course Upcoming';
-      String preBody = locale.startsWith('ko')
-          ? '보이드가 $_preVoidAlarmHours시간 후 시작됩니다.'
-          : 'Void of Course begins in $_preVoidAlarmHours hours.';
+      String preTitle =
+          locale.startsWith('ko') ? '보이드 시작 알림' : 'Void of Course Upcoming';
+      String preBody =
+          locale.startsWith('ko')
+              ? '보이드가 $_preVoidAlarmHours시간 후 시작됩니다.'
+              : 'Void of Course begins in $_preVoidAlarmHours hours.';
       await _notificationService.scheduleNotification(
         id: 0,
         title: preTitle,
@@ -214,10 +230,12 @@ class AstroState with ChangeNotifier {
 
     // VOC 시작 알림
     if (_realtimeVocStart!.isAfter(now)) {
-      String startTitle = locale.startsWith('ko') ? '보이드 시작' : 'Void of Course Started';
-      String startBody = locale.startsWith('ko')
-          ? '지금 보이드 시간이 시작되었습니다.'
-          : 'The Void of Course period has now begun.';
+      String startTitle =
+          locale.startsWith('ko') ? '보이드 시작' : 'Void of Course Started';
+      String startBody =
+          locale.startsWith('ko')
+              ? '지금 보이드 시간이 시작되었습니다.'
+              : 'The Void of Course period has now begun.';
       await _notificationService.scheduleNotification(
         id: 1,
         title: startTitle,
@@ -229,10 +247,12 @@ class AstroState with ChangeNotifier {
 
     // VOC 종료 알림
     if (_realtimeVocEnd!.isAfter(now)) {
-      String endTitle = locale.startsWith('ko') ? '보이드 종료' : 'Void of Course Ended';
-      String endBody = locale.startsWith('ko')
-          ? '보이드 시간이 종료되었습니다.'
-          : 'The Void of Course period has ended.';
+      String endTitle =
+          locale.startsWith('ko') ? '보이드 종료' : 'Void of Course Ended';
+      String endBody =
+          locale.startsWith('ko')
+              ? '보이드 시간이 종료되었습니다.'
+              : 'The Void of Course period has ended.';
       await _notificationService.scheduleNotification(
         id: 2,
         title: endTitle,
@@ -243,7 +263,9 @@ class AstroState with ChangeNotifier {
     }
 
     if (kDebugMode) {
-      print("Scheduled notifications: Pre-VOC at $preAlarmTime, Start at $_realtimeVocStart, End at $_realtimeVocEnd");
+      print(
+        "Scheduled notifications: Pre-VOC at $preAlarmTime, Start at $_realtimeVocStart, End at $_realtimeVocEnd",
+      );
     }
 
     _checkTime();
@@ -305,8 +327,9 @@ class AstroState with ChangeNotifier {
     }
 
     // 3. 현재 상태 정의
-    final preAlarmTime =
-        _realtimeVocStart!.subtract(Duration(hours: _preVoidAlarmHours));
+    final preAlarmTime = _realtimeVocStart!.subtract(
+      Duration(hours: _preVoidAlarmHours),
+    );
     final isCurrentlyInVoc =
         now.isAfter(_realtimeVocStart!) && now.isBefore(_realtimeVocEnd!);
     final isCurrentlyInPreVoc =
@@ -348,7 +371,8 @@ class AstroState with ChangeNotifier {
     _selectedDate = newDate;
 
     final now = DateTime.now().toUtc();
-    final bool isNowFollowingTime = newDate.year == now.year &&
+    final bool isNowFollowingTime =
+        newDate.year == now.year &&
         newDate.month == now.month &&
         newDate.day == now.day;
 
@@ -394,6 +418,8 @@ class AstroState with ChangeNotifier {
         'moonInSign': moonInSign,
         'vocStart': vocTimes['start'],
         'vocEnd': vocTimes['end'],
+        'vocPlanet': vocTimes['planet'],
+        'vocAspect': vocTimes['aspect'],
         'nextSignTime': moonSignTimes['end'],
         'nextMoonPhaseName': nextPhaseInfo['name'] ?? 'N/A',
         'nextMoonPhaseTime': nextPhaseInfo['time'],
@@ -418,6 +444,8 @@ class AstroState with ChangeNotifier {
     _moonInSign = result['moonInSign'] as String;
     _vocStart = result['vocStart'] as DateTime?;
     _vocEnd = result['vocEnd'] as DateTime?;
+    _vocPlanet = result['vocPlanet'] as String?;
+    _vocAspect = result['vocAspect'] as String?;
     _nextSignTime = result['nextSignTime'] as DateTime?;
     _nextMoonPhaseName = result['nextMoonPhaseName'] as String;
     _nextMoonPhaseTime = result['nextMoonPhaseTime'] as DateTime?;

@@ -5,10 +5,7 @@ import '../services/astro_state.dart';
 class VocInfoCard extends StatelessWidget {
   final AstroState provider;
 
-  const VocInfoCard({
-    super.key,
-    required this.provider,
-  });
+  const VocInfoCard({super.key, required this.provider});
 
   String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return 'N/A';
@@ -29,10 +26,15 @@ class VocInfoCard extends StatelessWidget {
 
     bool doesSelectedDateHaveVoc = false;
     if (vocStart != null && vocEnd != null) {
-      final selectedDayStart = DateTime.utc(selectedDate.year, selectedDate.month, selectedDate.day);
+      final selectedDayStart = DateTime.utc(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+      );
       final selectedDayEnd = selectedDayStart.add(const Duration(days: 1));
 
-      if (vocStart.isBefore(selectedDayEnd) && vocEnd.isAfter(selectedDayStart)) {
+      if (vocStart.isBefore(selectedDayEnd) &&
+          vocEnd.isAfter(selectedDayStart)) {
         doesSelectedDateHaveVoc = true;
       }
     }
@@ -43,7 +45,7 @@ class VocInfoCard extends StatelessWidget {
 
     if (isVocNow) {
       vocStatusText = "There's a void Now";
-      vocColor = Colors.red;
+      vocColor = const Color.fromRGBO(252, 17, 0, 1);
       vocIcon = '🚫';
     } else if (doesSelectedDateHaveVoc) {
       vocStatusText = "There's a void today";
@@ -52,7 +54,7 @@ class VocInfoCard extends StatelessWidget {
     } else {
       vocStatusText = "It's not a void";
       vocIcon = '✅';
-      vocColor = Colors.green;
+      vocColor = const Color.fromARGB(255, 72, 189, 76);
     }
 
     return Container(
@@ -76,7 +78,8 @@ class VocInfoCard extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(5), // ⭐️ 전체 컨테이너에 충분한 패딩을 줍니다.
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center, // ⭐️ Row의 자식들을 수직 중앙 정렬합니다.
+        crossAxisAlignment:
+            CrossAxisAlignment.center, // ⭐️ Row의 자식들을 수직 중앙 정렬합니다.
         children: [
           // ⭐️ 아이콘 부분을 담당하는 SizedBox와 Text 위젯
           SizedBox(
@@ -99,13 +102,47 @@ class VocInfoCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Void of Course',
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.titleLarge?.color,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'Void of Course',
+                      style: TextStyle(
+                        color: Theme.of(context).textTheme.titleLarge?.color,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    if (provider.vocAspect != null &&
+                        provider.vocPlanet != null) ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '${provider.vocAspect}',
+                        style: TextStyle(
+                          color: _getAspectColor(provider.vocAspect!),
+                          fontSize: 16,
+                          fontWeight: _getAspectFontWeight(provider.vocAspect!),
+                        ),
+                      ),
+                      Text(
+                        ', ',
+                        style: TextStyle(
+                          color: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '${provider.vocPlanet}',
+                        style: TextStyle(
+                          color: _getPlanetColor(provider.vocPlanet!),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 const SizedBox(height: 1),
                 Text(
@@ -115,6 +152,16 @@ class VocInfoCard extends StatelessWidget {
                     color: Theme.of(context).textTheme.bodyMedium?.color,
                     fontSize: 17,
                     fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  '${provider.moonInSign} Moon',
+                  style: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.color?.withOpacity(0.7),
+                    fontSize: 14,
                   ),
                 ),
                 const SizedBox(height: 1),
@@ -132,5 +179,63 @@ class VocInfoCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Color _getAspectColor(String aspect) {
+    // Hard aspects: Conjunction (☌), Square (▢), Opposition (☍) -> Red
+    if (['☌', '□', '☍'].contains(aspect)) {
+      return const Color.fromARGB(255, 255, 0, 0);
+    }
+    // Soft aspects: Sextile (✶), Trine (▵) -> Blue
+    if (['✶', '△'].contains(aspect)) {
+      return const Color.fromARGB(255, 0, 0, 255);
+    }
+    return Colors.grey;
+  }
+
+  Color _getPlanetColor(String planet) {
+    switch (planet) {
+      case '☉': // Sun
+        return Colors.brown;
+      case '☾': // Moon
+        return Colors.brown;
+      case '☿': // Mercury
+        return Colors.purple;
+      case '♀': // Venus
+        return const Color(0xFF00C4B4); // Mint (Teal-ish)
+      case '♂': // Mars
+        return Colors.red;
+      case '♃': // Jupiter
+        return Colors.grey[800]!; // Dark Grey
+      case '♄': // Saturn
+        return const Color(0xFFA52A2A); // Reddish Brown
+      case '♅': // Uranus
+        return const Color.fromARGB(223, 12, 26, 223); // Mint
+      case '♆': // Neptune
+        return const Color(0xFF00C4B4); // Mint
+      case '⯓': // Pluto
+        return const Color(0xFFA52A2A); // Reddish Brown
+      default:
+        return Colors.grey;
+    }
+  }
+
+  FontWeight _getAspectFontWeight(String aspect) {
+    if ([
+      '☉',
+      '☿',
+      '♀',
+      '♂',
+      '♃',
+      '♄',
+      '♅',
+      '♆',
+      '⯓',
+      '□',
+      '△',
+    ].contains(aspect)) {
+      return FontWeight.w900;
+    }
+    return FontWeight.w900;
   }
 }
