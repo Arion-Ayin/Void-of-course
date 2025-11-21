@@ -2,7 +2,6 @@
 // 달이 어떤 별자리에 있는지, 달의 모양(위상)은 어떤지 같은 것을 알려줘요.
 // 'sweph'라는 아주 정확한 계산을 해주는 도구를 사용해요.
 import 'package:sweph/sweph.dart'; // 천문학 계산을 위한 'sweph' 도구를 가져와요.
-import 'package:intl/intl.dart'; // 날짜와 시간을 보기 좋게 바꾸는 도구를 가져와요.
 
 // 점성술에 필요한 것들을 계산하는 특별한 상자(클래스)예요.
 class AstroCalculator {
@@ -292,11 +291,14 @@ class AstroCalculator {
     return zodiacSigns[signIndex]; // 별자리 기호를 알려줘요.
   }
 
-  // 달이 현재 어떤 별자리에 있는지 이름으로 알려주는 함수예요.
-  String getMoonZodiacName(DateTime date) {
-    final moonLon = getLongitude(HeavenlyBody.SE_MOON, date); // 달의 위치를 가져와요.
-    final signIndex = ((moonLon % 360) / 30).floor(); // 위치를 별자리 번호로 바꿔요.
-    return zodiacNames[signIndex]; // 별자리 이름을 알려줘요.
+  String getMoonSignName(DateTime date) {
+    final moonLon = getLongitude(HeavenlyBody.SE_MOON, date);
+    final signIndex = ((moonLon % 360) / 30).floor();
+    // 인덱스가 범위를 벗어나지 않도록 안전장치 추가
+    if (signIndex >= 0 && signIndex < zodiacNames.length) {
+      return zodiacNames[signIndex];
+    }
+    return 'Aries'; // 기본값
   }
 
   // 달이 특정 별자리에 들어오고 나가는 시간을 찾아주는 함수예요.
