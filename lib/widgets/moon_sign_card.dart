@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/astro_state.dart';
-import '../services/astro_calculator.dart';
 
 // 달이 어떤 별자리에 있는지 보여주는 카드를 만드는 위젯이에요.
 class MoonSignCard extends StatelessWidget {
@@ -11,7 +10,11 @@ class MoonSignCard extends StatelessWidget {
   final String nextSignTimeText;
 
   // 카드를 만들 때 이 정보들을 꼭 받아야 해요.
-  const MoonSignCard({super.key, required this.provider, required this.nextSignTimeText});
+  const MoonSignCard({
+    super.key,
+    required this.provider,
+    required this.nextSignTimeText,
+  });
 
   // 별자리 이름에 맞는 이모티콘(그림 아이콘)을 찾아주는 함수예요.
   String getZodiacEmoji(String sign) {
@@ -50,10 +53,11 @@ class MoonSignCard extends StatelessWidget {
   // 이 위젯이 화면에 어떻게 보일지 정하는 부분이에요.
   Widget build(BuildContext context) {
     // 다음 별자리 시간 텍스트를 포맷팅합니다.
-    final nextSignTime = provider.nextSignTime;
-    final formattedNextSignTime = nextSignTime != null
-        ? DateFormat('MM/dd HH:mm').format(nextSignTime)
-        : 'N/A';
+    final nextSignTime = provider.nextSignTime?.toLocal();
+    final formattedNextSignTime =
+        nextSignTime != null
+            ? DateFormat('MM/dd HH:mm').format(nextSignTime)
+            : 'N/A';
 
     // 카드를 담을 상자를 만들어요.
     return Container(
@@ -65,7 +69,9 @@ class MoonSignCard extends StatelessWidget {
           end: Alignment.bottomRight, // 오른쪽 아래로 색이 변해요.
           colors: [
             Theme.of(context).cardColor, // 앱의 기본 카드 색상을 사용해요.
-            Theme.of(context).cardColor.withOpacity(0.8), // 기본 카드 색상을 살짝 투명하게 만들어요.
+            Theme.of(
+              context,
+            ).cardColor.withOpacity(0.8), // 기본 카드 색상을 살짝 투명하게 만들어요.
           ],
         ),
         // 모서리를 둥글게 깎아줘요.
@@ -73,7 +79,9 @@ class MoonSignCard extends StatelessWidget {
         // 그림자를 만들어서 입체적으로 보이게 해요.
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.1), // 앱의 기본 그림자 색상을 아주 살짝 보이게 해요.
+            color: Theme.of(
+              context,
+            ).shadowColor.withOpacity(0.1), // 앱의 기본 그림자 색상을 아주 살짝 보이게 해요.
             blurRadius: 10, // 그림자를 부드럽게 퍼지게 해요.
             offset: const Offset(0, 5), // 그림자를 아래쪽으로 5만큼 이동시켜요.
           ),
@@ -102,14 +110,18 @@ class MoonSignCard extends StatelessWidget {
           // ⭐️ 텍스트 부분을 표시하는 부분
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start, // 글자들을 왼쪽부터 시작하도록 정렬해요.
+              crossAxisAlignment:
+                  CrossAxisAlignment.start, // 글자들을 왼쪽부터 시작하도록 정렬해요.
               mainAxisSize: MainAxisSize.min, // 내용물 크기만큼만 공간을 차지하게 해요.
               children: [
                 // 달이 있는 별자리 이름을 보여줘요.
                 Text(
                   'Moon in ${provider.moonInSign}', // '달은 양자리에 있어요' 처럼 보여줘요.
                   style: TextStyle(
-                    color: Theme.of(context).textTheme.titleLarge?.color, // 앱의 큰 제목 글자 색상을 사용해요.
+                    color:
+                        Theme.of(
+                          context,
+                        ).textTheme.titleLarge?.color, // 앱의 큰 제목 글자 색상을 사용해요.
                     fontSize: 18, // 글자 크기는 18
                     fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요.
                   ),
@@ -118,7 +130,10 @@ class MoonSignCard extends StatelessWidget {
                 Text(
                   'Next Sign : $formattedNextSignTime', // 포맷팅된 시간을 보여줘요.
                   style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
+                    color:
+                        Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
                     fontSize: 17, // 글자 크기는 17
                     fontWeight: FontWeight.w900, // 글자를 매우 두껍게 만들어요.
                   ),

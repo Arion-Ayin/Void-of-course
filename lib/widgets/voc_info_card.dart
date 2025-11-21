@@ -156,16 +156,6 @@ class VocInfoCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 1),
                 Text(
-                  '${provider.moonInSign} Moon',
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 1),
-                Text(
                   vocStatusText,
                   style: TextStyle(
                     color: vocColor,

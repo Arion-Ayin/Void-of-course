@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'astro_calculator.dart';
@@ -399,14 +398,15 @@ class AstroState with ChangeNotifier {
       final moonPhaseInfo = _calculator.getMoonPhaseInfo(dateForCalc);
       final moonPhase = moonPhaseInfo['phaseName'];
       final moonZodiac = _calculator.getMoonZodiacEmoji(dateForCalc);
-      final moonInSign = _calculator.getMoonZodiacName(dateForCalc);
       final vocTimes = _calculator.findVoidOfCoursePeriod(dateForCalc);
       final moonSignTimes = _calculator.getMoonSignTimes(dateForCalc);
+
+      final moonSignName = _calculator.getMoonSignName(dateForCalc);
 
       if (kDebugMode) {
         print('[DEBUG] moonPhaseInfo: $moonPhaseInfo');
         print('[DEBUG] moonZodiac: $moonZodiac');
-        print('[DEBUG] moonInSign: $moonInSign');
+        print('[DEBUG] moonInSign (Name): $moonSignName');
         print('[DEBUG] vocTimes: $vocTimes');
         print('[DEBUG] moonSignTimes: $moonSignTimes');
         print('[DEBUG] nextPhaseInfo: $nextPhaseInfo');
@@ -415,7 +415,7 @@ class AstroState with ChangeNotifier {
       final Map<String, dynamic> result = {
         'moonPhase': moonPhase,
         'moonZodiac': moonZodiac,
-        'moonInSign': moonInSign,
+        'moonInSign': moonSignName,
         'vocStart': vocTimes['start'],
         'vocEnd': vocTimes['end'],
         'vocPlanet': vocTimes['planet'],
