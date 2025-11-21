@@ -209,23 +209,8 @@ class VocInfoCard extends StatelessWidget {
         return Colors.grey;
     }
   }
+}
 
-  FontWeight _getAspectFontWeight(String aspect) {
-    if ([
-      '☉',
-      '☿',
-      '♀',
-      '♂',
-      '♃',
-      '♄',
-      '♅',
-      '♆',
-      '⯓',
-      '□',
-      '△',
-    ].contains(aspect)) {
-      return FontWeight.w900;
-    }
-    return FontWeight.w900;
-  }
+FontWeight _getAspectFontWeight(String aspect) {
+  return FontWeight.w900;
 }

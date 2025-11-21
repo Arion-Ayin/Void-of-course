@@ -10,8 +10,8 @@ class MoonPhaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final nextPhaseTime = provider.nextMoonPhaseTime?.toLocal();
     return Container(
-      // ... (decoration과 padding은 동일)
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -69,7 +69,7 @@ class MoonPhaseCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Next Phase : ${provider.nextMoonPhaseTime != null ? DateFormat('MM/dd HH:mm').format(provider.nextMoonPhaseTime!) : 'N/A'}',
+                  'Next Phase : ${nextPhaseTime != null ? DateFormat('MM/dd HH:mm').format(nextPhaseTime) : 'N/A'}',
                   style: TextStyle(
                     color: Theme.of(context).textTheme.bodyMedium?.color,
                     fontSize: 17,
