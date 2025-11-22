@@ -14,6 +14,7 @@ import 'package:lioluna/l10n/app_localizations.dart';
 import 'package:upgrader/upgrader.dart';
 import 'package:lioluna/widgets/exit_confirmation_dialog.dart';
 import 'package:lioluna/services/ad_service.dart';
+import 'package:flutter/services.dart';
 
 void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요.
@@ -116,16 +117,17 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // 현재 테마가 다크 모드인지 확인해요.
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Consumer<AstroState>(
       builder: (context, astroState, child) {
-        // 1. 로딩 중일 때
         if (!astroState.isInitialized) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        // 2. 에러가 있을 때
         if (astroState.lastError != null) {
           return Scaffold(
             body: Center(
@@ -141,7 +143,6 @@ class _MainAppScreenState extends State<MainAppScreen> {
           );
         }
 
-        // 3. 정상 화면
         return Consumer<LocaleProvider>(
           builder: (context, localeProvider, child) {
             final languageCode = localeProvider.locale?.languageCode ?? 'en';
@@ -154,68 +155,77 @@ class _MainAppScreenState extends State<MainAppScreen> {
               showLater: false,
               child: WillPopScope(
                 onWillPop: _onWillPop,
-                child: Scaffold(
-                  // ▼▼▼ [수정 2] SafeArea 추가 (상태바/하단바 침범 방지) ▼▼▼
-                  body: SafeArea(
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: IndexedStack(
-                            index: _selectedIndex,
-                            children: _buildScreens(),
-                          ),
-                        ),
-                        const BannerAdWidget(),
-                      ],
-                    ),
+                // ▼▼▼ [수정됨] 상태바 아이콘 색상 제어 코드 추가 ▼▼▼
+                child: AnnotatedRegion<SystemUiOverlayStyle>(
+                  value: SystemUiOverlayStyle(
+                    // 상태바 배경색을 투명하게 해서 앱 배경색이 보이게 함
+                    statusBarColor: Colors.transparent,
+                    // 다크 모드면 아이콘을 밝게(흰색), 라이트 모드면 어둡게(검은색) 설정
+                    statusBarIconBrightness:
+                        isDarkMode ? Brightness.light : Brightness.dark,
+                    // iOS를 위한 설정
+                    statusBarBrightness:
+                        isDarkMode ? Brightness.dark : Brightness.light,
                   ),
-
-                  // ▲▲▲ 여기까지 ▲▲▲
-                  bottomNavigationBar: Container(
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).cardColor,
-                      boxShadow: [
-                        BoxShadow(
-                          color:
-                              Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.black.withOpacity(0.3)
-                                  : Colors.grey.withOpacity(0.2),
-                          blurRadius: 10,
-                          offset: const Offset(0, -2),
-                        ),
-                      ],
+                  child: Scaffold(
+                    // SafeArea는 유지 (화면 가림 방지)
+                    body: SafeArea(
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: IndexedStack(
+                              index: _selectedIndex,
+                              children: _buildScreens(),
+                            ),
+                          ),
+                          const BannerAdWidget(),
+                        ],
+                      ),
                     ),
-                    child: BottomNavigationBar(
-                      currentIndex: _selectedIndex,
-                      onTap: (index) => setState(() => _selectedIndex = index),
-                      backgroundColor: Colors.transparent,
-                      elevation: 0,
-                      selectedItemColor:
-                          Theme.of(context).brightness == Brightness.dark
-                              ? Colors.blue[300]
-                              : Colors.blue[600],
-                      unselectedItemColor:
-                          Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[400]
-                              : Colors.grey[600],
-                      type: BottomNavigationBarType.fixed,
-                      items: const [
-                        BottomNavigationBarItem(
-                          icon: Icon(Icons.home),
-                          label: '홈',
-                        ),
-                        BottomNavigationBarItem(
-                          icon: Icon(Icons.settings),
-                          label: '설정',
-                        ),
-                        BottomNavigationBarItem(
-                          icon: Icon(Icons.info),
-                          label: '정보',
-                        ),
-                      ],
+                    bottomNavigationBar: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                isDarkMode
+                                    ? Colors.black.withOpacity(0.3)
+                                    : Colors.grey.withOpacity(0.2),
+                            blurRadius: 10,
+                            offset: const Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: BottomNavigationBar(
+                        currentIndex: _selectedIndex,
+                        onTap:
+                            (index) => setState(() => _selectedIndex = index),
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        selectedItemColor:
+                            isDarkMode ? Colors.blue[300] : Colors.blue[600],
+                        unselectedItemColor:
+                            isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        type: BottomNavigationBarType.fixed,
+                        items: const [
+                          BottomNavigationBarItem(
+                            icon: Icon(Icons.home),
+                            label: '홈',
+                          ),
+                          BottomNavigationBarItem(
+                            icon: Icon(Icons.settings),
+                            label: '설정',
+                          ),
+                          BottomNavigationBarItem(
+                            icon: Icon(Icons.info),
+                            label: '정보',
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
+                // ▲▲▲ 여기까지 ▲▲▲
               ),
             );
           },
