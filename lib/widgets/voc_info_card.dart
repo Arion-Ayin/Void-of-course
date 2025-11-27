@@ -166,7 +166,7 @@ class VocInfoCard extends StatelessWidget {
                   vocStatusText,
                   style: TextStyle(
                     color: vocColor,
-                    fontSize: 19,
+                    fontSize: 21,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
