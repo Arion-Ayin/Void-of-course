@@ -11,7 +11,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:lioluna/screens/splash_screen.dart';
 import 'package:lioluna/services/locale_provider.dart';
 import 'package:lioluna/l10n/app_localizations.dart';
-import 'package:upgrader/upgrader.dart';
+import 'package:in_app_update/in_app_update.dart';
 import 'package:lioluna/widgets/exit_confirmation_dialog.dart';
 import 'package:lioluna/services/ad_service.dart';
 import 'package:flutter/services.dart';
@@ -105,6 +105,18 @@ class _MainAppScreenState extends State<MainAppScreen> {
         ).updateLocale(initialLocale.languageCode);
       }
     });
+    _checkForUpdate();
+  }
+
+  Future<void> _checkForUpdate() async {
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+        await InAppUpdate.performImmediateUpdate();
+      }
+    } catch (e) {
+      print('Error checking for update: $e');
+    }
   }
 
   Future<bool> _onWillPop() async {
@@ -143,92 +155,75 @@ class _MainAppScreenState extends State<MainAppScreen> {
           );
         }
 
-        return Consumer<LocaleProvider>(
-          builder: (context, localeProvider, child) {
-            final languageCode = localeProvider.locale?.languageCode ?? 'en';
-            final upgrader = Upgrader(
-              messages: AppUpgraderMessages(languageCode),
-            );
-
-            return UpgradeAlert(
-              upgrader: upgrader,
-              showLater: false,
-              child: WillPopScope(
-                onWillPop: _onWillPop,
-                // ▼▼▼ [수정됨] 상태바 아이콘 색상 제어 코드 추가 ▼▼▼
-                child: AnnotatedRegion<SystemUiOverlayStyle>(
-                  value: SystemUiOverlayStyle(
-                    // 상태바 배경색을 투명하게 해서 앱 배경색이 보이게 함
-                    statusBarColor: Colors.transparent,
-                    // 다크 모드면 아이콘을 밝게(흰색), 라이트 모드면 어둡게(검은색) 설정
-                    statusBarIconBrightness:
-                        isDarkMode ? Brightness.light : Brightness.dark,
-                    // iOS를 위한 설정
-                    statusBarBrightness:
-                        isDarkMode ? Brightness.dark : Brightness.light,
-                  ),
-                  child: Scaffold(
-                    // SafeArea는 유지 (화면 가림 방지)
-                    body: SafeArea(
-                      child: Column(
-                        children: [
-                          Expanded(
-                            child: IndexedStack(
-                              index: _selectedIndex,
-                              children: _buildScreens(),
-                            ),
-                          ),
-                          const BannerAdWidget(),
-                        ],
+        return WillPopScope(
+          onWillPop: _onWillPop,
+          // ▼▼▼ [수정됨] 상태바 아이콘 색상 제어 코드 추가 ▼▼▼
+          child: AnnotatedRegion<SystemUiOverlayStyle>(
+            value: SystemUiOverlayStyle(
+              // 상태바 배경색을 투명하게 해서 앱 배경색이 보이게 함
+              statusBarColor: Colors.transparent,
+              // 다크 모드면 아이콘을 밝게(흰색), 라이트 모드면 어둡게(검은색) 설정
+              statusBarIconBrightness:
+                  isDarkMode ? Brightness.light : Brightness.dark,
+              // iOS를 위한 설정
+              statusBarBrightness:
+                  isDarkMode ? Brightness.dark : Brightness.light,
+            ),
+            child: Scaffold(
+              // SafeArea는 유지 (화면 가림 방지)
+              body: SafeArea(
+                child: Column(
+                  children: [
+                    Expanded(
+                      child: IndexedStack(
+                        index: _selectedIndex,
+                        children: _buildScreens(),
                       ),
                     ),
-                    bottomNavigationBar: Container(
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        boxShadow: [
-                          BoxShadow(
-                            color:
-                                isDarkMode
-                                    ? Colors.black.withOpacity(0.3)
-                                    : Colors.grey.withOpacity(0.2),
-                            blurRadius: 10,
-                            offset: const Offset(0, -2),
-                          ),
-                        ],
-                      ),
-                      child: BottomNavigationBar(
-                        currentIndex: _selectedIndex,
-                        onTap:
-                            (index) => setState(() => _selectedIndex = index),
-                        backgroundColor: Colors.transparent,
-                        elevation: 0,
-                        selectedItemColor:
-                            isDarkMode ? Colors.blue[300] : Colors.blue[600],
-                        unselectedItemColor:
-                            isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                        type: BottomNavigationBarType.fixed,
-                        items: const [
-                          BottomNavigationBarItem(
-                            icon: Icon(Icons.home),
-                            label: '홈',
-                          ),
-                          BottomNavigationBarItem(
-                            icon: Icon(Icons.settings),
-                            label: '설정',
-                          ),
-                          BottomNavigationBarItem(
-                            icon: Icon(Icons.info),
-                            label: '정보',
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+                    const BannerAdWidget(),
+                  ],
                 ),
-                // ▲▲▲ 여기까지 ▲▲▲
               ),
-            );
-          },
+              bottomNavigationBar: Container(
+                decoration: BoxDecoration(
+                  color: Theme.of(context).cardColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          isDarkMode
+                              ? Colors.black.withOpacity(0.3)
+                              : Colors.grey.withOpacity(0.2),
+                      blurRadius: 10,
+                      offset: const Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: BottomNavigationBar(
+                  currentIndex: _selectedIndex,
+                  onTap: (index) => setState(() => _selectedIndex = index),
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  selectedItemColor:
+                      isDarkMode ? Colors.blue[300] : Colors.blue[600],
+                  unselectedItemColor:
+                      isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  type: BottomNavigationBarType.fixed,
+                  items: const [
+                    BottomNavigationBarItem(icon: Icon(Icons.home), label: '홈'),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.settings),
+                      label: '설정',
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Icon(Icons.info),
+                      label: '정보',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          // ▲▲▲ 여기까지 ▲▲▲
         );
       },
     );
@@ -294,41 +289,5 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
     } else {
       return const SizedBox.shrink();
     }
-  }
-}
-
-// 업그레이드 메시지 클래스
-class AppUpgraderMessages extends UpgraderMessages {
-  final String languageCode;
-  AppUpgraderMessages(this.languageCode);
-
-  @override
-  String get title {
-    if (languageCode == 'ko') return '앱 업데이트';
-    return 'New Version Available';
-  }
-
-  @override
-  String get body {
-    if (languageCode == 'ko') return '더욱 안정적이고,\n정확한 보이드를 체크해보세요.';
-    return 'Experience a more stable and new app.';
-  }
-
-  @override
-  String get prompt {
-    if (languageCode == 'ko') return '지금 업데이트하시겠습니까?';
-    return 'Would you like to update now?';
-  }
-
-  @override
-  String get buttonTitleUpdate {
-    if (languageCode == 'ko') return '지금 업데이트';
-    return 'Update Now';
-  }
-
-  @override
-  String get buttonTitleIgnore {
-    if (languageCode == 'ko') return '나중에 할래요';
-    return 'Ignore';
   }
 }

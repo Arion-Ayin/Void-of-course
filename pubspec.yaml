@@ -1,10 +1,9 @@
-
 name: lioluna
 description: "A new Flutter project."
 
 publish_to: 'none'
 
-version: 1.1.1+23
+version: 1.1.1+24
 
 environment:
   sdk: ^3.7.2
@@ -30,9 +29,8 @@ dependencies:
   android_intent_plus: ^6.0.0
   timezone: ^0.10.1
   google_mobile_ads: ^5.3.1
-  upgrader: ^12.2.0 
   in_app_review: ^2.0.11
-
+  in_app_update: ^4.2.0
 
 dependency_overrides:
   package_info_plus: ^8.0.0
@@ -40,12 +38,8 @@ dependency_overrides:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-flutter_localizations:
-    sdk: flutter
-
-flutter_lints: ^5.0.0
-rename: ^3.1.0
+  flutter_lints: ^5.0.0
+  rename: ^3.1.0
 
 flutter:
   generate: true
