@@ -89,6 +89,9 @@ class NotificationService {
     required String body,
     required DateTime scheduledTime,
     required bool canScheduleExact,
+    bool usesChronometer = false,
+    bool chronometerCountDown = false,
+    int? when,
   }) async {
     if (Platform.isAndroid && canScheduleExact) {
       final bool hasExactAlarmPermission = await checkExactAlarmPermission();
@@ -111,13 +114,16 @@ class NotificationService {
       title,
       body,
       tzScheduledTime,
-      const NotificationDetails(
+      NotificationDetails(
         android: AndroidNotificationDetails(
           'void_channel_id',
           'Void Notifications',
           channelDescription: 'Notifications for Void of Course periods',
           importance: Importance.max,
           priority: Priority.high,
+          usesChronometer: usesChronometer,
+          chronometerCountDown: chronometerCountDown,
+          when: when,
         ),
       ),
       androidScheduleMode:
