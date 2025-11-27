@@ -26,11 +26,18 @@ class VocInfoCard extends StatelessWidget {
 
     bool doesSelectedDateHaveVoc = false;
     if (vocStart != null && vocEnd != null) {
-      final selectedDayStart = DateTime.utc(
-        selectedDate.year,
-        selectedDate.month,
-        selectedDate.day,
-      );
+      final selectedDayStart =
+          selectedDate.isUtc
+              ? DateTime.utc(
+                selectedDate.year,
+                selectedDate.month,
+                selectedDate.day,
+              )
+              : DateTime(
+                selectedDate.year,
+                selectedDate.month,
+                selectedDate.day,
+              );
       final selectedDayEnd = selectedDayStart.add(const Duration(days: 1));
 
       if (vocStart.isBefore(selectedDayEnd) &&
