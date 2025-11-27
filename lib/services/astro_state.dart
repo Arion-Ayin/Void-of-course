@@ -178,21 +178,6 @@ class AstroState with ChangeNotifier {
       return;
     }
 
-    final now = DateTime.now();
-    final vocTimes = _calculator.findVoidOfCoursePeriod(now);
-    _realtimeVocStart = vocTimes['start'];
-    _realtimeVocEnd = vocTimes['end'];
-
-    if (_realtimeVocStart == null || _realtimeVocEnd == null) {
-      if (kDebugMode) print("No upcoming VOC period found.");
-      return;
-    }
-
-    final locale = _currentLocale;
-    final preAlarmTime = _realtimeVocStart!.subtract(
-      Duration(hours: _preVoidAlarmHours),
-    );
-
     bool hasExactAlarmPermission =
         await _notificationService.checkExactAlarmPermission();
     if (!hasExactAlarmPermission) {
@@ -208,61 +193,103 @@ class AstroState with ChangeNotifier {
       }
     }
 
-    // Pre-VOC 알림
-    if (preAlarmTime.isAfter(now)) {
-      String preTitle =
-          locale.startsWith('ko') ? '보이드 시작 알림' : 'Void of Course Upcoming';
-      String preBody =
-          locale.startsWith('ko')
-              ? '보이드가 $_preVoidAlarmHours시간 후 시작됩니다.'
-              : 'Void of Course begins in $_preVoidAlarmHours hours.';
-      await _notificationService.scheduleNotification(
-        id: 0,
-        title: preTitle,
-        body: preBody,
-        scheduledTime: preAlarmTime,
-        canScheduleExact: hasExactAlarmPermission,
-      );
-    }
+    final now = DateTime.now();
+    DateTime searchDate = now;
+    int notificationId =
+        1000; // Start IDs from 1000 to avoid conflict with ongoing (0, 2)
 
-    // VOC 시작 알림
-    if (_realtimeVocStart!.isAfter(now)) {
-      String startTitle =
-          locale.startsWith('ko') ? '보이드 시작' : 'Void of Course Started';
-      String startBody =
-          locale.startsWith('ko')
-              ? '지금 보이드 시간이 시작되었습니다.'
-              : 'The Void of Course period has now begun.';
-      await _notificationService.scheduleNotification(
-        id: 1,
-        title: startTitle,
-        body: startBody,
-        scheduledTime: _realtimeVocStart!,
-        canScheduleExact: hasExactAlarmPermission,
-      );
-    }
+    // Schedule next 10 events
+    for (int i = 0; i < 10; i++) {
+      final vocTimes = _calculator.findVoidOfCoursePeriod(searchDate);
+      final vocStart = vocTimes['start'];
+      final vocEnd = vocTimes['end'];
 
-    // VOC 종료 알림
-    if (_realtimeVocEnd!.isAfter(now)) {
-      String endTitle =
-          locale.startsWith('ko') ? '보이드 종료' : 'Void of Course Ended';
-      String endBody =
-          locale.startsWith('ko')
-              ? '보이드 시간이 종료되었습니다.'
-              : 'The Void of Course period has ended.';
-      await _notificationService.scheduleNotification(
-        id: 2,
-        title: endTitle,
-        body: endBody,
-        scheduledTime: _realtimeVocEnd!,
-        canScheduleExact: hasExactAlarmPermission,
+      if (vocStart == null || vocEnd == null) {
+        // If we can't find a VOC, try searching from next day to avoid infinite loop if logic fails
+        searchDate = searchDate.add(const Duration(days: 1));
+        continue;
+      }
+
+      // If this VOC is already passed, move to next
+      if (vocEnd.isBefore(now)) {
+        searchDate = vocEnd.add(const Duration(minutes: 1));
+        continue;
+      }
+
+      // Update realtime VOC for the FIRST (current/next) event only, for UI display
+      if (i == 0) {
+        _realtimeVocStart = vocStart;
+        _realtimeVocEnd = vocEnd;
+      }
+
+      final locale = _currentLocale;
+      final preAlarmTime = vocStart.subtract(
+        Duration(hours: _preVoidAlarmHours),
       );
+
+      // 1. Pre-VOC Alarm (Counts down to Start)
+      if (preAlarmTime.isAfter(now)) {
+        String preTitle =
+            locale.startsWith('ko') ? '보이드 시작 알림' : 'Void of Course Upcoming';
+        String preBody =
+            locale.startsWith('ko')
+                ? '보이드 시작까지 남은 시간:'
+                : 'Time until Void of Course begins:';
+        await _notificationService.scheduleNotification(
+          id: notificationId++,
+          title: preTitle,
+          body: preBody,
+          scheduledTime: preAlarmTime,
+          canScheduleExact: hasExactAlarmPermission,
+          usesChronometer: true,
+          chronometerCountDown: true,
+          when: vocStart.millisecondsSinceEpoch,
+        );
+      }
+
+      // 2. VOC Start Alarm (Counts down to End)
+      if (vocStart.isAfter(now)) {
+        String startTitle =
+            locale.startsWith('ko') ? '보이드 시작' : 'Void of Course Started';
+        String startBody =
+            locale.startsWith('ko')
+                ? '보이드 종료까지 남은 시간:'
+                : 'Time until Void of Course ends:';
+        await _notificationService.scheduleNotification(
+          id: notificationId++,
+          title: startTitle,
+          body: startBody,
+          scheduledTime: vocStart,
+          canScheduleExact: hasExactAlarmPermission,
+          usesChronometer: true,
+          chronometerCountDown: true,
+          when: vocEnd.millisecondsSinceEpoch,
+        );
+      }
+
+      // 3. VOC End Alarm (No countdown)
+      if (vocEnd.isAfter(now)) {
+        String endTitle =
+            locale.startsWith('ko') ? '보이드 종료' : 'Void of Course Ended';
+        String endBody =
+            locale.startsWith('ko')
+                ? '보이드 시간이 종료되었습니다.'
+                : 'The Void of Course period has ended.';
+        await _notificationService.scheduleNotification(
+          id: notificationId++,
+          title: endTitle,
+          body: endBody,
+          scheduledTime: vocEnd,
+          canScheduleExact: hasExactAlarmPermission,
+        );
+      }
+
+      // Prepare for next iteration
+      searchDate = vocEnd.add(const Duration(minutes: 1));
     }
 
     if (kDebugMode) {
-      print(
-        "Scheduled notifications: Pre-VOC at $preAlarmTime, Start at $_realtimeVocStart, End at $_realtimeVocEnd",
-      );
+      print("Scheduled notifications for next 10 VOC periods.");
     }
 
     _checkTime();
