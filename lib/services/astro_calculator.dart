@@ -540,7 +540,10 @@ class AstroCalculator {
   // 달이 힘을 잃는 시간(Void-of-Course, 보이드 오브 코스)을 찾아주는 함수예요.
   // 이 시간은 달이 다음 별자리로 가기 전에 다른 행성들과 중요한 만남이 없는 때를 말해요.
   Map<String, dynamic> findVoidOfCoursePeriod(DateTime date) {
-    final dayStart = DateTime.utc(date.year, date.month, date.day);
+    final dayStart =
+        date.isUtc
+            ? DateTime.utc(date.year, date.month, date.day)
+            : DateTime(date.year, date.month, date.day);
     var searchDate = dayStart;
 
     // 며칠간 반복해서 보이드 오브 코스 시간을 찾아요.
