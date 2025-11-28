@@ -352,18 +352,18 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> updateDate(DateTime newDate) async {
-    _selectedDate = newDate;
-
     final now = DateTime.now();
-    final bool isNowFollowingTime =
+    final bool isSameDay =
         newDate.year == now.year &&
         newDate.month == now.month &&
         newDate.day == now.day;
 
-    _isFollowingTime = isNowFollowingTime;
-
-    if (_isFollowingTime) {
+    if (isSameDay) {
       _selectedDate = now;
+      _isFollowingTime = true;
+    } else {
+      _selectedDate = DateTime(newDate.year, newDate.month, newDate.day);
+      _isFollowingTime = false;
     }
     await refreshData();
   }

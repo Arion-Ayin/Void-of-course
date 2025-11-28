@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
@@ -21,8 +22,10 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Google Mobile Ads SDK와 AdService를 초기화해요.
-  await MobileAds.instance.initialize();
-  await AdService().initialize();
+  if (Platform.isAndroid || Platform.isIOS) {
+    await MobileAds.instance.initialize();
+    await AdService().initialize();
+  }
 
   // 우리 앱을 실행해요.
   runApp(

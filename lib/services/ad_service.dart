@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,7 +16,7 @@ class AdService {
 
   InterstitialAd? _interstitialAd;
   int _calculateClickCount = 0;
-  final int _adFrequency = 7; // 광고 표시 빈도 (7번 클릭마다)
+  final int _adFrequency = 5; // 광고 표시 빈도 (7번 클릭마다)
 
   static const _clickCountKey = 'calculateClickCount';
   static const _lastSplashAdShowTimeKey = 'lastSplashAdShowTime';
@@ -27,13 +28,16 @@ class AdService {
     }
     await _loadCalculateClickCount();
     print('AdService initialized. Click count: $_calculateClickCount');
-    _loadInterstitialAd();
+    if (Platform.isAndroid || Platform.isIOS) {
+      _loadInterstitialAd();
+    }
     _isInitialized = true;
   }
 
   /// 전면 광고를 로드합니다.
   void _loadInterstitialAd() {
-    InterstitialAd.load( // 이전에 설정된 일반 전면 광고 로드
+    InterstitialAd.load(
+      // 이전에 설정된 일반 전면 광고 로드
       adUnitId: 'ca-app-pub-7332476431820224/2876868409', // 실제 광고 ID
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
@@ -57,7 +61,9 @@ class AdService {
     await _saveCalculateClickCount();
     print('showAdIfNeeded called. Click count: $_calculateClickCount');
 
-    if (_calculateClickCount % _adFrequency == 0 && _interstitialAd != null) {
+    if ((Platform.isAndroid || Platform.isIOS) &&
+        _calculateClickCount % _adFrequency == 0 &&
+        _interstitialAd != null) {
       print('Showing interstitial ad.');
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
@@ -98,7 +104,7 @@ class AdService {
     }
 
     // 미리 로드된 광고가 있는지 확인합니다.
-    if (_interstitialAd != null) {
+    if ((Platform.isAndroid || Platform.isIOS) && _interstitialAd != null) {
       print("미리 로드된 스플래시 광고를 표시합니다.");
       // 광고 표시 시간을 지금으로 기록합니다.
       await prefs.setInt(_lastSplashAdShowTimeKey, currentTimeMillis);
@@ -133,6 +139,4 @@ class AdService {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_clickCountKey, _calculateClickCount);
   }
-
-
 }
