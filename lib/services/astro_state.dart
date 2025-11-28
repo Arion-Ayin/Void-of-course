@@ -15,7 +15,7 @@ class AstroState with ChangeNotifier {
   final NotificationService _notificationService = NotificationService();
   bool _voidAlarmEnabled = false;
   int _preVoidAlarmHours = 6;
-  bool _isOngoingNotificationVisible = false;
+
   DateTime _selectedDate = DateTime.now();
   bool _isFollowingTime = true;
   String _moonPhase = '';
@@ -25,10 +25,6 @@ class AstroState with ChangeNotifier {
   // VOC for the selected date
   DateTime? _vocStart;
   DateTime? _vocEnd;
-
-  // VOC for the current, real time
-  DateTime? _realtimeVocStart;
-  DateTime? _realtimeVocEnd;
 
   // VOC Aspect Info
   String? _vocPlanet;
@@ -62,9 +58,6 @@ class AstroState with ChangeNotifier {
   DateTime? get nextMoonPhaseTime => _nextMoonPhaseTime;
   bool get isFollowingTime => _isFollowingTime;
 
-  // Getter for the UI to know the real-time VOC status
-  bool get isRealtimeVoc => _isOngoingNotificationVisible;
-
   void toggleTheme() {
     _isDarkMode = !_isDarkMode;
     notifyListeners();
@@ -95,9 +88,6 @@ class AstroState with ChangeNotifier {
       _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 6;
 
       await _updateData();
-      final vocTimes = _calculator.findVoidOfCoursePeriod(DateTime.now());
-      _realtimeVocStart = vocTimes['start'];
-      _realtimeVocEnd = vocTimes['end'];
 
       _isInitialized = true;
       _startTimer();
@@ -155,7 +145,6 @@ class AstroState with ChangeNotifier {
       _voidAlarmEnabled = false;
       await prefs.setBool('voidAlarmEnabled', false);
       await _notificationService.cancelAllNotifications();
-      _isOngoingNotificationVisible = false;
       notifyListeners();
       return AlarmPermissionStatus.granted;
     }
@@ -173,7 +162,6 @@ class AstroState with ChangeNotifier {
     await _notificationService.cancelAllNotifications();
 
     if (!_voidAlarmEnabled) {
-      _isOngoingNotificationVisible = false;
       notifyListeners();
       return;
     }
@@ -216,12 +204,6 @@ class AstroState with ChangeNotifier {
         continue;
       }
 
-      // Update realtime VOC for the FIRST (current/next) event only, for UI display
-      if (i == 0) {
-        _realtimeVocStart = vocStart;
-        _realtimeVocEnd = vocEnd;
-      }
-
       final locale = _currentLocale;
       final preAlarmTime = vocStart.subtract(
         Duration(hours: _preVoidAlarmHours),
@@ -245,6 +227,24 @@ class AstroState with ChangeNotifier {
           chronometerCountDown: true,
           when: vocStart.millisecondsSinceEpoch,
         );
+      } else if (vocStart.isAfter(now)) {
+        // 현재 보이드 시작 전 6시간 이내인 경우 - 즉시 알림 스케줄링 (크로노미터 사용을 위해)
+        String preTitle =
+            locale.startsWith('ko') ? '보이드 시작 알림' : 'Void of Course Upcoming';
+        String preBody =
+            locale.startsWith('ko')
+                ? '보이드 시작까지 남은 시간:'
+                : 'Time until Void of Course begins:';
+        await _notificationService.scheduleNotification(
+          id: notificationId++,
+          title: preTitle,
+          body: preBody,
+          scheduledTime: now.add(const Duration(seconds: 2)),
+          canScheduleExact: hasExactAlarmPermission,
+          usesChronometer: true,
+          chronometerCountDown: true,
+          when: vocStart.millisecondsSinceEpoch,
+        );
       }
 
       // 2. VOC Start Alarm (Counts down to End)
@@ -260,6 +260,24 @@ class AstroState with ChangeNotifier {
           title: startTitle,
           body: startBody,
           scheduledTime: vocStart,
+          canScheduleExact: hasExactAlarmPermission,
+          usesChronometer: true,
+          chronometerCountDown: true,
+          when: vocEnd.millisecondsSinceEpoch,
+        );
+      } else if (vocEnd.isAfter(now)) {
+        // 현재 보이드 중인 경우 - 즉시 알림 스케줄링
+        String startTitle =
+            locale.startsWith('ko') ? '보이드 시작' : 'Void of Course Started';
+        String startBody =
+            locale.startsWith('ko')
+                ? '보이드 종료까지 남은 시간:'
+                : 'Time until Void of Course ends:';
+        await _notificationService.scheduleNotification(
+          id: notificationId++,
+          title: startTitle,
+          body: startBody,
+          scheduledTime: now.add(const Duration(seconds: 2)),
           canScheduleExact: hasExactAlarmPermission,
           usesChronometer: true,
           chronometerCountDown: true,
@@ -331,64 +349,6 @@ class AstroState with ChangeNotifier {
         }
       }
     }
-
-    // ▼▼▼ 2. (새로 추가된 핵심 로직) 지속적인 알림 상태 관리 ▼▼▼
-
-    // 알람 기능이 꺼져있으면, 보이던 알림을 끄고 함수 종료
-    if (!_voidAlarmEnabled) {
-      if (_isOngoingNotificationVisible) {
-        _notificationService.cancelNotification(0); // Pre-VOC 알림(ID 0) 취소
-        _notificationService.cancelNotification(2); // In-VOC 알림(ID 2) 취소
-        _isOngoingNotificationVisible = false;
-        notifyListeners();
-      }
-      return;
-    }
-
-    // 실시간 VOC 정보가 없으면 관리할 수 없음
-    if (_realtimeVocStart == null || _realtimeVocEnd == null) {
-      return;
-    }
-
-    // 3. 현재 상태 정의
-    final preAlarmTime = _realtimeVocStart!.subtract(
-      Duration(hours: _preVoidAlarmHours),
-    );
-    final isCurrentlyInVoc =
-        now.isAfter(_realtimeVocStart!) && now.isBefore(_realtimeVocEnd!);
-    final isCurrentlyInPreVoc =
-        now.isAfter(preAlarmTime) && now.isBefore(_realtimeVocStart!);
-
-    // 4. 상태에 따라 지속적인 알림 표시 또는 취소
-    if (isCurrentlyInVoc) {
-      // "보이드 중" 알림 표시 (ID: 2)
-      _updateOngoingNotification();
-      if (!_isOngoingNotificationVisible) {
-        _isOngoingNotificationVisible = true;
-        notifyListeners();
-      }
-    } else if (isCurrentlyInPreVoc) {
-      // "보이드 전" 알림 표시 (ID: 0)
-      _updatePreVoidAlarmNotification(_realtimeVocStart!);
-      if (!_isOngoingNotificationVisible) {
-        _isOngoingNotificationVisible = true;
-        notifyListeners();
-      }
-    } else {
-      // 알림 기간이 아님 (모든 지속 알림 취소)
-      _notificationService.cancelNotification(0); // Pre-VOC
-      _notificationService.cancelNotification(2); // In-VOC
-      if (_isOngoingNotificationVisible) {
-        _isOngoingNotificationVisible = false;
-        notifyListeners();
-      }
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
   }
 
   Future<void> updateDate(DateTime newDate) async {
@@ -423,7 +383,21 @@ class AstroState with ChangeNotifier {
       final moonPhaseInfo = _calculator.getMoonPhaseInfo(dateForCalc);
       final moonPhase = moonPhaseInfo['phaseName'];
       final moonZodiac = _calculator.getMoonZodiacEmoji(dateForCalc);
-      final vocTimes = _calculator.findVoidOfCoursePeriod(dateForCalc);
+      var vocTimes = _calculator.findVoidOfCoursePeriod(dateForCalc);
+
+      // If we are following time and the found VOC has already passed, find the next one
+      if (_isFollowingTime && vocTimes['end'] != null) {
+        final now = DateTime.now();
+        final vocEnd = vocTimes['end'] as DateTime;
+        if (vocEnd.isBefore(now)) {
+          // Search from the next day to ensure we find the next VOC event
+          // (findVoidOfCoursePeriod resets search to start of the day)
+          vocTimes = _calculator.findVoidOfCoursePeriod(
+            vocEnd.add(const Duration(days: 1)),
+          );
+        }
+      }
+
       final moonSignTimes = _calculator.getMoonSignTimes(dateForCalc);
 
       final moonSignName = _calculator.getMoonSignName(dateForCalc);
@@ -474,92 +448,5 @@ class AstroState with ChangeNotifier {
     _nextSignTime = result['nextSignTime'] as DateTime?;
     _nextMoonPhaseName = result['nextMoonPhaseName'] as String;
     _nextMoonPhaseTime = result['nextMoonPhaseTime'] as DateTime?;
-  }
-
-  Future<void> _updateOngoingNotification() async {
-    if (_realtimeVocStart == null || _realtimeVocEnd == null) return;
-
-    final now = DateTime.now();
-    final remainingDuration = _realtimeVocEnd!.difference(now);
-
-    final hours = remainingDuration.inHours;
-    final minutes = remainingDuration.inMinutes.remainder(60);
-
-    String remainingTimeText;
-    final locale = _currentLocale;
-    if (locale.startsWith('ko')) {
-      if (hours > 0) {
-        remainingTimeText = '남은 시간: ${hours}시간 ${minutes}분';
-      } else {
-        remainingTimeText = '남은 시간: ${minutes}분';
-      }
-    } else {
-      if (hours > 0) {
-        remainingTimeText = 'Time remaining: ${hours}h ${minutes}m';
-      } else {
-        remainingTimeText = 'Time remaining: $minutes minutes';
-      }
-    }
-
-    String title, body;
-    if (locale.startsWith('ko')) {
-      title = '보이드 중';
-      body = '지금은 보이드 시간입니다.\n$remainingTimeText';
-    } else {
-      title = 'Void of Course in Progress';
-      body = 'Currently in Void of Course period.\n$remainingTimeText';
-    }
-
-    await _notificationService.showOngoingNotification(
-      id: 2,
-      title: title,
-      body: body,
-    );
-  }
-
-  Future<void> _updatePreVoidAlarmNotification(DateTime vocStart) async {
-    final now = DateTime.now();
-    final remainingDuration = vocStart.difference(now);
-
-    final hours = remainingDuration.inHours;
-    final minutes = remainingDuration.inMinutes.remainder(60);
-    final seconds = remainingDuration.inSeconds.remainder(60);
-
-    String notificationBody;
-    final locale = _currentLocale;
-    if (locale.startsWith('ko')) {
-      if (hours > 0) {
-        notificationBody = '보이드 시작까지 ${hours}시간 ${minutes}분 남았습니다.';
-      } else if (minutes > 0) {
-        notificationBody = '보이드 시작까지 ${minutes}분 남았습니다.';
-      } else if (seconds >= 1) {
-        notificationBody = '보이드 시작까지 ${seconds}초 남았습니다.';
-      } else {
-        notificationBody = '보이드가 곧 시작됩니다.';
-      }
-    } else {
-      if (hours > 0) {
-        notificationBody = '$hours h $minutes m until Void of Course begins.';
-      } else if (minutes > 0) {
-        notificationBody = '$minutes minutes until Void of Course begins.';
-      } else if (seconds >= 1) {
-        notificationBody = '$seconds seconds until Void of Course begins.';
-      } else {
-        notificationBody = 'Void of Course begins soon.';
-      }
-    }
-
-    String title;
-    if (locale.startsWith('ko')) {
-      title = '보이드 오브 코스 알림';
-    } else {
-      title = 'Void of Course Notification';
-    }
-
-    await _notificationService.showOngoingNotification(
-      id: 0, // "보이드 전" 알림 ID는 0
-      title: title,
-      body: notificationBody,
-    );
   }
 }
