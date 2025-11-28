@@ -134,7 +134,7 @@ abstract class AppLocalizations {
   /// No description provided for @community.
   ///
   /// In en, this message translates to:
-  /// **'Community'**
+  /// **'Blog'**
   String get community;
 
   /// No description provided for @darkMode.

@@ -18,123 +18,82 @@ class SettingScreen extends StatelessWidget {
   // 이 위젯은 변하지 않는 내용을 보여줘서 StatelessWidget으로 만들었어요.
   const SettingScreen({super.key}); // 위젯을 만들 때 필요한 기본 정보예요.
 
-    Future<void> _showUrlConfirmationDialog(
+  Future<void> _showUrlConfirmationDialog(
+    BuildContext context, {
 
-      BuildContext context, {
+    required String url,
 
-      required String url,
+    required String serviceNameKo,
 
-      required String serviceNameKo,
+    required String serviceNameEn,
+  }) async {
+    final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
 
-      required String serviceNameEn,
+    final isKorean = localeProvider.locale?.languageCode == 'ko';
 
-    }) async {
+    final String title =
+        isKorean ? '$serviceNameKo로 이동' : 'Go to $serviceNameEn';
 
-      final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
+    final String contentText = isKorean ? '$serviceNameKo(으)로 이동하시겠습니까?' : '';
 
-      final isKorean = localeProvider.locale?.languageCode == 'ko';
+    final String yesButton = isKorean ? '예' : 'Yes';
 
-  
+    final String noButton = isKorean ? '아니오' : 'No';
 
-      final String title = isKorean ? '$serviceNameKo로 이동' : 'Go to $serviceNameEn';
+    return showDialog<void>(
+      context: context,
 
-      final String contentText =
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(title),
 
-          isKorean ? '$serviceNameKo(으)로 이동하시겠습니까?' : '';
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
 
-      final String yesButton = isKorean ? '예' : 'Yes';
+            children: [
+              Text(contentText),
 
-      final String noButton = isKorean ? '아니오' : 'No';
+              const SizedBox(height: 16),
 
-  
+              const ReusableNativeAdWidget(),
+            ],
+          ),
 
-      return showDialog<void>(
+          actions: <Widget>[
+            TextButton(
+              child: Text(noButton),
 
-        context: context,
-
-        builder: (BuildContext context) {
-
-          return AlertDialog(
-
-            title: Text(title),
-
-            content: Column(
-
-              mainAxisSize: MainAxisSize.min,
-
-              children: [
-
-                Text(contentText),
-
-                const SizedBox(height: 16),
-
-                const ReusableNativeAdWidget(),
-
-              ],
-
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
 
-            actions: <Widget>[
+            TextButton(
+              child: Text(yesButton),
 
-              TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
 
-                child: Text(noButton),
+                final Uri uri = Uri.parse(url);
 
-                onPressed: () {
+                if (await canLaunchUrl(uri)) {
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                } else {
+                  // URL을 열 수 없을 때 화면 아래에 알림 메시지를 띄워줘요.
 
-                  Navigator.of(context).pop();
-
-                },
-
-              ),
-
-              TextButton(
-
-                child: Text(yesButton),
-
-                onPressed: () async {
-
-                  Navigator.of(context).pop();
-
-                  final Uri uri = Uri.parse(url);
-
-                  if (await canLaunchUrl(uri)) {
-
-                    await launchUrl(uri, mode: LaunchMode.externalApplication);
-
-                  } else {
-
-                    // URL을 열 수 없을 때 화면 아래에 알림 메시지를 띄워줘요.
-
-                    if (context.mounted) {
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-
-                        SnackBar(
-
-                          content: Text('Could not launch $url'),
-
-                        ),
-
-                      );
-
-                    }
-
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Could not launch $url')),
+                    );
                   }
-
-                },
-
-              ),
-
-            ],
-
-          );
-
-        },
-
-      );
-
-    }
+                }
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   // 이 함수는 화면에 무엇을 그릴지 정해줘요.
   @override
@@ -158,9 +117,10 @@ class SettingScreen extends StatelessWidget {
             // 설정 아이콘을 보여줘요.
             Icon(
               Icons.settings,
-              color: Theme.of(
-                context,
-              ).colorScheme.primary, // 앱의 주요 색깔로 아이콘 색을 정해요.
+              color:
+                  Theme.of(
+                    context,
+                  ).colorScheme.primary, // 앱의 주요 색깔로 아이콘 색을 정해요.
               size: 24, // 아이콘 크기를 24로 정해요.
             ),
             const SizedBox(width: 8), // 아이콘과 글씨 사이에 작은 공간을 만들어요.
@@ -190,8 +150,9 @@ class SettingScreen extends StatelessWidget {
                 builder: (context, astroState, child) {
                   // 스위치 버튼을 만들어요.
                   return Switch(
-                    value: astroState
-                        .voidAlarmEnabled, // 스위치의 현재 상태(켜짐/꺼짐)를 AstroState에서 가져와요.
+                    value:
+                        astroState
+                            .voidAlarmEnabled, // 스위치의 현재 상태(켜짐/꺼짐)를 AstroState에서 가져와요.
                     onChanged: (value) async {
                       // 스위치를 누르면 이 코드가 실행돼요.
                       // 보이드 알람을 켜거나 끄는 함수를 불러와요.
@@ -216,16 +177,16 @@ class SettingScreen extends StatelessWidget {
                           break;
                         case AlarmPermissionStatus
                             .notificationDenied: // 알림 권한이 거부되었다면
-                          message = appLocalizations
-                              .voidAlarmDisabledMessage; // 알람을 끌 수밖에 없다는 메시지를 보여줘요.
+                          message =
+                              appLocalizations
+                                  .voidAlarmDisabledMessage; // 알람을 끌 수밖에 없다는 메시지를 보여줘요.
                           break;
                         case AlarmPermissionStatus
                             .exactAlarmDenied: // 정확한 알람 권한이 거부되었다면 (안드로이드 특정 기능)
-                          message = appLocalizations
-                              .voidAlarmExactAlarmDeniedMessage; // 권한이 필요하다는 메시지를 보여줘요.
-                          duration = const Duration(
-                            seconds: 2,
-                          );
+                          message =
+                              appLocalizations
+                                  .voidAlarmExactAlarmDeniedMessage; // 권한이 필요하다는 메시지를 보여줘요.
+                          duration = const Duration(seconds: 2);
                           break;
                       }
 
@@ -233,7 +194,7 @@ class SettingScreen extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(message), // 위에서 정한 메시지를 보여줘요.
-                           duration: const Duration(seconds: 2), // 2초 동안 보여줘요.
+                          duration: const Duration(seconds: 2), // 2초 동안 보여줘요.
                         ),
                       );
                     },
@@ -276,9 +237,10 @@ class SettingScreen extends StatelessWidget {
               iconColor: Colors.blue, // 아이콘 색깔을 파란색으로 정해요.
               trailing: DropdownButton<String>(
                 // 드롭다운 메뉴를 만들어요.
-                value: localeProvider
-                    .locale
-                    ?.languageCode, // 현재 언어 코드를 드롭다운 메뉴의 선택 값으로 정해요.
+                value:
+                    localeProvider
+                        .locale
+                        ?.languageCode, // 현재 언어 코드를 드롭다운 메뉴의 선택 값으로 정해요.
                 items: [
                   // 영어 옵션을 만들어요.
                   DropdownMenuItem(
@@ -346,14 +308,13 @@ class SettingScreen extends StatelessWidget {
                   // 버튼을 누르면 기존에 만드신 확인 대화상자를 띄웁니다.
                   _showUrlConfirmationDialog(
                     context,
-                    url: 'https://cafe.naver.com/shootingstarter',
-                    serviceNameKo: '네이버 카페',
-                    serviceNameEn: 'Naver Cafe',
+                    url: 'https://arion-ayin.github.io/',
+                    serviceNameKo: '블로그',
+                    serviceNameEn: 'Blog',
                   );
                 },
               ),
             ),
-            // ▲▲▲ 여기까지 수정되었습니다 ▲▲▲
           ],
         ),
       ),
