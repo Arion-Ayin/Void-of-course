@@ -31,7 +31,9 @@ class SettingCard extends StatelessWidget {
           end: Alignment.bottomRight, // 오른쪽 아래로 색이 변해요.
           colors: [
             Theme.of(context).cardColor, // 앱의 기본 카드 색상을 사용해요.
-            Theme.of(context).cardColor.withOpacity(0.8), // 기본 카드 색상을 살짝 투명하게 만들어요.
+            Theme.of(
+              context,
+            ).cardColor.withOpacity(0.8), // 기본 카드 색상을 살짝 투명하게 만들어요.
           ],
         ),
         // 모서리를 둥글게 깎아줘요.
@@ -39,7 +41,9 @@ class SettingCard extends StatelessWidget {
         // 그림자를 만들어서 입체적으로 보이게 해요.
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.1), // 앱의 기본 그림자 색상을 아주 살짝 보이게 해요.
+            color: Theme.of(
+              context,
+            ).shadowColor.withOpacity(0.1), // 앱의 기본 그림자 색상을 아주 살짝 보이게 해요.
             blurRadius: 10, // 그림자를 부드럽게 퍼지게 해요.
             offset: const Offset(0, 5), // 그림자를 아래쪽으로 5만큼 이동시켜요.
           ),
@@ -47,23 +51,33 @@ class SettingCard extends StatelessWidget {
       ),
       // 카드 안에 들어갈 내용(아이콘, 글자 등)을 설정해요.
       child: ListTile(
-        contentPadding: const EdgeInsets.all(20), // 내용물 주변에 모든 방향으로 20만큼 여백을 줘요.
+        contentPadding: const EdgeInsets.all(
+          20,
+        ), // 내용물 주변에 모든 방향으로 20만큼 여백을 줘요.
         // 왼쪽에 동그란 배경을 가진 아이콘을 보여줘요.
         leading: CircleAvatar(
           radius: 25, // 동그라미의 반지름은 25
-          backgroundColor: iconColor.withOpacity(0.1), // 아이콘 색깔을 아주 연하게 해서 배경색으로 써요.
-          child: Icon(icon, color: iconColor, size: 28), // 아이콘을 보여주고, 정해진 색깔과 크기로 설정해요.
+          backgroundColor: iconColor.withOpacity(
+            0.1,
+          ), // 아이콘 색깔을 아주 연하게 해서 배경색으로 써요.
+          child: Icon(
+            icon,
+            color: iconColor,
+            size: 28,
+          ), // 아이콘을 보여주고, 정해진 색깔과 크기로 설정해요.
         ),
         // 아이콘 오른쪽에 제목을 보여줘요.
         title: Text(
           title, // '다크 모드' 같은 제목을 보여줘요.
           style: TextStyle(
-            color: Theme.of(context).textTheme.titleLarge?.color, // 앱의 큰 제목 글자 색상을 사용해요.
+            color:
+                Theme.of(
+                  context,
+                ).textTheme.titleLarge?.color, // 앱의 큰 제목 글자 색상을 사용해요.
             fontSize: 20, // 글자 크기는 20
             fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요.
           ),
         ),
-        // 제목 오른쪽에 추가적인 위젯(스위치, 버튼 등)을 보여줘요.
         trailing: trailing,
       ),
     );
