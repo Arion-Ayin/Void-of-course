@@ -1,4 +1,5 @@
 package com.example.lioluna
+
 import android.os.Bundle
 import androidx.core.view.WindowCompat
 import io.flutter.embedding.android.FlutterActivity
@@ -7,9 +8,8 @@ import io.flutter.plugins.googlemobileads.GoogleMobileAdsPlugin
 
 class MainActivity: FlutterActivity() {
 
-    // ▼▼▼ [새로 추가된 부분] Android 15 Edge-to-Edge 대응 ▼▼▼
     override fun onCreate(savedInstanceState: Bundle?) {
-        // 상태바, 내비게이션바 영역까지 화면을 확장합니다 (Android 15 필수)
+        // '더 넓은 화면(edge-to-edge)'을 활성화합니다.
         WindowCompat.setDecorFitsSystemWindows(window, false)
         super.onCreate(savedInstanceState)
     }

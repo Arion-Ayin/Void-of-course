@@ -23,7 +23,12 @@ class Themes {
       foregroundColor: Colors.black87, // 앱 바의 글자나 아이콘 색상은 거의 검은색
       elevation: 4, // 앱 바 아래에 그림자를 4만큼 만들어요.
       shadowColor: Colors.black12, // 그림자 색상은 살짝 투명한 검은색
-      systemOverlayStyle: SystemUiOverlayStyle.dark, // 시스템 UI(상태표시줄)의 글자나 아이콘을 어둡게 보여줘요.
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.dark,
+      ), // 시스템 UI(상태표시줄)의 글자나 아이콘을 어둡게 보여줘요.
       titleTextStyle: TextStyle(color: Colors.black, fontSize: 22, fontWeight: FontWeight.bold), // 제목 글자 스타일
     ),
     textTheme: const TextTheme( // 앱의 글자 스타일을 정해요.
@@ -61,7 +66,12 @@ class Themes {
       foregroundColor: Colors.white, // 앱 바의 글자나 아이콘 색상은 하얀색
       elevation: 0, // 앱 바 아래에 그림자를 없애요.
       shadowColor: Colors.transparent, // 그림자가 없다는 뜻
-      systemOverlayStyle: SystemUiOverlayStyle.light, // 시스템 UI(상태표시줄)의 글자나 아이콘을 밝게 보여줘요.
+      systemOverlayStyle: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ), // 시스템 UI(상태표시줄)의 글자나 아이콘을 밝게 보여줘요.
       titleTextStyle: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold), // 제목 글자 스타일
     ),
     textTheme: const TextTheme( // 앱의 글자 스타일을 정해요.

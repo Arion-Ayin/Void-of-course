@@ -92,6 +92,7 @@ class NotificationService {
     bool usesChronometer = false,
     bool chronometerCountDown = false,
     int? when,
+    bool isOngoing = false,
   }) async {
     if (Platform.isAndroid && canScheduleExact) {
       final bool hasExactAlarmPermission = await checkExactAlarmPermission();
@@ -124,6 +125,8 @@ class NotificationService {
           usesChronometer: usesChronometer,
           chronometerCountDown: chronometerCountDown,
           when: when,
+          ongoing: isOngoing,
+          autoCancel: !isOngoing,
         ),
       ),
       androidScheduleMode:
