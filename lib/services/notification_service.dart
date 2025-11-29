@@ -156,62 +156,12 @@ class NotificationService {
     );
   }
 
-  Future<void> showOngoingNotification({
-    required int id,
-    required String title,
-    required String body,
-  }) async {
-    final BigTextStyleInformation bigTextStyleInformation =
-        BigTextStyleInformation(
-          body,
-          contentTitle: title,
-          htmlFormatBigText: false,
-          htmlFormatContentTitle: false,
-        );
-
-    final NotificationDetails notificationDetails = NotificationDetails(
-      android: AndroidNotificationDetails(
-        'ongoing_void_channel_id',
-        'Ongoing Void Notifications',
-        channelDescription: 'Persistent notification during Void of Course',
-        importance: Importance.low,
-        priority: Priority.low,
-        ongoing: true,
-        autoCancel: false,
-        enableVibration: false,
-        styleInformation: bigTextStyleInformation,
-      ),
-    );
-    await _notificationsPlugin.show(id, title, body, notificationDetails);
-  }
-
   Future<void> cancelNotification(int id) async {
     await _notificationsPlugin.cancel(id);
   }
 
   Future<void> cancelAllNotifications() async {
     await _notificationsPlugin.cancelAll();
-  }
-
-  Future<void> showImmediateNotification({
-    required int id,
-    required String title,
-    required String body,
-    bool isVibrate = false,
-  }) async {
-    final NotificationDetails notificationDetails = NotificationDetails(
-      android: AndroidNotificationDetails(
-        isVibrate ? 'alert_void_channel' : 'void_channel_id',
-        isVibrate ? 'Alerts' : 'Void Notifications',
-        channelDescription: 'Notifications for Void of Course periods',
-        importance: isVibrate ? Importance.max : Importance.max,
-        priority: isVibrate ? Priority.high : Priority.high,
-        ongoing: false,
-        autoCancel: true,
-        enableVibration: isVibrate,
-      ),
-    );
-    await _notificationsPlugin.show(id, title, body, notificationDetails);
   }
 
   Future<void> showInstantNotification({
@@ -243,20 +193,5 @@ class NotificationService {
       ),
     );
     await _notificationsPlugin.show(id, title, body, notificationDetails);
-  }
-
-  Future<bool> isNotificationActive(int id) async {
-    if (Platform.isAndroid) {
-      final List<ActiveNotification>? activeNotifications =
-          await _notificationsPlugin
-              .resolvePlatformSpecificImplementation<
-                AndroidFlutterLocalNotificationsPlugin
-              >()
-              ?.getActiveNotifications();
-      if (activeNotifications != null) {
-        return activeNotifications.any((notification) => notification.id == id);
-      }
-    }
-    return false;
   }
 }

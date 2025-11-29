@@ -368,8 +368,6 @@ class AstroState with ChangeNotifier {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _checkTime();
-      // 매초 알람 상태 확인 (즉시 부활)
-      _ensureActiveNotification();
     });
   }
 
@@ -518,10 +516,5 @@ class AstroState with ChangeNotifier {
     // This method is called when UI updates (e.g. user changes date),
     // but we want the background service to ALWAYS track the *actual next* VOC,
     // which is calculated in _schedulePreVoidAlarm.
-  }
-
-  Future<void> _ensureActiveNotification() async {
-    // Logic moved to Background Service
-    return;
   }
 }
