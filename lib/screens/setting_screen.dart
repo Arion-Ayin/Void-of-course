@@ -135,187 +135,189 @@ class SettingScreen extends StatelessWidget {
         elevation: Theme.of(context).appBarTheme.elevation,
       ),
       // 화면의 나머지 부분을 채워요.
-      body: Padding(
-        padding: const EdgeInsets.all(16.0), // 화면 가장자리로부터 16만큼 떨어뜨려요.
-        child: Column(
-          // 카드들을 위에서 아래로 차례대로 쌓을 거예요.
-          children: [
-            // 첫 번째 설정 카드: 보이드 알람 켜기/끄기
-            SettingCard(
-              icon: Icons.notifications_active_outlined, // 알림 아이콘을 보여줘요.
-              title: appLocalizations.voidAlarmTitle, // '보이드 알람'이라는 제목을 보여줘요.
-              iconColor: Colors.deepPurpleAccent, // 아이콘 색깔을 보라색으로 정해요.
-              trailing: Consumer<AstroState>(
-                // 'AstroState'라는 상태 변화를 지켜볼 거예요.
-                builder: (context, astroState, child) {
-                  // 스위치 버튼을 만들어요.
-                  return Switch(
-                    value:
-                        astroState
-                            .voidAlarmEnabled, // 스위치의 현재 상태(켜짐/꺼짐)를 AstroState에서 가져와요.
-                    onChanged: (value) async {
-                      // 스위치를 누르면 이 코드가 실행돼요.
-                      // 보이드 알람을 켜거나 끄는 함수를 불러와요.
-                      final status = await astroState.toggleVoidAlarm(value);
-                      // 만약 위젯이 화면에서 사라졌다면 아무것도 하지 않아요.
-                      if (!context.mounted) return;
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0), // 화면 가장자리로부터 16만큼 떨어뜨려요.
+          child: Column(
+            // 카드들을 위에서 아래로 차례대로 쌓을 거예요.
+            children: [
+              // 첫 번째 설정 카드: 보이드 알람 켜기/끄기
+              SettingCard(
+                icon: Icons.notifications_active_outlined, // 알림 아이콘을 보여줘요.
+                title: appLocalizations.voidAlarmTitle, // '보이드 알람'이라는 제목을 보여줘요.
+                iconColor: Colors.deepPurpleAccent, // 아이콘 색깔을 보라색으로 정해요.
+                trailing: Consumer<AstroState>(
+                  // 'AstroState'라는 상태 변화를 지켜볼 거예요.
+                  builder: (context, astroState, child) {
+                    // 스위치 버튼을 만들어요.
+                    return Switch(
+                      value:
+                          astroState
+                              .voidAlarmEnabled, // 스위치의 현재 상태(켜짐/꺼짐)를 AstroState에서 가져와요.
+                      onChanged: (value) async {
+                        // 스위치를 누르면 이 코드가 실행돼요.
+                        // 보이드 알람을 켜거나 끄는 함수를 불러와요.
+                        final status = await astroState.toggleVoidAlarm(value);
+                        // 만약 위젯이 화면에서 사라졌다면 아무것도 하지 않아요.
+                        if (!context.mounted) return;
 
-                      String message = ''; // 화면 아래에 잠깐 나타날 메시지를 담을 변수예요.
-                      Duration duration = const Duration(
-                        seconds: 2,
-                      ); // 메시지가 2초 동안 보이게 할 거예요.
+                        String message = ''; // 화면 아래에 잠깐 나타날 메시지를 담을 변수예요.
+                        Duration duration = const Duration(
+                          seconds: 2,
+                        ); // 메시지가 2초 동안 보이게 할 거예요.
 
-                      // 알람 허용 상태에 따라 다른 메시지를 보여줘요.
-                      switch (status) {
-                        case AlarmPermissionStatus.granted: // 알람이 허용되었다면
-                          message =
-                              value // 스위치가 켜졌는지 꺼졌는지에 따라 메시지를 다르게 보여줘요.
-                                  ? appLocalizations
-                                      .voidAlarmEnabledMessage // 켜졌을 때 메시지
-                                  : appLocalizations
-                                      .voidAlarmDisabledMessage; // 꺼졌을 때 메시지
-                          break;
-                        case AlarmPermissionStatus
-                            .notificationDenied: // 알림 권한이 거부되었다면
-                          message =
-                              appLocalizations
-                                  .voidAlarmDisabledMessage; // 알람을 끌 수밖에 없다는 메시지를 보여줘요.
-                          break;
-                        case AlarmPermissionStatus
-                            .exactAlarmDenied: // 정확한 알람 권한이 거부되었다면 (안드로이드 특정 기능)
-                          message =
-                              appLocalizations
-                                  .voidAlarmExactAlarmDeniedMessage; // 권한이 필요하다는 메시지를 보여줘요.
-                          duration = const Duration(seconds: 2);
-                          break;
-                      }
+                        // 알람 허용 상태에 따라 다른 메시지를 보여줘요.
+                        switch (status) {
+                          case AlarmPermissionStatus.granted: // 알람이 허용되었다면
+                            message =
+                                value // 스위치가 켜졌는지 꺼졌는지에 따라 메시지를 다르게 보여줘요.
+                                    ? appLocalizations
+                                        .voidAlarmEnabledMessage // 켜졌을 때 메시지
+                                    : appLocalizations
+                                        .voidAlarmDisabledMessage; // 꺼졌을 때 메시지
+                            break;
+                          case AlarmPermissionStatus
+                              .notificationDenied: // 알림 권한이 거부되었다면
+                            message =
+                                appLocalizations
+                                    .voidAlarmDisabledMessage; // 알람을 끌 수밖에 없다는 메시지를 보여줘요.
+                            break;
+                          case AlarmPermissionStatus
+                              .exactAlarmDenied: // 정확한 알람 권한이 거부되었다면 (안드로이드 특정 기능)
+                            message =
+                                appLocalizations
+                                    .voidAlarmExactAlarmDeniedMessage; // 권한이 필요하다는 메시지를 보여줘요.
+                            duration = const Duration(seconds: 2);
+                            break;
+                        }
 
-                      // 화면 아래에 알림 메시지를 잠깐 띄워줘요.
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(message), // 위에서 정한 메시지를 보여줘요.
-                          duration: const Duration(seconds: 2), // 2초 동안 보여줘요.
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
-            // 두 번째 설정 카드: 다크 모드 켜기/끄기
-            SettingCard(
-              icon: themeIcon, // 위에서 정한 달 또는 해 아이콘을 보여줘요.
-              title: appLocalizations.darkMode, // '다크 모드'라는 제목을 보여줘요.
-              iconColor:
-                  isDarkMode
-                      ? Colors.white
-                      : Colors.pink, // 다크 모드일 땐 흰색, 아닐 땐 분홍색으로 아이콘 색을 정해요.
-              trailing: ThemeSwitcher(
-                // 테마 변경을 위한 스위치를 만들어요.
-                builder: (context) {
-                  // 현재 테마가 다크 모드인지 다시 확인해요.
-                  final isDarkModeSwitch =
-                      Theme.of(context).brightness == Brightness.dark;
-                  return Switch(
-                    value: isDarkModeSwitch, // 스위치의 현재 상태를 현재 테마에 맞게 정해요.
-                    onChanged: (value) {
-                      // 스위치를 누르면 이 코드가 실행돼요.
-                      // 스위치 상태에 따라 밝은 테마 또는 어두운 테마를 정해요.
-                      final theme =
-                          value ? Themes.darkTheme : Themes.lightTheme;
-                      // 앱의 테마를 새로운 테마로 바꿔줘요.
-                      ThemeSwitcher.of(context).changeTheme(theme: theme);
-                    },
-                  );
-                },
-              ),
-            ),
-            // 세 번째 설정 카드: 언어 설정
-            SettingCard(
-              icon: Icons.language, // 언어 아이콘을 보여줘요.
-              title: appLocalizations.languageSettings, // '언어 설정'이라는 제목을 보여줘요.
-              iconColor: Colors.blue, // 아이콘 색깔을 파란색으로 정해요.
-              trailing: DropdownButton<String>(
-                // 드롭다운 메뉴를 만들어요.
-                value:
-                    localeProvider
-                        .locale
-                        ?.languageCode, // 현재 언어 코드를 드롭다운 메뉴의 선택 값으로 정해요.
-                items: [
-                  // 영어 옵션을 만들어요.
-                  DropdownMenuItem(
-                    value: 'en',
-                    child: Text(appLocalizations.english),
-                  ), // '영어'라는 글씨를 현재 언어에 맞게 보여줘요.
-                  // 한국어 옵션을 만들어요.
-                  DropdownMenuItem(
-                    value: 'ko',
-                    child: Text(appLocalizations.korean),
-                  ), // '한국어'라는 글씨를 현재 언어에 맞게 보여줘요.
-                ],
-                onChanged: (value) {
-                  // 드롭다운 메뉴에서 다른 것을 고르면 이 코드가 실행돼요.
-                  if (value == null) return; // 선택된 값이 없다면 아무것도 하지 않아요.
-
-                  final newLocale = Locale(value); // 선택된 값으로 새로운 언어 정보를 만들어요.
-                  String message; // 화면 아래에 잠깐 나타날 메시지를 담을 변수예요.
-
-                  // 선택된 언어에 따라 다른 메시지를 정해요.
-                  if (value == 'ko') {
-                    message = '언어가 한국어로 변경되었습니다.';
-                  } else {
-                    message = 'Language changed to English.';
-                  }
-
-                  // 1. 먼저 UI의 언어부터 즉시 변경합니다.
-                  localeProvider.setLocale(newLocale);
-
-                  // 2. 잠시 후 (UI 변경이 완료될 시간을 준 후) 알람 업데이트를 수행합니다.
-                  // 이렇게 하면 UI 버벅임이 사라집니다.
-                  Future.delayed(const Duration(milliseconds: 200), () {
-                    if (context.mounted) {
-                      Provider.of<AstroState>(
-                        context,
-                        listen: false,
-                      ).updateLocale(newLocale.languageCode);
-                    }
-                  });
-
-                  // 화면 아래에 언어 변경 알림 메시지를 잠깐 띄워줘요.
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(message), // 위에서 정한 메시지를 보여줘요.
-                      duration: const Duration(seconds: 1), // 2초 동안 보여줘요.
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // ▼▼▼ 여기가 수정된 네 번째 설정 카드입니다 ▼▼▼
-            SettingCard(
-              icon: Icons.coffee_outlined, // 네이버 카페를 상징하는 커피 아이콘
-              title: appLocalizations.community, // '커뮤니티' 제목
-              iconColor: const Color(0xFF03C75A), // 네이버 녹색
-              trailing: IconButton(
-                // 오른쪽 끝에 버튼을 추가
-                icon: const Icon(
-                  Icons.arrow_forward_ios, // 오른쪽 화살표 아이콘
-                  size: 30,
-                  color: Colors.grey,
+                        // 화면 아래에 알림 메시지를 잠깐 띄워줘요.
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(message), // 위에서 정한 메시지를 보여줘요.
+                            duration: const Duration(seconds: 2), // 2초 동안 보여줘요.
+                          ),
+                        );
+                      },
+                    );
+                  },
                 ),
-                onPressed: () {
-                  // 버튼을 누르면 기존에 만드신 확인 대화상자를 띄웁니다.
-                  _showUrlConfirmationDialog(
-                    context,
-                    url: 'https://arion-ayin.github.io/',
-                    serviceNameKo: '블로그',
-                    serviceNameEn: 'Blog',
-                  );
-                },
               ),
-            ),
-          ],
+              // 두 번째 설정 카드: 다크 모드 켜기/끄기
+              SettingCard(
+                icon: themeIcon, // 위에서 정한 달 또는 해 아이콘을 보여줘요.
+                title: appLocalizations.darkMode, // '다크 모드'라는 제목을 보여줘요.
+                iconColor:
+                    isDarkMode
+                        ? Colors.white
+                        : Colors.pink, // 다크 모드일 땐 흰색, 아닐 땐 분홍색으로 아이콘 색을 정해요.
+                trailing: ThemeSwitcher(
+                  // 테마 변경을 위한 스위치를 만들어요.
+                  builder: (context) {
+                    // 현재 테마가 다크 모드인지 다시 확인해요.
+                    final isDarkModeSwitch =
+                        Theme.of(context).brightness == Brightness.dark;
+                    return Switch(
+                      value: isDarkModeSwitch, // 스위치의 현재 상태를 현재 테마에 맞게 정해요.
+                      onChanged: (value) {
+                        // 스위치를 누르면 이 코드가 실행돼요.
+                        // 스위치 상태에 따라 밝은 테마 또는 어두운 테마를 정해요.
+                        final theme =
+                            value ? Themes.darkTheme : Themes.lightTheme;
+                        // 앱의 테마를 새로운 테마로 바꿔줘요.
+                        ThemeSwitcher.of(context).changeTheme(theme: theme);
+                      },
+                    );
+                  },
+                ),
+              ),
+              // 세 번째 설정 카드: 언어 설정
+              SettingCard(
+                icon: Icons.language, // 언어 아이콘을 보여줘요.
+                title: appLocalizations.languageSettings, // '언어 설정'이라는 제목을 보여줘요.
+                iconColor: Colors.blue, // 아이콘 색깔을 파란색으로 정해요.
+                trailing: DropdownButton<String>(
+                  // 드롭다운 메뉴를 만들어요.
+                  value:
+                      localeProvider
+                          .locale
+                          ?.languageCode, // 현재 언어 코드를 드롭다운 메뉴의 선택 값으로 정해요.
+                  items: [
+                    // 영어 옵션을 만들어요.
+                    DropdownMenuItem(
+                      value: 'en',
+                      child: Text(appLocalizations.english),
+                    ), // '영어'라는 글씨를 현재 언어에 맞게 보여줘요.
+                    // 한국어 옵션을 만들어요.
+                    DropdownMenuItem(
+                      value: 'ko',
+                      child: Text(appLocalizations.korean),
+                    ), // '한국어'라는 글씨를 현재 언어에 맞게 보여줘요.
+                  ],
+                  onChanged: (value) {
+                    // 드롭다운 메뉴에서 다른 것을 고르면 이 코드가 실행돼요.
+                    if (value == null) return; // 선택된 값이 없다면 아무것도 하지 않아요.
+
+                    final newLocale = Locale(value); // 선택된 값으로 새로운 언어 정보를 만들어요.
+                    String message; // 화면 아래에 잠깐 나타날 메시지를 담을 변수예요.
+
+                    // 선택된 언어에 따라 다른 메시지를 정해요.
+                    if (value == 'ko') {
+                      message = '언어가 한국어로 변경되었습니다.';
+                    } else {
+                      message = 'Language changed to English.';
+                    }
+
+                    // 1. 먼저 UI의 언어부터 즉시 변경합니다.
+                    localeProvider.setLocale(newLocale);
+
+                    // 2. 잠시 후 (UI 변경이 완료될 시간을 준 후) 알람 업데이트를 수행합니다.
+                    // 이렇게 하면 UI 버벅임이 사라집니다.
+                    Future.delayed(const Duration(milliseconds: 200), () {
+                      if (context.mounted) {
+                        Provider.of<AstroState>(
+                          context,
+                          listen: false,
+                        ).updateLocale(newLocale.languageCode);
+                      }
+                    });
+
+                    // 화면 아래에 언어 변경 알림 메시지를 잠깐 띄워줘요.
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(message), // 위에서 정한 메시지를 보여줘요.
+                        duration: const Duration(seconds: 1), // 2초 동안 보여줘요.
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // ▼▼▼ 여기가 수정된 네 번째 설정 카드입니다 ▼▼▼
+              SettingCard(
+                icon: Icons.coffee_outlined, // 네이버 카페를 상징하는 커피 아이콘
+                title: appLocalizations.community, // '커뮤니티' 제목
+                iconColor: const Color(0xFF03C75A), // 네이버 녹색
+                trailing: IconButton(
+                  // 오른쪽 끝에 버튼을 추가
+                  icon: const Icon(
+                    Icons.arrow_forward_ios, // 오른쪽 화살표 아이콘
+                    size: 30,
+                    color: Colors.grey,
+                  ),
+                  onPressed: () {
+                    // 버튼을 누르면 기존에 만드신 확인 대화상자를 띄웁니다.
+                    _showUrlConfirmationDialog(
+                      context,
+                      url: 'https://arion-ayin.github.io/',
+                      serviceNameKo: '블로그',
+                      serviceNameEn: 'Blog',
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

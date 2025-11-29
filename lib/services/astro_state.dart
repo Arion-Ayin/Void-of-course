@@ -226,6 +226,7 @@ class AstroState with ChangeNotifier {
           usesChronometer: true,
           chronometerCountDown: true,
           when: vocStart.millisecondsSinceEpoch,
+          isOngoing: true,
         );
       } else if (vocStart.isAfter(now)) {
         // 현재 보이드 시작 전 6시간 이내인 경우 - 즉시 알림 스케줄링 (크로노미터 사용을 위해)
@@ -244,6 +245,7 @@ class AstroState with ChangeNotifier {
           usesChronometer: true,
           chronometerCountDown: true,
           when: vocStart.millisecondsSinceEpoch,
+          isOngoing: true,
         );
       }
 
@@ -264,6 +266,7 @@ class AstroState with ChangeNotifier {
           usesChronometer: true,
           chronometerCountDown: true,
           when: vocEnd.millisecondsSinceEpoch,
+          isOngoing: true,
         );
       } else if (vocEnd.isAfter(now)) {
         // 현재 보이드 중인 경우 - 즉시 알림 스케줄링
@@ -282,6 +285,7 @@ class AstroState with ChangeNotifier {
           usesChronometer: true,
           chronometerCountDown: true,
           when: vocEnd.millisecondsSinceEpoch,
+          isOngoing: true,
         );
       }
 
@@ -369,6 +373,14 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> refreshData() async {
+    final now = DateTime.now();
+
+    // On refresh, if we are in follow mode, snap back to the current time.
+    if (_isFollowingTime) {
+      _isFollowingTime = true;
+      _selectedDate = now;
+    }
+
     await _updateData();
   }
 

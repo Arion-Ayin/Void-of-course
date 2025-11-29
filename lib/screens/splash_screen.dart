@@ -60,19 +60,21 @@ class _SplashScreenState extends State<SplashScreen> {
             _triggerAdShow();
           }
           
-          return Container(
-            color: Theme.of(context).colorScheme.primary,
-            child: const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(color: Colors.white),
-                  SizedBox(height: 20),
-                  Text(
-                    'Loading...',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                ],
+          return SafeArea(
+            child: Container(
+              color: Theme.of(context).colorScheme.primary,
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: Colors.white),
+                    SizedBox(height: 20),
+                    Text(
+                      'Loading...',
+                      style: TextStyle(color: Colors.white, fontSize: 20),
+                    ),
+                  ],
+                ),
               ),
             ),
           );
