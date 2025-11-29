@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'astro_calculator.dart';
 import 'notification_service.dart';
 import 'package:sweph/sweph.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 
 final AstroCalculator _calculator = AstroCalculator();
 
@@ -101,11 +102,26 @@ class AstroState with ChangeNotifier {
     }
   }
 
-  Future<void> updateLocale(String newLocale) async {
-    _currentLocale = newLocale;
+  Future<void> updateLocale(String languageCode) async {
+    _currentLocale = languageCode;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('cached_language_code', languageCode);
+
     if (_voidAlarmEnabled) {
       await _schedulePreVoidAlarm();
       _checkTime();
+    }
+
+    // 언어가 변경되면 알림 메시지도 갱신되어야 하므로 데이터 갱신 (배경 서비스용)
+    if (_vocStart != null) {
+      // Trigger update to save new locale to prefs if not already done by _schedulePreVoidAlarm
+      // But _schedulePreVoidAlarm doesn't save to prefs. _updateStateFromResult does.
+      // So let's just save explicitly here or rely on _updateData if called.
+      // Actually, _updateData calls _updateStateFromResult.
+      // Let's call _updateData to be safe and consistent.
+      // But _updateData might be expensive.
+      // Let's just ensure prefs are saved.
+      // We already saved 'cached_language_code' above.
     }
   }
 
@@ -121,6 +137,9 @@ class AstroState with ChangeNotifier {
         return AlarmPermissionStatus.notificationDenied;
       }
 
+      // 배터리 최적화 제외 요청 (알람이 죽지 않도록)
+      await _notificationService.requestBatteryOptimizationPermission();
+
       bool hasExactAlarmPermission =
           await _notificationService.checkExactAlarmPermission();
       if (!hasExactAlarmPermission) {
@@ -133,6 +152,11 @@ class AstroState with ChangeNotifier {
         _voidAlarmEnabled = true;
         await prefs.setBool('voidAlarmEnabled', true);
         await _schedulePreVoidAlarm(isToggleOn: true);
+
+        // Start Background Service
+        final service = FlutterBackgroundService();
+        await service.startService();
+
         notifyListeners();
         return AlarmPermissionStatus.granted;
       } else {
@@ -145,6 +169,11 @@ class AstroState with ChangeNotifier {
       _voidAlarmEnabled = false;
       await prefs.setBool('voidAlarmEnabled', false);
       await _notificationService.cancelAllNotifications();
+
+      // Stop Background Service
+      final service = FlutterBackgroundService();
+      service.invoke("stopService");
+
       notifyListeners();
       return AlarmPermissionStatus.granted;
     }
@@ -185,8 +214,13 @@ class AstroState with ChangeNotifier {
     DateTime searchDate = now;
     int notificationId =
         1000; // Start IDs from 1000 to avoid conflict with ongoing (0, 2)
+    const int ongoingNotificationId =
+        888; // Fixed ID for the active persistent notification
 
     // Schedule next 10 events
+    bool isFirstVocFound = false;
+    final prefs = await SharedPreferences.getInstance();
+
     for (int i = 0; i < 10; i++) {
       final vocTimes = _calculator.findVoidOfCoursePeriod(searchDate);
       final vocStart = vocTimes['start'];
@@ -204,6 +238,13 @@ class AstroState with ChangeNotifier {
         continue;
       }
 
+      // Found the first valid upcoming VOC! Cache it for the background service.
+      if (!isFirstVocFound) {
+        isFirstVocFound = true;
+        await prefs.setString('cached_voc_start', vocStart.toIso8601String());
+        await prefs.setString('cached_voc_end', vocEnd.toIso8601String());
+      }
+
       final locale = _currentLocale;
       final preAlarmTime = vocStart.subtract(
         Duration(hours: _preVoidAlarmHours),
@@ -218,7 +259,7 @@ class AstroState with ChangeNotifier {
                 ? '보이드 시작까지 남은 시간:'
                 : 'Time until Void of Course begins:';
         await _notificationService.scheduleNotification(
-          id: notificationId++,
+          id: notificationId++, // Future alarm -> Unique ID
           title: preTitle,
           body: preBody,
           scheduledTime: preAlarmTime,
@@ -227,6 +268,8 @@ class AstroState with ChangeNotifier {
           chronometerCountDown: true,
           when: vocStart.millisecondsSinceEpoch,
           isOngoing: true,
+          onlyAlertOnce: true,
+          isSilent: true,
         );
       } else if (vocStart.isAfter(now)) {
         // 현재 보이드 시작 전 6시간 이내인 경우 - 즉시 알림 스케줄링 (크로노미터 사용을 위해)
@@ -236,16 +279,16 @@ class AstroState with ChangeNotifier {
             locale.startsWith('ko')
                 ? '보이드 시작까지 남은 시간:'
                 : 'Time until Void of Course begins:';
-        await _notificationService.scheduleNotification(
-          id: notificationId++,
+        await _notificationService.showInstantNotification(
+          id: ongoingNotificationId, // Immediate alarm -> Fixed ID (888)
           title: preTitle,
           body: preBody,
-          scheduledTime: now.add(const Duration(seconds: 2)),
-          canScheduleExact: hasExactAlarmPermission,
           usesChronometer: true,
           chronometerCountDown: true,
           when: vocStart.millisecondsSinceEpoch,
           isOngoing: true,
+          onlyAlertOnce: true,
+          isSilent: true,
         );
       }
 
@@ -258,7 +301,7 @@ class AstroState with ChangeNotifier {
                 ? '보이드 종료까지 남은 시간:'
                 : 'Time until Void of Course ends:';
         await _notificationService.scheduleNotification(
-          id: notificationId++,
+          id: notificationId++, // Future alarm -> Unique ID
           title: startTitle,
           body: startBody,
           scheduledTime: vocStart,
@@ -267,6 +310,8 @@ class AstroState with ChangeNotifier {
           chronometerCountDown: true,
           when: vocEnd.millisecondsSinceEpoch,
           isOngoing: true,
+          onlyAlertOnce: true,
+          isSilent: true,
         );
       } else if (vocEnd.isAfter(now)) {
         // 현재 보이드 중인 경우 - 즉시 알림 스케줄링
@@ -276,16 +321,16 @@ class AstroState with ChangeNotifier {
             locale.startsWith('ko')
                 ? '보이드 종료까지 남은 시간:'
                 : 'Time until Void of Course ends:';
-        await _notificationService.scheduleNotification(
-          id: notificationId++,
+        await _notificationService.showInstantNotification(
+          id: ongoingNotificationId, // Immediate alarm -> Fixed ID (888)
           title: startTitle,
           body: startBody,
-          scheduledTime: now.add(const Duration(seconds: 2)),
-          canScheduleExact: hasExactAlarmPermission,
           usesChronometer: true,
           chronometerCountDown: true,
           when: vocEnd.millisecondsSinceEpoch,
           isOngoing: true,
+          onlyAlertOnce: true,
+          isSilent: true,
         );
       }
 
@@ -303,6 +348,7 @@ class AstroState with ChangeNotifier {
           body: endBody,
           scheduledTime: vocEnd,
           canScheduleExact: hasExactAlarmPermission,
+          isSilent: true,
         );
       }
 
@@ -322,6 +368,8 @@ class AstroState with ChangeNotifier {
     _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _checkTime();
+      // 매초 알람 상태 확인 (즉시 부활)
+      _ensureActiveNotification();
     });
   }
 
@@ -460,5 +508,20 @@ class AstroState with ChangeNotifier {
     _nextSignTime = result['nextSignTime'] as DateTime?;
     _nextMoonPhaseName = result['nextMoonPhaseName'] as String;
     _nextMoonPhaseTime = result['nextMoonPhaseTime'] as DateTime?;
+
+    // Cache VOC times and settings for background service
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('cached_pre_void_hours', _preVoidAlarmHours);
+    await prefs.setString('cached_language_code', _currentLocale);
+
+    // NOTE: We do NOT cache vocStart/vocEnd here anymore.
+    // This method is called when UI updates (e.g. user changes date),
+    // but we want the background service to ALWAYS track the *actual next* VOC,
+    // which is calculated in _schedulePreVoidAlarm.
+  }
+
+  Future<void> _ensureActiveNotification() async {
+    // Logic moved to Background Service
+    return;
   }
 }

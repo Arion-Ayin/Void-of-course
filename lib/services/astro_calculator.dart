@@ -123,9 +123,6 @@ class AstroCalculator {
     if (sun.longitude == null || moon.longitude == null) {
       throw Exception('Sun or Moon position not available.');
     }
-    print(
-      'getSunMoonLongitude for $date: Sun Lon = ${sun.longitude}, Moon Lon = ${moon.longitude}',
-    );
     return {'sun': sun.longitude!, 'moon': moon.longitude!};
   }
 
@@ -577,7 +574,7 @@ class AstroCalculator {
       final vocEnd = signEndTime; // 보이드 끝은 별자리에서 나가는 시간이에요.
 
       // 만약 오늘 이후에 보이드 오브 코스 시간이 있다면, 그 시간을 알려줘요.
-      if (vocEnd.isAfter(dayStart)) {
+      if (vocEnd.isAfter(date)) {
         return {
           'start': vocStart,
           'end': vocEnd,

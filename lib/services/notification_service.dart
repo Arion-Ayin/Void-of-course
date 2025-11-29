@@ -23,6 +23,15 @@ class NotificationService {
       importance: Importance.max,
     );
 
+    const AndroidNotificationChannel silentChannel = AndroidNotificationChannel(
+      'void_silent_channel_id',
+      'Void Silent Notifications',
+      description: 'Silent persistent notifications for Void of Course',
+      importance: Importance.low, // Low importance = No sound, no vibration
+      playSound: false,
+      enableVibration: false,
+    );
+
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
 
@@ -33,6 +42,12 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin
         >()
         ?.createNotificationChannel(channel);
+
+    await _notificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()
+        ?.createNotificationChannel(silentChannel);
 
     await _notificationsPlugin.initialize(initializationSettings);
   }
@@ -93,6 +108,8 @@ class NotificationService {
     bool chronometerCountDown = false,
     int? when,
     bool isOngoing = false,
+    bool onlyAlertOnce = false,
+    bool isSilent = false, // New parameter
   }) async {
     if (Platform.isAndroid && canScheduleExact) {
       final bool hasExactAlarmPermission = await checkExactAlarmPermission();
@@ -117,16 +134,19 @@ class NotificationService {
       tzScheduledTime,
       NotificationDetails(
         android: AndroidNotificationDetails(
-          'void_channel_id',
-          'Void Notifications',
+          isSilent ? 'void_silent_channel_id' : 'void_channel_id',
+          isSilent ? 'Void Silent Notifications' : 'Void Notifications',
           channelDescription: 'Notifications for Void of Course periods',
-          importance: Importance.max,
-          priority: Priority.high,
+          importance: isSilent ? Importance.low : Importance.max,
+          priority: isSilent ? Priority.low : Priority.high,
           usesChronometer: usesChronometer,
           chronometerCountDown: chronometerCountDown,
           when: when,
           ongoing: isOngoing,
           autoCancel: !isOngoing,
+          onlyAlertOnce: onlyAlertOnce,
+          playSound: !isSilent,
+          enableVibration: !isSilent,
         ),
       ),
       androidScheduleMode:
@@ -192,5 +212,51 @@ class NotificationService {
       ),
     );
     await _notificationsPlugin.show(id, title, body, notificationDetails);
+  }
+
+  Future<void> showInstantNotification({
+    required int id,
+    required String title,
+    required String body,
+    bool usesChronometer = false,
+    bool chronometerCountDown = false,
+    int? when,
+    bool isOngoing = false,
+    bool onlyAlertOnce = false,
+    bool isSilent = false, // New parameter
+  }) async {
+    final NotificationDetails notificationDetails = NotificationDetails(
+      android: AndroidNotificationDetails(
+        isSilent ? 'void_silent_channel_id' : 'void_channel_id',
+        isSilent ? 'Void Silent Notifications' : 'Void Notifications',
+        channelDescription: 'Notifications for Void of Course periods',
+        importance: isSilent ? Importance.low : Importance.max,
+        priority: isSilent ? Priority.low : Priority.high,
+        usesChronometer: usesChronometer,
+        chronometerCountDown: chronometerCountDown,
+        when: when,
+        ongoing: isOngoing,
+        autoCancel: !isOngoing,
+        onlyAlertOnce: onlyAlertOnce,
+        playSound: !isSilent,
+        enableVibration: !isSilent,
+      ),
+    );
+    await _notificationsPlugin.show(id, title, body, notificationDetails);
+  }
+
+  Future<bool> isNotificationActive(int id) async {
+    if (Platform.isAndroid) {
+      final List<ActiveNotification>? activeNotifications =
+          await _notificationsPlugin
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >()
+              ?.getActiveNotifications();
+      if (activeNotifications != null) {
+        return activeNotifications.any((notification) => notification.id == id);
+      }
+    }
+    return false;
   }
 }

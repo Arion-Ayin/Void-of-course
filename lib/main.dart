@@ -16,10 +16,14 @@ import 'package:in_app_update/in_app_update.dart';
 import 'package:lioluna/widgets/exit_confirmation_dialog.dart';
 import 'package:lioluna/services/ad_service.dart';
 import 'package:flutter/services.dart';
+import 'package:lioluna/services/background_service.dart';
 
 void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요.
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Background Service
+  await initializeBackgroundService();
 
   // Google Mobile Ads SDK와 AdService를 초기화해요.
   if (Platform.isAndroid || Platform.isIOS) {
