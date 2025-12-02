@@ -91,7 +91,6 @@ class AstroState with ChangeNotifier {
       await _updateData();
 
       _isInitialized = true;
-      _startTimer();
       _lastError = null;
     } catch (e, stack) {
       print('Initialization error: $e\n$stack');
@@ -109,7 +108,6 @@ class AstroState with ChangeNotifier {
 
     if (_voidAlarmEnabled) {
       await _schedulePreVoidAlarm();
-      _checkTime();
     }
 
     // 언어가 변경되면 알림 메시지도 갱신되어야 하므로 데이터 갱신 (배경 서비스용)
@@ -360,43 +358,60 @@ class AstroState with ChangeNotifier {
       print("Scheduled notifications for next 10 VOC periods.");
     }
 
-    _checkTime();
     notifyListeners();
   }
 
-  void _startTimer() {
+  void _scheduleNextUpdate() {
     _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _checkTime();
-    });
-  }
 
-  void _checkTime() {
+    // We only schedule updates if the app is following the current time.
+    if (!_isFollowingTime) {
+      return;
+    }
+
+    // Determine the soonest event time that is in the future.
     final now = DateTime.now();
+    DateTime? nextEvent;
 
-    // 1. (기존 로직) 현재 시간을 따르는 중일 때 데이터 자동 새로고침
-    if (_isFollowingTime) {
-      bool shouldRefresh = false;
-      String refreshReason = "";
+    final signTime = _nextSignTime;
+    final phaseTime = _nextMoonPhaseTime;
 
-      if (_nextMoonPhaseTime != null && now.isAfter(_nextMoonPhaseTime!)) {
-        shouldRefresh = true;
-        refreshReason = "Next Moon Phase time has passed.";
-      } else if (_nextSignTime != null && now.isAfter(_nextSignTime!)) {
-        shouldRefresh = true;
-        refreshReason = "Moon Sign end time has passed.";
+    if (signTime != null && signTime.isAfter(now)) {
+      nextEvent = signTime;
+    }
+    if (phaseTime != null && phaseTime.isAfter(now)) {
+      if (nextEvent == null || phaseTime.isBefore(nextEvent)) {
+        nextEvent = phaseTime;
+      }
+    }
+
+    if (nextEvent != null) {
+      // We have a future event. Schedule a timer to fire just after it.
+      final duration = nextEvent.difference(now) + const Duration(seconds: 1);
+
+      if (kDebugMode) {
+        print('Scheduling next UI update in $duration for event at $nextEvent');
       }
 
-      if (shouldRefresh) {
+      _timer = Timer(duration, () {
         if (kDebugMode) {
-          print("Time to refresh data: $refreshReason. Refreshing...");
+          print('Timer fired for UI update. Refreshing data...');
         }
-        _selectedDate = now;
-        refreshData();
-        // 데이터를 새로고칠 때, 알람 스케줄도 다시 잡아야 합니다.
-        if (_voidAlarmEnabled) {
-          _schedulePreVoidAlarm();
+
+        // If we are still following time, refresh the data.
+        if (_isFollowingTime) {
+          _selectedDate = DateTime.now();
+          refreshData(); // This will re-calculate event times and re-schedule the next update via _updateStateFromResult
+
+          // Also reschedule alarms if they are enabled.
+          if (_voidAlarmEnabled) {
+            _schedulePreVoidAlarm();
+          }
         }
+      });
+    } else {
+      if (kDebugMode) {
+        print('No future events found to schedule an update for.');
       }
     }
   }
@@ -516,5 +531,6 @@ class AstroState with ChangeNotifier {
     // This method is called when UI updates (e.g. user changes date),
     // but we want the background service to ALWAYS track the *actual next* VOC,
     // which is calculated in _schedulePreVoidAlarm.
+    _scheduleNextUpdate();
   }
 }

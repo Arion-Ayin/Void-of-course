@@ -81,6 +81,12 @@ void onStart(ServiceInstance service) async {
         final DateTime now = DateTime.now();
         final DateTime vocStart = DateTime.parse(startStr);
         final DateTime vocEnd = DateTime.parse(endStr);
+
+        if (now.isAfter(vocEnd)) {
+          service.stopSelf();
+          return;
+        }
+
         final DateTime preVoidStart = vocStart.subtract(
           Duration(hours: preHours),
         );
