@@ -9,14 +9,14 @@ import 'screens/setting_screen.dart';
 import 'services/astro_state.dart';
 import 'themes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:lioluna/screens/splash_screen.dart';
-import 'package:lioluna/services/locale_provider.dart';
-import 'package:lioluna/l10n/app_localizations.dart';
+import 'package:void_of_course/screens/splash_screen.dart';
+import 'package:void_of_course/services/locale_provider.dart';
+import 'package:void_of_course/l10n/app_localizations.dart';
 import 'package:in_app_update/in_app_update.dart';
-import 'package:lioluna/widgets/exit_confirmation_dialog.dart';
-import 'package:lioluna/services/ad_service.dart';
+import 'package:void_of_course/widgets/exit_confirmation_dialog.dart';
+import 'package:void_of_course/services/ad_service.dart';
 import 'package:flutter/services.dart';
-import 'package:lioluna/services/background_service.dart';
+import 'package:void_of_course/services/background_service.dart';
 
 void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요.
