@@ -110,6 +110,7 @@ class NotificationService {
     bool isOngoing = false,
     bool onlyAlertOnce = false,
     bool isSilent = false, // New parameter
+    int? timeoutAfter, // New parameter
   }) async {
     if (Platform.isAndroid && canScheduleExact) {
       final bool hasExactAlarmPermission = await checkExactAlarmPermission();
@@ -147,6 +148,7 @@ class NotificationService {
           onlyAlertOnce: onlyAlertOnce,
           playSound: !isSilent,
           enableVibration: !isSilent,
+          timeoutAfter: timeoutAfter,
         ),
       ),
       androidScheduleMode:
@@ -174,6 +176,7 @@ class NotificationService {
     bool isOngoing = false,
     bool onlyAlertOnce = false,
     bool isSilent = false, // New parameter
+    int? timeoutAfter, // New parameter
   }) async {
     final NotificationDetails notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
@@ -190,6 +193,7 @@ class NotificationService {
         onlyAlertOnce: onlyAlertOnce,
         playSound: !isSilent,
         enableVibration: !isSilent,
+        timeoutAfter: timeoutAfter,
       ),
     );
     await _notificationsPlugin.show(id, title, body, notificationDetails);
