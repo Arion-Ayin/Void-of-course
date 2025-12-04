@@ -268,6 +268,7 @@ class AstroState with ChangeNotifier {
           isOngoing: true,
           onlyAlertOnce: true,
           isSilent: true,
+          timeoutAfter: vocStart.millisecondsSinceEpoch,
         );
       } else if (vocStart.isAfter(now)) {
         // 현재 보이드 시작 전 6시간 이내인 경우 - 즉시 알림 스케줄링 (크로노미터 사용을 위해)
@@ -287,6 +288,7 @@ class AstroState with ChangeNotifier {
           isOngoing: true,
           onlyAlertOnce: true,
           isSilent: true,
+          timeoutAfter: vocStart.millisecondsSinceEpoch,
         );
       }
 
@@ -310,6 +312,7 @@ class AstroState with ChangeNotifier {
           isOngoing: true,
           onlyAlertOnce: true,
           isSilent: true,
+          timeoutAfter: vocEnd.millisecondsSinceEpoch,
         );
       } else if (vocEnd.isAfter(now)) {
         // 현재 보이드 중인 경우 - 즉시 알림 스케줄링
@@ -329,6 +332,7 @@ class AstroState with ChangeNotifier {
           isOngoing: true,
           onlyAlertOnce: true,
           isSilent: true,
+          timeoutAfter: vocEnd.millisecondsSinceEpoch,
         );
       }
 
@@ -375,6 +379,8 @@ class AstroState with ChangeNotifier {
 
     final signTime = _nextSignTime;
     final phaseTime = _nextMoonPhaseTime;
+    final vocStart = _vocStart;
+    final vocEnd = _vocEnd;
 
     if (signTime != null && signTime.isAfter(now)) {
       nextEvent = signTime;
@@ -382,6 +388,16 @@ class AstroState with ChangeNotifier {
     if (phaseTime != null && phaseTime.isAfter(now)) {
       if (nextEvent == null || phaseTime.isBefore(nextEvent)) {
         nextEvent = phaseTime;
+      }
+    }
+    if (vocStart != null && vocStart.isAfter(now)) {
+      if (nextEvent == null || vocStart.isBefore(nextEvent)) {
+        nextEvent = vocStart;
+      }
+    }
+    if (vocEnd != null && vocEnd.isAfter(now)) {
+      if (nextEvent == null || vocEnd.isBefore(nextEvent)) {
+        nextEvent = vocEnd;
       }
     }
 
@@ -454,7 +470,7 @@ class AstroState with ChangeNotifier {
     try {
       final nextPhaseInfo = _calculator.findNextPhase(dateForCalc);
       final moonPhaseInfo = _calculator.getMoonPhaseInfo(dateForCalc);
-      final moonPhase = moonPhaseInfo['phaseName'];
+      final moonPhase = moonPhaseInfo['phaseName'] ?? '';
       final moonZodiac = _calculator.getMoonZodiacEmoji(dateForCalc);
       var vocTimes = _calculator.findVoidOfCoursePeriod(dateForCalc);
 
@@ -511,7 +527,7 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> _updateStateFromResult(Map<String, dynamic> result) async {
-    _moonPhase = result['moonPhase'] as String;
+    _moonPhase = result['moonPhase'] as String? ?? '';
     _moonZodiac = result['moonZodiac'] as String;
     _moonInSign = result['moonInSign'] as String;
     _vocStart = result['vocStart'] as DateTime?;
