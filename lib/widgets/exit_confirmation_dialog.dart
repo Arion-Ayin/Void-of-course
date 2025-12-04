@@ -1,8 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:in_app_review/in_app_review.dart';
-import 'package:lioluna/widgets/reusable_native_ad_widget.dart';
+import 'package:void_of_course/widgets/reusable_native_ad_widget.dart';
 
 class ExitConfirmationDialog extends StatelessWidget {
   const ExitConfirmationDialog({super.key});
@@ -19,9 +18,7 @@ class ExitConfirmationDialog extends StatelessWidget {
       title: const Text('정말 앱을 나가시겠습니까?'),
       content: const Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
-          ReusableNativeAdWidget(),
-        ],
+        children: [ReusableNativeAdWidget()],
       ),
       actions: [
         TextButton(

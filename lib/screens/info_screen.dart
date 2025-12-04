@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart'; // Flutter 앱의 기본 위젯들을 가져와요.
 import '../widgets/info_card.dart'; // 정보 화면에 보이는 카드 모양 위젯을 가져와요.
-import 'package:lioluna/l10n/app_localizations.dart'; // 앱의 언어(한국어, 영어 등)를 쉽게 바꾸기 위한 파일을 가져와요.
+import 'package:void_of_course/l10n/app_localizations.dart'; // 앱의 언어(한국어, 영어 등)를 쉽게 바꾸기 위한 파일을 가져와요.
 
 // 정보 화면을 보여주는 위젯이에요.
 class InfoScreen extends StatelessWidget {
@@ -25,7 +25,10 @@ class InfoScreen extends StatelessWidget {
             // 정보 아이콘을 보여줘요.
             Icon(
               Icons.info_outline,
-              color: Theme.of(context).colorScheme.primary, // 앱의 주요 색깔로 아이콘 색을 정해요.
+              color:
+                  Theme.of(
+                    context,
+                  ).colorScheme.primary, // 앱의 주요 색깔로 아이콘 색을 정해요.
               size: 24, // 아이콘 크기를 24로 정해요.
             ),
             const SizedBox(width: 8), // 아이콘과 글씨 사이에 작은 공간을 만들어요.
@@ -66,24 +69,36 @@ class InfoScreen extends StatelessWidget {
                 // 첫 번째 정보 카드: 앱을 만든 사람
                 InfoCard(
                   icon: Icons.people, // 사람 아이콘을 보여줘요.
-                  title: appLocalizations.whoAreWeTitle, // '우리는 누구인가요?'라는 제목을 보여줘요.
-                  subtitle: appLocalizations.whoAreWeSubtitle.replaceAll('|||', '\n'), // 이 앱을 만든 사람에 대한 설명을 보여줘요.
+                  title:
+                      appLocalizations
+                          .whoAreWeTitle, // '우리는 누구인가요?'라는 제목을 보여줘요.
+                  subtitle: appLocalizations.whoAreWeSubtitle.replaceAll(
+                    '|||',
+                    '\n',
+                  ), // 이 앱을 만든 사람에 대한 설명을 보여줘요.
                   iconColor: Colors.amber, // 아이콘 색깔을 호박색으로 정해요.
                 ),
                 const SizedBox(height: 20), // 카드 사이에 20만큼의 공간을 만들어요.
                 // 두 번째 정보 카드: 앱이 유용한 사람
                 InfoCard(
                   icon: Icons.timer_sharp, // 시계 아이콘을 보여줘요.
-                  title: appLocalizations.whoIsItUsefulForTitle, // '이 앱이 유용한 사람은?'이라는 제목을 보여줘요.
-                  subtitle: appLocalizations.whoIsItUsefulForSubtitle.replaceAll('|||', '\n'), // 이 앱을 쓰면 좋은 사람에 대한 설명을 보여줘요.
+                  title:
+                      appLocalizations
+                          .whoIsItUsefulForTitle, // '이 앱이 유용한 사람은?'이라는 제목을 보여줘요.
+                  subtitle: appLocalizations.whoIsItUsefulForSubtitle
+                      .replaceAll('|||', '\n'), // 이 앱을 쓰면 좋은 사람에 대한 설명을 보여줘요.
                   iconColor: Colors.green, // 아이콘 색깔을 초록색으로 정해요.
                 ),
                 const SizedBox(height: 20), // 카드 사이에 20만큼의 공간을 만들어요.
                 // 세 번째 정보 카드: 앱을 만든 이유
                 InfoCard(
                   icon: Icons.app_shortcut, // 앱 아이콘을 보여줘요.
-                  title: appLocalizations.whyDidWeMakeThisAppTitle, // '왜 이 앱을 만들었나요?'라는 제목을 보여줘요.
-                  subtitle: appLocalizations.whyDidWeMakeThisAppSubtitle, // 이 앱을 만든 이유에 대한 설명을 보여줘요.
+                  title:
+                      appLocalizations
+                          .whyDidWeMakeThisAppTitle, // '왜 이 앱을 만들었나요?'라는 제목을 보여줘요.
+                  subtitle:
+                      appLocalizations
+                          .whyDidWeMakeThisAppSubtitle, // 이 앱을 만든 이유에 대한 설명을 보여줘요.
                   iconColor: Colors.purple, // 아이콘 색깔을 보라색으로 정해요.
                 ),
                 const SizedBox(height: 20), // 카드 사이에 20만큼의 공간을 만들어요.
@@ -96,7 +111,9 @@ class InfoScreen extends StatelessWidget {
                     boxShadow: [
                       // 상자 아래에 그림자 효과를 줘요.
                       BoxShadow(
-                        color: Theme.of(context).shadowColor.withOpacity(0.1), // 그림자 색깔을 투명하게 해요.
+                        color: Theme.of(
+                          context,
+                        ).shadowColor.withOpacity(0.1), // 그림자 색깔을 투명하게 해요.
                         blurRadius: 10, // 그림자를 흐릿하게 만들어요.
                         offset: const Offset(0, 5), // 그림자를 아래쪽으로 5만큼 옮겨요.
                       ),
@@ -105,7 +122,8 @@ class InfoScreen extends StatelessWidget {
                   child: Text(
                     appLocalizations.copyrightText, // 저작권 글씨를 현재 언어에 맞게 보여줘요.
                     style: TextStyle(
-                      color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7), // 글씨색을 살짝 흐리게 해요.
+                      color: Theme.of(context).textTheme.bodyMedium?.color
+                          ?.withOpacity(0.7), // 글씨색을 살짝 흐리게 해요.
                       fontSize: 12, // 글씨 크기를 12로 작게 만들어요.
                       fontStyle: FontStyle.italic, // 글씨체를 기울이게 해요.
                     ),

@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
-import 'package:lioluna/services/ad_service.dart';
-import 'package:lioluna/main.dart';
-import 'package:lioluna/services/astro_state.dart';
+import 'package:void_of_course/services/ad_service.dart';
+import 'package:void_of_course/main.dart';
+import 'package:void_of_course/services/astro_state.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
-    State<SplashScreen> createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
   bool _adTriggered = false;
 
-  
   void didChangeDependencies() {
     super.didChangeDependencies();
     // astroState가 이미 초기화되었는지 확인
@@ -26,9 +25,9 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _navigateToMainScreen() {
     if (!mounted) return;
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => MainAppScreen()),
-    );
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (context) => MainAppScreen()));
   }
 
   Future<void> _showAdAndNavigate() async {
@@ -51,7 +50,6 @@ class _SplashScreenState extends State<SplashScreen> {
     });
   }
 
-  
   Widget build(BuildContext context) {
     return Scaffold(
       body: Consumer<AstroState>(
@@ -59,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen> {
           if (astroState.isInitialized) {
             _triggerAdShow();
           }
-          
+
           return SafeArea(
             child: Container(
               color: Theme.of(context).colorScheme.primary,

@@ -1,6 +1,6 @@
 // 플러터의 디자인 라이브러리를 가져와요. 화면에 보이는 것들을 만들 때 필요해요.
 import 'package:flutter/material.dart';
-import 'package:lioluna/services/ad_service.dart';
+import 'package:void_of_course/services/ad_service.dart';
 
 // 날짜를 오늘로 되돌리는 동그란 버튼 위젯이에요. StatefulWidget은 위젯의 상태가 변할 수 있다는 뜻이에요.
 class ResetDateButton extends StatefulWidget {
@@ -9,7 +9,6 @@ class ResetDateButton extends StatefulWidget {
 
   // 이 위젯을 만들 때, 버튼을 누르면 실행될 함수를 꼭 받아야 해요. super.key는 위젯을 구분하는 이름표 같은 거예요.
   const ResetDateButton({super.key, required this.onPressed});
-
 
   @override
   // StatefulWidget은 상태를 관리하는 별도의 클래스를 만들어요.
@@ -55,12 +54,16 @@ class _ResetDateButtonState extends State<ResetDateButton> {
             padding: EdgeInsets.zero, // 버튼 안쪽의 여백을 없애요. 아이콘이 꽉 차게 보여요.
             // 버튼의 모양을 동그랗게 만들어요. shape는 위젯의 모양을 정해요.
             shape: RoundedRectangleBorder(
-              borderRadius:
-                  BorderRadius.circular(35), // 모서리를 35만큼 둥글게 만들어서 완벽한 원을 만들어요. (너비/높이의 절반)
+              borderRadius: BorderRadius.circular(
+                35,
+              ), // 모서리를 35만큼 둥글게 만들어서 완벽한 원을 만들어요. (너비/높이의 절반)
             ),
           ),
           // 버튼 안에 들어갈 내용물이에요. child는 버튼 안에 들어갈 내용이에요.
-          child: const Icon(Icons.refresh, size: 35), // 새로고침 모양 아이콘을 넣고, 크기는 35로 해요.
+          child: const Icon(
+            Icons.refresh,
+            size: 35,
+          ), // 새로고침 모양 아이콘을 넣고, 크기는 35로 해요.
         ),
       ),
     );
