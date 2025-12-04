@@ -81,10 +81,16 @@ class AstroState with ChangeNotifier {
     _isLoading = true;
 
     try {
+      //스위프 초기화
+      //천문학 라이브러리 초기화
       await Sweph.init();
+      //현재 로케일 설정
       _currentLocale = Intl.getCurrentLocale();
+      //알림 서비스 초기화
       await _notificationService.init();
+      //shared preferences 초기화
       final prefs = await SharedPreferences.getInstance();
+      //void alarm enabled 상태 저장
       _voidAlarmEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
       _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 6;
 
@@ -101,6 +107,7 @@ class AstroState with ChangeNotifier {
     }
   }
 
+  //
   Future<void> updateLocale(String languageCode) async {
     _currentLocale = languageCode;
     final prefs = await SharedPreferences.getInstance();
@@ -461,12 +468,14 @@ class AstroState with ChangeNotifier {
     await _updateData();
   }
 
+  //실제 계산 시작
   Future<void> _updateData() async {
     _isLoading = true;
     notifyListeners();
 
     final dateForCalc = _selectedDate;
 
+    //카큘레이터에서 가져와서 계산 시작
     try {
       final nextPhaseInfo = _calculator.findNextPhase(dateForCalc);
       final moonPhaseInfo = _calculator.getMoonPhaseInfo(dateForCalc);
@@ -526,27 +535,32 @@ class AstroState with ChangeNotifier {
     }
   }
 
+   // 계산된 결과를 -> 메모리에 저장하고
   Future<void> _updateStateFromResult(Map<String, dynamic> result) async {
     _moonPhase = result['moonPhase'] as String? ?? '';
-    _moonZodiac = result['moonZodiac'] as String;
-    _moonInSign = result['moonInSign'] as String;
+    // 수정: null일 경우 빈 문자열로 처리하여 오류 방지
+    _moonZodiac = result['moonZodiac'] as String? ?? '';
+    _moonInSign = result['moonInSign'] as String? ?? '';
     _vocStart = result['vocStart'] as DateTime?;
     _vocEnd = result['vocEnd'] as DateTime?;
     _vocPlanet = result['vocPlanet'] as String?;
     _vocAspect = result['vocAspect'] as String?;
     _nextSignTime = result['nextSignTime'] as DateTime?;
-    _nextMoonPhaseName = result['nextMoonPhaseName'] as String;
+    _nextMoonPhaseName = result['nextMoonPhaseName'] as String? ?? '';
     _nextMoonPhaseTime = result['nextMoonPhaseTime'] as DateTime?;
 
     // Cache VOC times and settings for background service
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('cached_pre_void_hours', _preVoidAlarmHours);
-    await prefs.setString('cached_language_code', _currentLocale);
+    
+    // 수정: _currentLocale이 초기화되지 않았을 경우를 대비해 예외 처리
+    try {
+      await prefs.setString('cached_language_code', _currentLocale);
+    } catch (_) {
+      // 초기화 전이라면 무시하거나 기본값 사용
+    }
 
-    // NOTE: We do NOT cache vocStart/vocEnd here anymore.
-    // This method is called when UI updates (e.g. user changes date),
-    // but we want the background service to ALWAYS track the *actual next* VOC,
-    // which is calculated in _schedulePreVoidAlarm.
+    // ... (나머지 코드는 동일)
     _scheduleNextUpdate();
   }
 }

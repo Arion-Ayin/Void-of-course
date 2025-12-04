@@ -4,6 +4,7 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+//백그라운드 서비스 세팅 대기함수
 Future<void> initializeBackgroundService() async {
   final service = FlutterBackgroundService();
 

@@ -22,7 +22,7 @@ void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요.
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Background Service
+  //백그라운드 서비스 세팅 대기함수
   await initializeBackgroundService();
 
   // Google Mobile Ads SDK와 AdService를 초기화해요.
@@ -31,10 +31,11 @@ void main() async {
     await AdService().initialize();
   }
 
-  // 우리 앱을 실행해요.
+  //앱의 실행
   runApp(
     MultiProvider(
       providers: [
+        //astro_state.dart의 AstroState를 초기화(initialize)하고 Provider로 등록
         ChangeNotifierProvider(create: (context) => AstroState()..initialize()),
         ChangeNotifierProvider(create: (context) => LocaleProvider()),
       ],
@@ -47,6 +48,7 @@ void main() async {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+  // 앱 화면 보여주기
   @override
   Widget build(BuildContext context) {
     // 테마를 관리하고 앱의 기본 설정을 하는 위젯이에요.
