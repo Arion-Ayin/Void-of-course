@@ -82,7 +82,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get whyDidWeMakeThisAppTitle => '왜 이 앱을 만들었나요?';
 
   @override
-  String get whyDidWeMakeThisAppSubtitle => '• 누구나 손쉽게 이 정보들에 접근 가능하면 좋겠다는 마음에';
+  String get whyDidWeMakeThisAppSubtitle => '• 달의 에너지가 닿지 않는 시간을 피하고,\n유저들이 지혜로운 결정을 할 수 있도록\n돕기위해';
 
   @override
   String get copyrightText => '© 2025 Arion Ayin. All rights reserved.';
