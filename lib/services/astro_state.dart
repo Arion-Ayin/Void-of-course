@@ -193,7 +193,17 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> _schedulePreVoidAlarm({bool isToggleOn = false}) async {
-    await _notificationService.cancelAllNotifications();
+    // 기존 로직: await _notificationService.cancelAllNotifications();
+    // 수정: 모든 알림을 취소하면 "보이드 종료" 알림까지 사라지므로,
+    // 현재 진행 중인 카운트다운(888)과 예약된 미래 알림들(1000~)만 골라서 취소합니다.
+
+    // 1. 진행 중인 카운트다운(마이너스 방지) 취소
+    await _notificationService.cancelNotification(888);
+
+    // 2. 미래 예약된 알림들 취소 (넉넉하게 1000~1100번까지)
+    for (int i = 0; i < 100; i++) {
+      await _notificationService.cancelNotification(1000 + i);
+    }
 
     if (!_voidAlarmEnabled) {
       notifyListeners();
@@ -344,6 +354,10 @@ class AstroState with ChangeNotifier {
       }
 
       // 3. VOC End Alarm (No countdown)
+      // This notification should persist (not be cancelled by loop), so we use a unique timestamp-based ID
+      // (Time in seconds fits in int32)
+      int endNotificationId = (vocEnd.millisecondsSinceEpoch / 1000).round();
+
       if (vocEnd.isAfter(now)) {
         String endTitle =
             locale.startsWith('ko') ? '보이드 종료' : 'Void of Course Ended';
@@ -352,7 +366,7 @@ class AstroState with ChangeNotifier {
                 ? '보이드 시간이 종료되었습니다.'
                 : 'The Void of Course period has ended.';
         await _notificationService.scheduleNotification(
-          id: notificationId++,
+          id: endNotificationId, // Unique ID based on time
           title: endTitle,
           body: endBody,
           scheduledTime: vocEnd,
@@ -535,7 +549,7 @@ class AstroState with ChangeNotifier {
     }
   }
 
-   // 계산된 결과를 -> 메모리에 저장하고
+  // 계산된 결과를 -> 메모리에 저장하고
   Future<void> _updateStateFromResult(Map<String, dynamic> result) async {
     _moonPhase = result['moonPhase'] as String? ?? '';
     // 수정: null일 경우 빈 문자열로 처리하여 오류 방지
@@ -552,7 +566,7 @@ class AstroState with ChangeNotifier {
     // Cache VOC times and settings for background service
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('cached_pre_void_hours', _preVoidAlarmHours);
-    
+
     // 수정: _currentLocale이 초기화되지 않았을 경우를 대비해 예외 처리
     try {
       await prefs.setString('cached_language_code', _currentLocale);

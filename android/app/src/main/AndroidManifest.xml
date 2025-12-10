@@ -55,7 +55,6 @@
 
         <service 
             android:name="id.flutter.flutter_background_service.BackgroundService" 
-            android:foregroundServiceType="dataSync"
         />
 
         <receiver android:exported="false" android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
