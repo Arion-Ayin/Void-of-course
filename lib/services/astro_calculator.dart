@@ -583,7 +583,8 @@ class AstroCalculator {
         };
       }
       // 오늘이 아니면 다음 별자리로 넘어가서 다시 찾아봐요.
-      searchDate = signEndTime;
+      // 1분 추가: 정밀도 오차로 인해 이전 별자리 구간에 갇혀 무한 루프(N/A)가 발생하는 것을 방지
+      searchDate = signEndTime.add(const Duration(minutes: 1));
     }
     return {'start': null, 'end': null}; // 5일 내에 못 찾으면 '없어요'라고 알려줘요.
   }
