@@ -13,7 +13,7 @@
     "voidAlarmDisabledMessage": "보이드 알람이 비활성화되었습니다.",
     "mailAppError": "메일 앱을 열 수 없습니다. 기본 메일 앱 설정을 확인해주세요.",
     "contactEmail": "Arion.Ayin@gmail.com",
-    "infoScreenTitle": "정보",
+    "infoScreenTitle": "개발자 노트",
     "whoAreWeTitle": "우리는 누구인가요?",
     "whoAreWeSubtitle": "• 아리온아인의 사명 : |||사자의 눈으로 세상을 헤아립니다.",
     "whoIsItUsefulForTitle": "누구에게 유용한가요?",
@@ -163,5 +163,12 @@
     "disseminatingMoon": "기울어가는 달",
     "lastQuarter": "하현달",
     "balsamicMoon": "그믐달",
-    "moonInSign": "달, {sign}에 위치"
+    "moonInSign": "달, {sign}에 위치",
+    "noPostsFound": "등록된 게시글이 없습니다.",
+    "btnReadMore": "자세히 보기",
+    "btnReview": "리뷰 남기러 가기",
+    "btnContact": "개발자에게 한마디",
+    "btnSupport": "개발자에게 후원하기",
+    "msgAppNotFound": "실행 가능한 앱을 찾을 수 없습니다.",
+    "msgEmailCopied": "메일 앱을 찾을 수 없어 이메일 주소가 복사되었습니다."
 }
