@@ -514,6 +514,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Next Phase: {time}'**
   String nextPhase(String time);
+
+  /// No description provided for @noPostsFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No posts found.'**
+  String get noPostsFound;
+
+  /// No description provided for @btnReadMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Read More'**
+  String get btnReadMore;
+
+  /// No description provided for @btnReview.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave a Review'**
+  String get btnReview;
+
+  /// No description provided for @btnContact.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact Developer'**
+  String get btnContact;
+
+  /// No description provided for @btnSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Buy me a coffee'**
+  String get btnSupport;
+
+  /// No description provided for @msgAppNotFound.
+  ///
+  /// In en, this message translates to:
+  /// **'Cannot find an app to open this.'**
+  String get msgAppNotFound;
+
+  /// No description provided for @msgEmailCopied.
+  ///
+  /// In en, this message translates to:
+  /// **'Email app not found. Address copied to clipboard.'**
+  String get msgEmailCopied;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

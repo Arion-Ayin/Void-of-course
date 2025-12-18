@@ -61,7 +61,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get contactEmail => 'Arion.Ayin@gmail.com';
 
   @override
-  String get infoScreenTitle => '정보';
+  String get infoScreenTitle => '개발자 노트';
 
   @override
   String get headerSubtitle => '보이드 오브 코스 계산기';
@@ -257,4 +257,25 @@ class AppLocalizationsKo extends AppLocalizations {
   String nextPhase(String time) {
     return '다음 상태 : $time';
   }
+
+  @override
+  String get noPostsFound => '등록된 게시글이 없습니다.';
+
+  @override
+  String get btnReadMore => '자세히 보기';
+
+  @override
+  String get btnReview => '리뷰 남기러 가기';
+
+  @override
+  String get btnContact => '개발자에게 한마디';
+
+  @override
+  String get btnSupport => '개발자에게 후원하기';
+
+  @override
+  String get msgAppNotFound => '실행 가능한 앱을 찾을 수 없습니다.';
+
+  @override
+  String get msgEmailCopied => '메일 앱을 찾을 수 없어 이메일 주소가 복사되었습니다.';
 }

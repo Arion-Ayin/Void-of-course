@@ -4,7 +4,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'screens/home_screen.dart';
-import 'screens/info_screen.dart';
+import 'screens/Developer Notes_screen.dart';
 import 'screens/setting_screen.dart';
 import 'services/astro_state.dart';
 import 'themes.dart';
@@ -217,15 +217,18 @@ class _MainAppScreenState extends State<MainAppScreen> {
                   unselectedItemColor:
                       isDarkMode ? Colors.grey[400] : Colors.grey[600],
                   type: BottomNavigationBarType.fixed,
-                  items: const [
-                    BottomNavigationBarItem(icon: Icon(Icons.home), label: '홈'),
+                  items: [
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.settings),
-                      label: '설정',
+                      icon: const Icon(Icons.home),
+                      label: AppLocalizations.of(context)!.home,
                     ),
                     BottomNavigationBarItem(
-                      icon: Icon(Icons.info),
-                      label: '정보',
+                      icon: const Icon(Icons.settings),
+                      label: AppLocalizations.of(context)!.settings,
+                    ),
+                    BottomNavigationBarItem(
+                      icon: const Icon(Icons.description),
+                      label: AppLocalizations.of(context)!.infoScreenTitle,
                     ),
                   ],
                 ),

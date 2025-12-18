@@ -257,4 +257,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String nextPhase(String time) {
     return 'Next Phase: $time';
   }
+
+  @override
+  String get noPostsFound => 'No posts found.';
+
+  @override
+  String get btnReadMore => 'Read More';
+
+  @override
+  String get btnReview => 'Leave a Review';
+
+  @override
+  String get btnContact => 'Contact Developer';
+
+  @override
+  String get btnSupport => 'Buy me a coffee';
+
+  @override
+  String get msgAppNotFound => 'Cannot find an app to open this.';
+
+  @override
+  String get msgEmailCopied => 'Email app not found. Address copied to clipboard.';
 }

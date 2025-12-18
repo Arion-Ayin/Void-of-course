@@ -170,5 +170,12 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "noPostsFound": "No posts found.",
+    "btnReadMore": "Read More",
+    "btnReview": "Leave a Review",
+    "btnContact": "Contact Developer",
+    "btnSupport": "Buy me a coffee",
+    "msgAppNotFound": "Cannot find an app to open this.",
+    "msgEmailCopied": "Email app not found. Address copied to clipboard."
 }
