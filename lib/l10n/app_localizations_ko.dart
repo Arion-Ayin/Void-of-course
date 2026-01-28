@@ -76,13 +76,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get whoIsItUsefulForTitle => '누구에게 유용한가요?';
 
   @override
-  String get whoIsItUsefulForSubtitle => '• 간단한 택일이 필요하신 분들|||• 보이드 오브 코스 계산이 필요한 분들|||• 행동의 지표성이 필요한 분들';
+  String get whoIsItUsefulForSubtitle =>
+      '• 간단한 택일이 필요하신 분들|||• 보이드 오브 코스 계산이 필요한 분들|||• 행동의 지표성이 필요한 분들';
 
   @override
   String get whyDidWeMakeThisAppTitle => '왜 이 앱을 만들었나요?';
 
   @override
-  String get whyDidWeMakeThisAppSubtitle => '• 달의 에너지가 닿지 않는 시간을 피하고,\n유저들이 지혜로운 결정을 할 수 있도록\n돕기 위해';
+  String get whyDidWeMakeThisAppSubtitle =>
+      '• 달의 에너지가 닿지 않는 시간을 피하고,\n유저들이 지혜로운 결정을 할 수 있도록\n돕기 위해';
 
   @override
   String get copyrightText => '© 2025 Arion Ayin. All rights reserved.';
@@ -122,11 +124,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String vocStartsInMinutes(int minutesRemaining) {
-    final intl.NumberFormat minutesRemainingNumberFormat = intl.NumberFormat.compact(
-      locale: localeName,
-      
+    final intl.NumberFormat minutesRemainingNumberFormat = intl
+        .NumberFormat.compact(locale: localeName);
+    final String minutesRemainingString = minutesRemainingNumberFormat.format(
+      minutesRemaining,
     );
-    final String minutesRemainingString = minutesRemainingNumberFormat.format(minutesRemaining);
 
     return '$minutesRemainingString분 후에 보이드가 시작됩니다.';
   }
@@ -135,7 +137,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String vocStartsInHours(int count) {
     final intl.NumberFormat countNumberFormat = intl.NumberFormat.compact(
       locale: localeName,
-      
     );
     final String countString = countNumberFormat.format(count);
 
@@ -175,10 +176,12 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get voidAlarmExactAlarmDeniedMessage => '앱 설정에서 \'알람 및 리마인더\' 권한을 허용해주세요.';
+  String get voidAlarmExactAlarmDeniedMessage =>
+      '앱 설정에서 \'알람 및 리마인더\' 권한을 허용해주세요.';
 
   @override
-  String get noUpcomingVocFound => '선택된 날짜에 예정된 보이드 기간이 없거나 이미 지났습니다. 알람이 예약되지 않았습니다.';
+  String get noUpcomingVocFound =>
+      '선택된 날짜에 예정된 보이드 기간이 없거나 이미 지났습니다. 알람이 예약되지 않았습니다.';
 
   @override
   String get errorSchedulingAlarm => '알람 예약 중 오류 발생';
