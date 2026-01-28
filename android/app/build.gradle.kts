@@ -10,7 +10,9 @@ plugins {
 // ✅ key.properties 경로 올바르게 수정
 val keystorePropertiesFile = rootProject.file("key.properties")
 val keystoreProperties = Properties()
-keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
+}
 
 android {
     namespace = "com.example.lioluna"
@@ -29,10 +31,12 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = file(keystoreProperties.getProperty("storeFile"))
-            storePassword = keystoreProperties.getProperty("storePassword")
-            keyAlias = keystoreProperties.getProperty("keyAlias")
-            keyPassword = keystoreProperties.getProperty("keyPassword")
+            if (keystorePropertiesFile.exists()) {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
         }
     }
 

@@ -16,7 +16,7 @@ class AdService {
 
   InterstitialAd? _interstitialAd;
   int _calculateClickCount = 0;
-  final int _adFrequency = 5; // 광고 표시 빈도 (7번 클릭마다)
+  final int _adFrequency = 7; // 광고 표시 빈도 (7번 클릭마다)
 
   static const _clickCountKey = 'calculateClickCount';
   static const _lastSplashAdShowTimeKey = 'lastSplashAdShowTime';

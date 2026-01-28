@@ -32,12 +32,15 @@ class AstroState with ChangeNotifier {
   String? _vocAspect;
 
   DateTime? _nextSignTime;
+  DateTime? _currentSignStartTime;
   String? _lastError;
   bool _isInitialized = false;
   bool _isLoading = false;
   bool _isDarkMode = false;
   String _nextMoonPhaseName = 'calculating';
   DateTime? _nextMoonPhaseTime;
+  DateTime? _moonPhaseStartTime;
+  DateTime? _moonPhaseEndTime;
   late String _currentLocale;
 
   DateTime get selectedDate => _selectedDate;
@@ -49,6 +52,7 @@ class AstroState with ChangeNotifier {
   String? get vocPlanet => _vocPlanet;
   String? get vocAspect => _vocAspect;
   DateTime? get nextSignTime => _nextSignTime;
+  DateTime? get currentSignStartTime => _currentSignStartTime;
   String? get lastError => _lastError;
   bool get isInitialized => _isInitialized;
   bool get isLoading => _isLoading;
@@ -57,6 +61,8 @@ class AstroState with ChangeNotifier {
   int get preVoidAlarmHours => _preVoidAlarmHours;
   String get nextMoonPhaseName => _nextMoonPhaseName;
   DateTime? get nextMoonPhaseTime => _nextMoonPhaseTime;
+  DateTime? get moonPhaseStartTime => _moonPhaseStartTime;
+  DateTime? get moonPhaseEndTime => _moonPhaseEndTime;
   bool get isFollowingTime => _isFollowingTime;
 
   void toggleTheme() {
@@ -193,14 +199,7 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> _schedulePreVoidAlarm({bool isToggleOn = false}) async {
-    // 기존 로직: await _notificationService.cancelAllNotifications();
-    // 수정: 모든 알림을 취소하면 "보이드 종료" 알림까지 사라지므로,
-    // 현재 진행 중인 카운트다운(888)과 예약된 미래 알림들(1000~)만 골라서 취소합니다.
-
-    // 1. 진행 중인 카운트다운(마이너스 방지) 취소
-    await _notificationService.cancelNotification(888);
-
-    // 2. 미래 예약된 알림들 취소 (넉넉하게 1000~1100번까지)
+    // 기존 예약된 알림들 취소 (1000~1100번)
     for (int i = 0; i < 100; i++) {
       await _notificationService.cancelNotification(1000 + i);
     }
@@ -210,30 +209,10 @@ class AstroState with ChangeNotifier {
       return;
     }
 
-    bool hasExactAlarmPermission =
-        await _notificationService.checkExactAlarmPermission();
-    if (!hasExactAlarmPermission) {
-      await _notificationService.requestExactAlarmPermission();
-      hasExactAlarmPermission =
-          await _notificationService.checkExactAlarmPermission();
-      if (!hasExactAlarmPermission) {
-        if (kDebugMode)
-          print(
-            "Exact alarm permission denied, cannot schedule notifications.",
-          );
-        return;
-      }
-    }
-
     final now = DateTime.now();
     DateTime searchDate = now;
-    int notificationId =
-        1000; // Start IDs from 1000 to avoid conflict with ongoing (0, 2)
-    const int ongoingNotificationId =
-        888; // Fixed ID for the active persistent notification
 
-    // Schedule next 10 events
-    bool isFirstVocFound = false;
+    // 다음 유효한 VOC 찾기 및 캐시
     final prefs = await SharedPreferences.getInstance();
 
     for (int i = 0; i < 10; i++) {
@@ -242,145 +221,38 @@ class AstroState with ChangeNotifier {
       final vocEnd = vocTimes['end'];
 
       if (vocStart == null || vocEnd == null) {
-        // If we can't find a VOC, try searching from next day to avoid infinite loop if logic fails
         searchDate = searchDate.add(const Duration(days: 1));
         continue;
       }
 
-      // If this VOC is already passed, move to next
+      // 이미 지난 VOC는 스킵
       if (vocEnd.isBefore(now)) {
         searchDate = vocEnd.add(const Duration(minutes: 1));
         continue;
       }
 
-      // Found the first valid upcoming VOC! Cache it for the background service.
-      if (!isFirstVocFound) {
-        isFirstVocFound = true;
-        await prefs.setString('cached_voc_start', vocStart.toIso8601String());
-        await prefs.setString('cached_voc_end', vocEnd.toIso8601String());
+      // 첫 번째 유효한 VOC를 백그라운드 서비스용으로 캐시
+      await prefs.setString('cached_voc_start', vocStart.toIso8601String());
+      await prefs.setString('cached_voc_end', vocEnd.toIso8601String());
+
+      if (kDebugMode) {
+        print("Cached VOC: start=$vocStart, end=$vocEnd");
       }
 
-      final locale = _currentLocale;
-      final preAlarmTime = vocStart.subtract(
-        Duration(hours: _preVoidAlarmHours),
-      );
-
-      // 1. Pre-VOC Alarm (Counts down to Start)
-      if (preAlarmTime.isAfter(now)) {
-        String preTitle =
-            locale.startsWith('ko') ? '보이드 시작 알림' : 'Void of Course Upcoming';
-        String preBody =
-            locale.startsWith('ko')
-                ? '보이드 시작까지 남은 시간:'
-                : 'Time until Void of Course begins:';
-        await _notificationService.scheduleNotification(
-          id: notificationId++, // Future alarm -> Unique ID
-          title: preTitle,
-          body: preBody,
-          scheduledTime: preAlarmTime,
-          canScheduleExact: hasExactAlarmPermission,
-          usesChronometer: true,
-          chronometerCountDown: true,
-          when: vocStart.millisecondsSinceEpoch,
-          isOngoing: true,
-          onlyAlertOnce: true,
-          isSilent: true,
-          timeoutAfter: vocStart.millisecondsSinceEpoch,
-        );
-      } else if (vocStart.isAfter(now)) {
-        // 현재 보이드 시작 전 6시간 이내인 경우 - 즉시 알림 스케줄링 (크로노미터 사용을 위해)
-        String preTitle =
-            locale.startsWith('ko') ? '보이드 시작 알림' : 'Void of Course Upcoming';
-        String preBody =
-            locale.startsWith('ko')
-                ? '보이드 시작까지 남은 시간:'
-                : 'Time until Void of Course begins:';
-        await _notificationService.showInstantNotification(
-          id: ongoingNotificationId, // Immediate alarm -> Fixed ID (888)
-          title: preTitle,
-          body: preBody,
-          usesChronometer: true,
-          chronometerCountDown: true,
-          when: vocStart.millisecondsSinceEpoch,
-          isOngoing: true,
-          onlyAlertOnce: true,
-          isSilent: true,
-          timeoutAfter: vocStart.millisecondsSinceEpoch,
-        );
-      }
-
-      // 2. VOC Start Alarm (Counts down to End)
-      if (vocStart.isAfter(now)) {
-        String startTitle =
-            locale.startsWith('ko') ? '보이드 시작' : 'Void of Course Started';
-        String startBody =
-            locale.startsWith('ko')
-                ? '보이드 종료까지 남은 시간:'
-                : 'Time until Void of Course ends:';
-        await _notificationService.scheduleNotification(
-          id: notificationId++, // Future alarm -> Unique ID
-          title: startTitle,
-          body: startBody,
-          scheduledTime: vocStart,
-          canScheduleExact: hasExactAlarmPermission,
-          usesChronometer: true,
-          chronometerCountDown: true,
-          when: vocEnd.millisecondsSinceEpoch,
-          isOngoing: true,
-          onlyAlertOnce: true,
-          isSilent: true,
-          timeoutAfter: vocEnd.millisecondsSinceEpoch,
-        );
-      } else if (vocEnd.isAfter(now)) {
-        // 현재 보이드 중인 경우 - 즉시 알림 스케줄링
-        String startTitle =
-            locale.startsWith('ko') ? '보이드 시작' : 'Void of Course Started';
-        String startBody =
-            locale.startsWith('ko')
-                ? '보이드 종료까지 남은 시간:'
-                : 'Time until Void of Course ends:';
-        await _notificationService.showInstantNotification(
-          id: ongoingNotificationId, // Immediate alarm -> Fixed ID (888)
-          title: startTitle,
-          body: startBody,
-          usesChronometer: true,
-          chronometerCountDown: true,
-          when: vocEnd.millisecondsSinceEpoch,
-          isOngoing: true,
-          onlyAlertOnce: true,
-          isSilent: true,
-          timeoutAfter: vocEnd.millisecondsSinceEpoch,
-        );
-      }
-
-      // 3. VOC End Alarm (No countdown)
-      // This notification should persist (not be cancelled by loop), so we use a unique timestamp-based ID
-      // (Time in seconds fits in int32)
-      int endNotificationId = (vocEnd.millisecondsSinceEpoch / 1000).round();
-
-      if (vocEnd.isAfter(now)) {
-        String endTitle =
-            locale.startsWith('ko') ? '보이드 종료' : 'Void of Course Ended';
-        String endBody =
-            locale.startsWith('ko')
-                ? '보이드 시간이 종료되었습니다.'
-                : 'The Void of Course period has ended.';
-        await _notificationService.scheduleNotification(
-          id: endNotificationId, // Unique ID based on time
-          title: endTitle,
-          body: endBody,
-          scheduledTime: vocEnd,
-          canScheduleExact: hasExactAlarmPermission,
-          isSilent: true,
-        );
-      }
-
-      // Prepare for next iteration
-      searchDate = vocEnd.add(const Duration(minutes: 1));
+      break; // 첫 번째 유효한 VOC만 캐시하면 됨
     }
 
-    if (kDebugMode) {
-      print("Scheduled notifications for next 10 VOC periods.");
+    // 백그라운드 서비스가 모든 알림(1번: Pre-Void, 2번: VOC Active, 3번: VOC Ended)을 처리함
+    // 여기서는 VOC 시간만 캐시하고, 알림은 백그라운드 서비스에서 1초마다 업데이트
+
+    // 백그라운드 서비스가 실행 중이 아니면 시작
+    final service = FlutterBackgroundService();
+    final isRunning = await service.isRunning();
+    if (!isRunning && _voidAlarmEnabled) {
+      await service.startService();
+      if (kDebugMode) {
+        print("Background service restarted for next VOC monitoring");
+      }
     }
 
     notifyListeners();
@@ -491,7 +363,6 @@ class AstroState with ChangeNotifier {
 
     //카큘레이터에서 가져와서 계산 시작
     try {
-      final nextPhaseInfo = _calculator.findNextPhase(dateForCalc);
       final moonPhaseInfo = _calculator.getMoonPhaseInfo(dateForCalc);
       final moonPhase = moonPhaseInfo['phaseName'] ?? '';
       final moonZodiac = _calculator.getMoonZodiacEmoji(dateForCalc);
@@ -513,6 +384,11 @@ class AstroState with ChangeNotifier {
       final moonSignTimes = _calculator.getMoonSignTimes(dateForCalc);
 
       final moonSignName = _calculator.getMoonSignName(dateForCalc);
+      
+      final moonPhaseTimes = _calculator.getMoonPhaseTimes(dateForCalc);
+      
+      // Extract next phase info from moonPhaseTimes to avoid duplicate calculation
+      final nextMoonPhaseName = _calculator.findNextPhase(dateForCalc)['name'] ?? 'N/A';
 
       if (kDebugMode) {
         print('[DEBUG] moonPhaseInfo: $moonPhaseInfo');
@@ -520,7 +396,7 @@ class AstroState with ChangeNotifier {
         print('[DEBUG] moonInSign (Name): $moonSignName');
         print('[DEBUG] vocTimes: $vocTimes');
         print('[DEBUG] moonSignTimes: $moonSignTimes');
-        print('[DEBUG] nextPhaseInfo: $nextPhaseInfo');
+        print('[DEBUG] moonPhaseTimes: $moonPhaseTimes');
       }
 
       final Map<String, dynamic> result = {
@@ -532,8 +408,11 @@ class AstroState with ChangeNotifier {
         'vocPlanet': vocTimes['planet'],
         'vocAspect': vocTimes['aspect'],
         'nextSignTime': moonSignTimes['end'],
-        'nextMoonPhaseName': nextPhaseInfo['name'] ?? 'N/A',
-        'nextMoonPhaseTime': nextPhaseInfo['time'],
+        'currentSignStartTime': moonSignTimes['start'],
+        'nextMoonPhaseName': nextMoonPhaseName,
+        'nextMoonPhaseTime': moonPhaseTimes['end'],
+        'moonPhaseStartTime': moonPhaseTimes['start'],
+        'moonPhaseEndTime': moonPhaseTimes['end'],
       };
 
       await _updateStateFromResult(result);
@@ -560,8 +439,11 @@ class AstroState with ChangeNotifier {
     _vocPlanet = result['vocPlanet'] as String?;
     _vocAspect = result['vocAspect'] as String?;
     _nextSignTime = result['nextSignTime'] as DateTime?;
+    _currentSignStartTime = result['currentSignStartTime'] as DateTime?;
     _nextMoonPhaseName = result['nextMoonPhaseName'] as String? ?? '';
     _nextMoonPhaseTime = result['nextMoonPhaseTime'] as DateTime?;
+    _moonPhaseStartTime = result['moonPhaseStartTime'] as DateTime?;
+    _moonPhaseEndTime = result['moonPhaseEndTime'] as DateTime?;
 
     // Cache VOC times and settings for background service
     final prefs = await SharedPreferences.getInstance();

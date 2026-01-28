@@ -309,7 +309,7 @@ class AstroCalculator {
 
     // 달이 현재 별자리에 들어온 시간을 찾아봐요.
     final utcStartTime = _findTimeOfLongitude(
-      date.subtract(const Duration(days: 3)), // 3일 전부터 오늘까지 찾아봐요.
+      date.subtract(const Duration(days: 4)), // 4일 전부터 오늘까지 찾아봐요.
       date,
       currentSignLon,
     );
@@ -328,6 +328,35 @@ class AstroCalculator {
     }
 
     return {'start': signStartTime, 'end': signEndTime}; // 들어오고 나가는 시간을 알려줘요.
+  }
+
+  Map<String, DateTime?> getMoonPhaseTimes(DateTime date) {
+    // Strategy: Reuse existing findNextPhase() for endTime (which does binary search)
+    // For startTime: search backwards to find phase change, then get time when it started
+    
+    final currentPhaseInfo = getMoonPhaseInfo(date);
+    final currentPhaseName = currentPhaseInfo['phaseName'];
+    
+    // End time: use existing findNextPhase() which already optimizes
+    final nextPhaseInfo = findNextPhase(date);
+    final endTime = nextPhaseInfo['time'] as DateTime?;
+    
+    // Start time: search backwards in 6-hour intervals to find phase change
+    DateTime? startTime;
+    var backSearchDate = date.subtract(const Duration(days: 1));
+    
+    for (int i = 0; i < 32; i++) {
+      final phaseAtDate = getMoonPhaseInfo(backSearchDate)['phaseName'];
+      if (phaseAtDate != currentPhaseName) {
+        // Phase changed - current phase started when this old phase ended
+        final prevPhaseInfo = findNextPhase(backSearchDate);
+        startTime = prevPhaseInfo['time'] as DateTime?;
+        break;
+      }
+      backSearchDate = backSearchDate.subtract(const Duration(hours: 6));
+    }
+    
+    return {'start': startTime, 'end': endTime};
   }
 
   DateTime? _findSpecificPhaseTime(

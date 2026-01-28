@@ -97,13 +97,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return Center(child: Text('Error: ${provider.lastError}'));
     }
 
-    // 다음 별자리로 바뀌는 시간에 대한 글자를 만들어요.
-    final nextSignTimeText =
-        provider.nextSignTime != null
-            // 만약 다음 별자리로 바뀌는 시간이 있다면, 그 시간을 예쁘게 만들어서 보여줘요.
-            ? 'Next Sign : ${DateFormat('MM월 dd일 HH:mm').format(provider.nextSignTime!.toLocal())}'
-            : 'Next Sign : N/A';
-
     // 화면의 전체적인 구조를 짜요.
     return Scaffold(
       // 화면 상단의 앱 바(제목 바)예요.
@@ -174,7 +167,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 // 2. 달의 별자리 정보를 보여주는 카드를 넣어요.
                 MoonSignCard(
                   provider: provider,
-                  nextSignTimeText: nextSignTimeText,
                 ),
                 const SizedBox(height: 5), // 카드와 카드 사이에 작은 공간을 만들어요.
                 // 3. VOC(Void of Course) 정보를 보여주는 카드를 넣어요.
