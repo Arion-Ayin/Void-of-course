@@ -6,14 +6,11 @@ import '../services/astro_state.dart';
 class MoonSignCard extends StatelessWidget {
   // 이 카드는 별자리 정보가 필요해요.
   final AstroState provider;
-  // 다음 별자리로 바뀌는 시간 정보도 필요해요.
-  final String nextSignTimeText;
 
   // 카드를 만들 때 이 정보들을 꼭 받아야 해요.
   const MoonSignCard({
     super.key,
     required this.provider,
-    required this.nextSignTimeText,
   });
 
   // 별자리 이름에 맞는 이모티콘(그림 아이콘)을 찾아주는 함수예요.
@@ -95,7 +92,7 @@ class MoonSignCard extends StatelessWidget {
           // ⭐️ 이모지(아이콘)를 표시하는 부분
           SizedBox(
             width: 90, // 이모지 컨테이너의 너비를 충분히 확보
-            height: 100, // 이모지 컨테이너의 높이를 충분히 확보
+            height: 90, // 이모지 컨테이너의 높이를 충분히 확보
             child: Center(
               child: Text(
                 getZodiacEmoji(provider.moonInSign), // 별자리 이름으로 이모티콘을 찾아서 보여줘요.
@@ -128,7 +125,18 @@ class MoonSignCard extends StatelessWidget {
                 ),
                 // 다음 별자리로 바뀌는 시간을 보여줘요.
                 Text(
-                  'Next Sign : $formattedNextSignTime', // 포맷팅된 시간을 보여줘요.
+                  'Start : ${provider.currentSignStartTime != null ? DateFormat('MM/dd HH:mm').format(provider.currentSignStartTime!.toLocal()) : 'N/A'}',
+                  style: TextStyle(
+                    color:
+                        Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
+                    fontSize: 17, // 글자 크기는 17
+                    fontWeight: FontWeight.w900, // 글자를 매우 두껍게 만들어요.
+                  ),
+                ),
+                Text(
+                  'End   : $formattedNextSignTime', // 포맷팅된 시간을 보여줘요.
                   style: TextStyle(
                     color:
                         Theme.of(

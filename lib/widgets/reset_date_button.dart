@@ -46,7 +46,7 @@ class _ResetDateButtonState extends State<ResetDateButton> {
           onPressed: () {
             // 부모 위젯에서 전달받은 onPressed 함수를 실행해요.
             widget.onPressed();
-            // 광고를 표시해야 할지 확인하고, 필요하면 광고를 보여줘요.
+            // 새로고침 버튼 7번 누르면 광고를 표시해요.
             _adService.showAdIfNeeded(() {});
           },
           // 버튼의 스타일(모양, 색깔 등)을 정해요. styleFrom은 버튼의 모양을 꾸미는 도구예요.
@@ -62,7 +62,7 @@ class _ResetDateButtonState extends State<ResetDateButton> {
           // 버튼 안에 들어갈 내용물이에요. child는 버튼 안에 들어갈 내용이에요.
           child: const Icon(
             Icons.refresh,
-            size: 35,
+            size: 40,
           ), // 새로고침 모양 아이콘을 넣고, 크기는 35로 해요.
         ),
       ),

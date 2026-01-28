@@ -10,7 +10,8 @@ class MoonPhaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nextPhaseTime = provider.nextMoonPhaseTime?.toLocal();
+    final phaseStartTime = provider.moonPhaseStartTime?.toLocal();
+    final phaseEndTime = provider.moonPhaseEndTime?.toLocal();
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -69,10 +70,12 @@ class MoonPhaseCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Next Phase : ${nextPhaseTime != null ? DateFormat('MM/dd HH:mm').format(nextPhaseTime) : 'N/A'}',
+                  'Start : ${phaseStartTime != null ? DateFormat('MM/dd HH:mm').format(phaseStartTime) : 'N/A'}\n'
+                  'End  : ${phaseEndTime != null ? DateFormat('MM/dd HH:mm').format(phaseEndTime) : 'N/A'}',
                   style: TextStyle(
                     color: Theme.of(context).textTheme.bodyMedium?.color,
                     fontSize: 17,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
