@@ -36,7 +36,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get voidAlarmTitle => 'Void Alarm';
 
   @override
-  String get voidAlarmEnabledMessage => 'Void alarm has been activated.\nThe alarm will sound 6 hours before.';
+  String get voidAlarmEnabledMessage =>
+      'Void alarm has been activated.\nThe alarm will sound 6 hours before.';
 
   @override
   String get voidAlarmDisabledMessage => 'Void alarm has been deactivated.';
@@ -55,7 +56,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get mailAppError => 'Cannot open mail app. Please check your default mail app settings.';
+  String get mailAppError =>
+      'Cannot open mail app. Please check your default mail app settings.';
 
   @override
   String get contactEmail => 'Arion.Ayin@gmail.com';
@@ -70,19 +72,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get whoAreWeTitle => 'Who are we?';
 
   @override
-  String get whoAreWeSubtitle => '• Arion Ayin\'s Mission : Fathoming the world with the eyes of a lion';
+  String get whoAreWeSubtitle =>
+      '• Arion Ayin\'s Mission : Fathoming the world with the eyes of a lion';
 
   @override
   String get whoIsItUsefulForTitle => 'Who is it useful for?';
 
   @override
-  String get whoIsItUsefulForSubtitle => '• Those who need simple date selection\n• Those who need Void of Course calculations\n• Those who need an indicator for action';
+  String get whoIsItUsefulForSubtitle =>
+      '• Those who need simple date selection\n• Those who need Void of Course calculations\n• Those who need an indicator for action';
 
   @override
   String get whyDidWeMakeThisAppTitle => 'Why did we make this?';
 
   @override
-  String get whyDidWeMakeThisAppSubtitle => '• With the hope that anyone can easily access this information.';
+  String get whyDidWeMakeThisAppSubtitle =>
+      '• With the hope that anyone can easily access this information.';
 
   @override
   String get copyrightText => '© 2025 Arion Ayin. All rights reserved.';
@@ -122,11 +127,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String vocStartsInMinutes(int minutesRemaining) {
-    final intl.NumberFormat minutesRemainingNumberFormat = intl.NumberFormat.compact(
-      locale: localeName,
-      
+    final intl.NumberFormat minutesRemainingNumberFormat = intl
+        .NumberFormat.compact(locale: localeName);
+    final String minutesRemainingString = minutesRemainingNumberFormat.format(
+      minutesRemaining,
     );
-    final String minutesRemainingString = minutesRemainingNumberFormat.format(minutesRemaining);
 
     return '$minutesRemainingString minutes until Void of Course begins.';
   }
@@ -135,7 +140,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String vocStartsInHours(int count) {
     final intl.NumberFormat countNumberFormat = intl.NumberFormat.compact(
       locale: localeName,
-      
     );
     final String countString = countNumberFormat.format(count);
 
@@ -175,10 +179,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get voidAlarmExactAlarmDeniedMessage => 'Please allow the *Alarms & Reminders* permission in the app settings.';
+  String get voidAlarmExactAlarmDeniedMessage =>
+      'Please allow the *Alarms & Reminders* permission in the app settings.';
 
   @override
-  String get noUpcomingVocFound => 'No upcoming Void of Course period found or it has passed. No alarm scheduled.';
+  String get noUpcomingVocFound =>
+      'No upcoming Void of Course period found or it has passed. No alarm scheduled.';
 
   @override
   String get errorSchedulingAlarm => 'Error scheduling alarm';
@@ -277,5 +283,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get msgAppNotFound => 'Cannot find an app to open this.';
 
   @override
-  String get msgEmailCopied => 'Email app not found. Address copied to clipboard.';
+  String get msgEmailCopied =>
+      'Email app not found. Address copied to clipboard.';
 }
