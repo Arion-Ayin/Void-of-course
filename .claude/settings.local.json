@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gradlew.bat:*)",
+      "Bash(./gradlew:*)",
+      "Bash(java:*)",
+      "Bash(where:*)",
+      "Bash(dir:*)",
+      "Bash(Select-String -Pattern \"25.0.1|JavaVersion|kotlin\" -Context 2,2)",
+      "Bash(winget install:*)"
+    ]
+  }
+}

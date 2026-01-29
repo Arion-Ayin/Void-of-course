@@ -22,6 +22,16 @@ void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요.
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Edge-to-Edge 모드 활성화 (Android 15+ 권장)
+  // 시스템 바를 투명하게 만들고 전체 화면을 사용합니다.
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.edgeToEdge,
+  );
+
+  // 참고: SystemChrome.setSystemUIOverlayStyle()은 Android 15에서 deprecated된 API를 사용합니다.
+  // 대신 각 화면에서 AnnotatedRegion<SystemUiOverlayStyle>을 사용하여 개별적으로 설정합니다.
+  // 이 방식이 더 유연하고 Android 15의 권장사항에 부합합니다.
+
   //백그라운드 서비스 세팅 대기함수
   await initializeBackgroundService();
 
@@ -166,7 +176,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
         return WillPopScope(
           onWillPop: _onWillPop,
-          // ▼▼▼ [수정됨] 상태바 아이콘 색상 제어 코드 추가 ▼▼▼
+          // ▼▼▼ [수정됨] Edge-to-Edge를 위한 시스템 UI 오버레이 설정 ▼▼▼
           child: AnnotatedRegion<SystemUiOverlayStyle>(
             value: SystemUiOverlayStyle(
               // 상태바 배경색을 투명하게 해서 앱 배경색이 보이게 함
@@ -177,6 +187,12 @@ class _MainAppScreenState extends State<MainAppScreen> {
               // iOS를 위한 설정
               statusBarBrightness:
                   isDarkMode ? Brightness.dark : Brightness.light,
+              // Android 15+ Edge-to-Edge: 내비게이션 바도 투명하게
+              systemNavigationBarColor: Colors.transparent,
+              systemNavigationBarDividerColor: Colors.transparent,
+              // 내비게이션 바 아이콘도 테마에 맞게 설정
+              systemNavigationBarIconBrightness:
+                  isDarkMode ? Brightness.light : Brightness.dark,
             ),
             child: Scaffold(
               // SafeArea는 유지 (화면 가림 방지)

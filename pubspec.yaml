@@ -14,32 +14,32 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   ffi: ^2.1.0
-  sweph: ^2.10.3
+  sweph: ^2.10.3  # 호환성 유지
   animated_theme_switcher: ^2.0.10
   provider: ^6.1.2
-  google_fonts: ^6.1.0
+  google_fonts: ^6.2.1  # 업데이트: 안정 버전
   http: ^1.2.2
   intl: ^0.20.2
-  shared_preferences: ^2.0.0
+  shared_preferences: ^2.3.0  # Android 15 지원
   table_calendar: ^3.1.0
   cupertino_icons: ^1.0.8
   another_flushbar: ^1.12.32
-  flutter_local_notifications: ^19.5.0
-  url_launcher: ^6.0.0 
+  flutter_local_notifications: ^19.5.0  # 호환성 유지
+  url_launcher: ^6.3.1  # Android 15 지원
   android_intent_plus: ^6.0.0
-  timezone: ^0.10.1
-  google_mobile_ads: ^5.3.1
+  timezone: ^0.10.1  # 호환성 유지
+  google_mobile_ads: ^7.0.0  # 업데이트: Android 15 지원
   in_app_review: ^2.0.11
   in_app_update: ^4.2.0
   flutter_background_service: ^5.1.0
 
 dependency_overrides:
-  package_info_plus: ^8.0.0 
+  package_info_plus: ^9.0.0  # 업데이트: 최신 버전 
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0  # 업데이트: 최신 버전
   rename: ^3.1.0
 
 flutter:
