@@ -9,7 +9,11 @@
       "Bash(Select-String -Pattern \"25.0.1|JavaVersion|kotlin\" -Context 2,2)",
       "Bash(winget install:*)",
       "Bash(test:*)",
-      "Bash(keytool -list -v -keystore:*)"
+      "Bash(keytool -list -v -keystore:*)",
+      "Bash(keytool -printcert:*)",
+      "Bash(unzip:*)",
+      "Bash(findstr:*)",
+      "Bash(Select-Object -First 1)"
     ]
   }
 }
