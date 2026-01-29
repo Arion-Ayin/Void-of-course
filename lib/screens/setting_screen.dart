@@ -136,11 +136,13 @@ class SettingScreen extends StatelessWidget {
       ),
       // 화면의 나머지 부분을 채워요.
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0), // 화면 가장자리로부터 16만큼 떨어뜨려요.
-          child: Column(
-            // 카드들을 위에서 아래로 차례대로 쌓을 거예요.
-            children: [
+        child: SingleChildScrollView(
+          // 화면을 스크롤 가능하게 만들어요.
+          child: Padding(
+            padding: const EdgeInsets.all(16.0), // 화면 가장자리로부터 16만큼 떨어뜨려요.
+            child: Column(
+              // 카드들을 위에서 아래로 차례대로 쌓을 거예요.
+              children: [
               // 첫 번째 설정 카드: 보이드 알람 켜기/끄기
               SettingCard(
                 icon: Icons.notifications_active_outlined, // 알림 아이콘을 보여줘요.
@@ -317,7 +319,8 @@ class SettingScreen extends StatelessWidget {
                   },
                 ),
               ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
