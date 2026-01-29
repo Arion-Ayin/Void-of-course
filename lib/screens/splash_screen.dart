@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:void_of_course/services/ad_service.dart';
 import 'package:void_of_course/main.dart';
@@ -51,15 +52,29 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Consumer<AstroState>(
-        builder: (context, astroState, child) {
-          if (astroState.isInitialized) {
-            _triggerAdShow();
-          }
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      // Android 15+ Edge-to-Edge를 위한 시스템 UI 설정
+      value: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light, // 스플래시는 보통 어두운 배경
+        statusBarBrightness: Brightness.dark,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+      child: Scaffold(
+        // Edge-to-Edge를 위해 배경색을 body 전체에 적용
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        body: Consumer<AstroState>(
+          builder: (context, astroState, child) {
+            if (astroState.isInitialized) {
+              _triggerAdShow();
+            }
 
-          return SafeArea(
-            child: Container(
+            // 스플래시 화면은 전체 화면을 사용하므로 SafeArea 제거
+            return Container(
+              width: double.infinity,
+              height: double.infinity,
               color: Theme.of(context).colorScheme.primary,
               child: const Center(
                 child: Column(
@@ -74,9 +89,9 @@ class _SplashScreenState extends State<SplashScreen> {
                   ],
                 ),
               ),
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }

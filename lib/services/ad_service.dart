@@ -16,7 +16,7 @@ class AdService {
 
   InterstitialAd? _interstitialAd;
   int _calculateClickCount = 0;
-  final int _adFrequency = 7; // 광고 표시 빈도 (7번 클릭마다)
+  final int _adFrequency = 10; // 광고 표시 빈도 (10번 클릭마다)
 
   static const _clickCountKey = 'calculateClickCount';
   static const _lastSplashAdShowTimeKey = 'lastSplashAdShowTime';
@@ -96,11 +96,18 @@ class AdService {
     // 30분 (밀리초 단위)
     const thirtyMinutesInMillis = 30 * 60 * 1000;
 
-    // 30분 이내에 광고를 본 경우, 바로 onAdFailed를 호출하여 다음 화면으로 넘어갑니다.
+    // 새로고침 10번 이상 누른 경우 30분 규칙을 무시하고 광고 표시
+    final shouldShowAdByClickCount = _calculateClickCount >= _adFrequency;
+
+    // 30분 이내에 광고를 본 경우, 새로고침 횟수를 확인합니다.
     if (currentTimeMillis - lastAdShowTimeMillis < thirtyMinutesInMillis) {
-      print("스플래시 광고: 마지막 광고 표시 후 30분이 지나지 않았습니다.");
-      onAdFailed();
-      return;
+      if (!shouldShowAdByClickCount) {
+        print("스플래시 광고: 마지막 광고 표시 후 30분이 지나지 않았습니다.");
+        onAdFailed();
+        return;
+      } else {
+        print("스플래시 광고: 새로고침 $_calculateClickCount회로 30분 규칙을 무시하고 광고를 표시합니다.");
+      }
     }
 
     // 미리 로드된 광고가 있는지 확인합니다.
@@ -108,6 +115,13 @@ class AdService {
       print("미리 로드된 스플래시 광고를 표시합니다.");
       // 광고 표시 시간을 지금으로 기록합니다.
       await prefs.setInt(_lastSplashAdShowTimeKey, currentTimeMillis);
+
+      // 새로고침 횟수로 인해 광고를 표시한 경우 카운트를 리셋합니다.
+      if (shouldShowAdByClickCount) {
+        _calculateClickCount = 0;
+        await _saveCalculateClickCount();
+        print("스플래시 광고 표시로 인해 클릭 카운트를 리셋했습니다.");
+      }
 
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {

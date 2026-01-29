@@ -9,8 +9,10 @@ import io.flutter.plugins.googlemobileads.GoogleMobileAdsPlugin
 class MainActivity: FlutterActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // '더 넓은 화면(edge-to-edge)'을 활성화합니다.
+        // Edge-to-Edge 모드 활성화 (Android 15+에서 권장)
+        // Flutter에서 시스템 UI 인셋을 직접 처리하도록 설정
         WindowCompat.setDecorFitsSystemWindows(window, false)
+
         super.onCreate(savedInstanceState)
     }
 
