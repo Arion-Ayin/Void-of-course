@@ -1,6 +1,9 @@
 import 'dart:io';
+import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:void_of_course/services/ad_ids.dart';
 
 /// 전면 광고 및 광고 정책을 관리하는 서비스 클래스입니다.
 class AdService {
@@ -37,8 +40,8 @@ class AdService {
   /// 전면 광고를 로드합니다.
   void _loadInterstitialAd() {
     InterstitialAd.load(
-      // 이전에 설정된 일반 전면 광고 로드
-      adUnitId: 'ca-app-pub-7332476431820224/2876868409', // 실제 광고 ID
+      // 이전에 설정된 일반 전면 광고 로드 (centralized AdIds)
+      adUnitId: AdIds.interstitial,
       request: const AdRequest(),
       adLoadCallback: InterstitialAdLoadCallback(
         onAdLoaded: (ad) {
@@ -142,6 +145,109 @@ class AdService {
       print("스플래시 광고: 미리 로드된 광고가 없습니다.");
       onAdFailed();
     }
+  }
+
+  /// 주어진 광고 단위 ID로 스플래시 전면광고를 로드하고 표시합니다.
+  /// `timeout` 내에 로드되지 않으면 `onAdFailed`가 호출됩니다.
+  Future<void> loadAndShowSplashAd({
+    required String adUnitId,
+    required Function onAdDismissed,
+    required Function onAdFailed,
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    // 디버그 모드에서는 스플래시 광고를 즉시 건너뜁니다.
+    if (kDebugMode) {
+      print('디버그 모드이므로 스플래시 광고를 건너뜁니다.');
+      onAdFailed();
+      return;
+    }
+
+    if (!(Platform.isAndroid || Platform.isIOS)) {
+      onAdFailed();
+      return;
+    }
+
+    final prefs = await SharedPreferences.getInstance();
+    final lastAdShowTimeMillis = prefs.getInt(_lastSplashAdShowTimeKey) ?? 0;
+    final currentTimeMillis = DateTime.now().millisecondsSinceEpoch;
+    const thirtyMinutesInMillis = 30 * 60 * 1000;
+
+    final shouldShowAdByClickCount = _calculateClickCount >= _adFrequency;
+
+    if (currentTimeMillis - lastAdShowTimeMillis < thirtyMinutesInMillis &&
+        !shouldShowAdByClickCount) {
+      print('스플래시 광고 로드: 30분 규칙 때문에 표시하지 않습니다.');
+      onAdFailed();
+      return;
+    }
+
+    final completer = Completer<void>();
+    Timer? timer;
+    InterstitialAd? loadedAd;
+
+    void cleanupAndFail([String? reason]) {
+      timer?.cancel();
+      if (loadedAd != null) {
+        try {
+          loadedAd!.dispose();
+        } catch (_) {}
+        loadedAd = null;
+      }
+      if (!completer.isCompleted) {
+        completer.complete();
+      }
+      onAdFailed();
+      if (reason != null) print('loadAndShowSplashAd failed: $reason');
+    }
+
+    timer = Timer(timeout, () {
+      cleanupAndFail('timeout');
+    });
+
+    InterstitialAd.load(
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) async {
+          timer?.cancel();
+          loadedAd = ad;
+          try {
+            await prefs.setInt(_lastSplashAdShowTimeKey, currentTimeMillis);
+          } catch (_) {}
+
+          if (shouldShowAdByClickCount) {
+            _calculateClickCount = 0;
+            await _saveCalculateClickCount();
+            print('클릭 카운트를 리셋합니다.');
+          }
+
+          loadedAd!.fullScreenContentCallback = FullScreenContentCallback(
+            onAdDismissedFullScreenContent: (ad) {
+              try {
+                ad.dispose();
+              } catch (_) {}
+              _loadInterstitialAd();
+              onAdDismissed();
+            },
+            onAdFailedToShowFullScreenContent: (ad, error) {
+              try {
+                ad.dispose();
+              } catch (_) {}
+              _loadInterstitialAd();
+              onAdFailed();
+            },
+          );
+
+          await loadedAd!.show();
+          if (!completer.isCompleted) completer.complete();
+        },
+        onAdFailedToLoad: (error) {
+          cleanupAndFail(error.message);
+        },
+      ),
+    );
+
+    return completer.future;
   }
 
   Future<void> _loadCalculateClickCount() async {

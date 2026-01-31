@@ -23,7 +23,7 @@ class ExitConfirmationDialog extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: () {
-            SystemNavigator.pop();
+            Navigator.of(context).pop(true);
           },
           child: const Text('종료'),
         ),

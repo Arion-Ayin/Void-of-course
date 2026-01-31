@@ -51,13 +51,17 @@ class InfoScreen extends StatelessWidget {
         titleEn: '<26-01-28 Update>',
         contentKo: '''
 안녕하세요 아리온 아인입니다.
-이번 업데이트의 변경사항입니다.
+이번 1.1.33 업데이트 사항입니다.
 
 1. 문 페이즈, 문 인 싸인의 시작 및 종료 시간 추가
 2. 앱 이미지 원상태로 복구
-3. 안드로이드 어플리케이션 최적화를 진행
+3. 안드로이드 어플리케이션 최적화
 
-추가 문의 사항 및 피드백이 있다면, 연락해주세요.
+앱을 편하게 사용하시고 계시다면 or 불편한 점이 있다면, 언제든지 리뷰를 남겨주세요. 
+따뜻한 리뷰는 개발자에게 큰 힘이 됩니다.
+
+감사합니다
+아리온 아인 드림
 ''',
         contentEn: '''
 Hello, this is Arion Ayin.
@@ -115,6 +119,9 @@ If you have any feedback or questions, please contact us.
 
 앱을 편하게 사용하시고 계시다면, or 불편한 점이 있다면, 언제든지 리뷰를 남겨주세요. 
 따뜻한 리뷰는 개발자에게 큰 힘이 됩니다.
+
+감사합니다
+아리온 아인 드림
 ''',
         contentEn: '''
 Hello, this is Arion Ayin.

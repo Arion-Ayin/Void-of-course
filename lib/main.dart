@@ -15,6 +15,7 @@ import 'package:void_of_course/l10n/app_localizations.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:void_of_course/widgets/exit_confirmation_dialog.dart';
 import 'package:void_of_course/services/ad_service.dart';
+import 'package:void_of_course/services/ad_ids.dart';
 import 'package:flutter/services.dart';
 import 'package:void_of_course/services/background_service.dart';
 
@@ -138,14 +139,6 @@ class _MainAppScreenState extends State<MainAppScreen> {
     }
   }
 
-  Future<bool> _onWillPop() async {
-    final shouldPop = await showDialog<bool>(
-      context: context,
-      builder: (context) => const ExitConfirmationDialog(),
-    );
-    return shouldPop ?? false;
-  }
-
   @override
   Widget build(BuildContext context) {
     // 현재 테마가 다크 모드인지 확인해요.
@@ -174,8 +167,20 @@ class _MainAppScreenState extends State<MainAppScreen> {
           );
         }
 
-        return WillPopScope(
-          onWillPop: _onWillPop,
+        return PopScope(
+          canPop: false,
+          onPopInvoked: (didPop) async {
+            if (didPop) {
+              return;
+            }
+            final shouldPop = await showDialog<bool>(
+              context: context,
+              builder: (context) => const ExitConfirmationDialog(),
+            );
+            if (shouldPop ?? false) {
+              SystemNavigator.pop();
+            }
+          },
           // ▼▼▼ [수정됨] Edge-to-Edge를 위한 시스템 UI 오버레이 설정 ▼▼▼
           child: AnnotatedRegion<SystemUiOverlayStyle>(
             value: SystemUiOverlayStyle(
@@ -273,7 +278,7 @@ class BannerAdWidget extends StatefulWidget {
 class _BannerAdWidgetState extends State<BannerAdWidget> {
   BannerAd? _bannerAd;
   bool _isAdLoaded = false;
-  final String _adUnitId = 'ca-app-pub-7332476431820224/6217062207';
+  final String _adUnitId = AdIds.banner;
 
   @override
   void initState() {

@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:void_of_course/services/ad_ids.dart';
 
 class ReusableNativeAdWidget extends StatefulWidget {
   const ReusableNativeAdWidget({super.key});
@@ -13,8 +14,8 @@ class _ReusableNativeAdWidgetState extends State<ReusableNativeAdWidget> {
   NativeAd? _nativeAd;
   bool _isAdLoaded = false;
 
-  // Using Google's test ID for native ads on Android.
-  final String _adUnitId = 'ca-app-pub-7332476431820224/3843192065';
+  // Centralized native ad unit id
+  final String _adUnitId = AdIds.nativeAd;
 
   @override
   void initState() {
