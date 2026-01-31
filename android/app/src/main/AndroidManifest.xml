@@ -54,10 +54,18 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-7332476431820224~6357674762"/>
 
-        <service 
-            android:name="id.flutter.flutter_background_service.BackgroundService" 
+        <service
+            android:name="id.flutter.flutter_background_service.BackgroundService"
             android:foregroundServiceType="dataSync"
         />
+
+        <!-- 포그라운드 서비스 알림 아이콘 설정 -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="id.flutter.flutter_background_service.notification_icon"
+            android:resource="@drawable/ic_notification" />
 
         <!-- Disable the plugin's default BootReceiver to prevent Android 15 Restricted Service crash on boot -->
         <receiver

@@ -46,12 +46,12 @@ class InfoScreen extends StatelessWidget {
     final List<DeveloperNote> notes = [
       // ▼▼▼ [최신 글] ▼▼▼
       DeveloperNote(
-        date: '2026-01-28',
-        titleKo: '<26-01-28 업데이트>',
-        titleEn: '<26-01-28 Update>',
+        date: '2026-02-01',
+        titleKo: '<26-02-01 업데이트>',
+        titleEn: '<26-02-01 Update>',
         contentKo: '''
 안녕하세요 아리온 아인입니다.
-이번 1.1.33 업데이트 사항입니다.
+이번 1.2.0 업데이트 사항입니다.
 
 1. 문 페이즈, 문 인 싸인의 시작 및 종료 시간 추가
 2. 앱 이미지 원상태로 복구
