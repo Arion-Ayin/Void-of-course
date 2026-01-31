@@ -215,6 +215,9 @@ class AstroState with ChangeNotifier {
     // 다음 유효한 VOC 찾기 및 캐시
     final prefs = await SharedPreferences.getInstance();
 
+    // 백그라운드 서비스용 pre-void 시간 동기화
+    await prefs.setInt('cached_pre_void_hours', _preVoidAlarmHours);
+
     for (int i = 0; i < 10; i++) {
       final vocTimes = _calculator.findVoidOfCoursePeriod(searchDate);
       final vocStart = vocTimes['start'];

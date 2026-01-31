@@ -18,11 +18,12 @@ import 'package:void_of_course/services/ad_service.dart';
 import 'package:void_of_course/services/ad_ids.dart';
 import 'package:flutter/services.dart';
 import 'package:void_of_course/services/background_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요.
   WidgetsFlutterBinding.ensureInitialized();
-
+  await Firebase.initializeApp();
   // Edge-to-Edge 모드 활성화 (Android 15+ 권장)
   // 시스템 바를 투명하게 만들고 전체 화면을 사용합니다.
   SystemChrome.setEnabledSystemUIMode(

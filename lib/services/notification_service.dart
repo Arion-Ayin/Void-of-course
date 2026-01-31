@@ -14,7 +14,7 @@ class NotificationService {
 
   Future<void> init() async {
     const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/ic_launcher');
+        AndroidInitializationSettings('@drawable/ic_notification');
 
     const AndroidNotificationChannel channel = AndroidNotificationChannel(
       'void_channel_id',
@@ -149,6 +149,7 @@ class NotificationService {
           playSound: !isSilent,
           enableVibration: !isSilent,
           timeoutAfter: timeoutAfter,
+          icon: '@drawable/ic_notification',
         ),
       ),
       androidScheduleMode:
@@ -194,6 +195,7 @@ class NotificationService {
         playSound: !isSilent,
         enableVibration: !isSilent,
         timeoutAfter: timeoutAfter,
+        icon: '@drawable/ic_notification',
       ),
     );
     await _notificationsPlugin.show(id, title, body, notificationDetails);

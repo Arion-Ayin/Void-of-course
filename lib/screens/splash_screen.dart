@@ -10,13 +10,28 @@ import 'package:void_of_course/services/astro_state.dart';
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
+  @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
   bool _adTriggered = false;
   DateTime? _splashStartTime;
+  bool _timeoutTriggered = false;
 
+  @override
+  void initState() {
+    super.initState();
+    // 안전장치: 10초 후에도 초기화 안되면 강제로 메인 화면으로 이동
+    Future.delayed(const Duration(seconds: 10), () {
+      if (mounted && !_adTriggered && !_timeoutTriggered) {
+        _timeoutTriggered = true;
+        _triggerAdShow();
+      }
+    });
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     // astroState가 이미 초기화되었는지 확인
@@ -89,6 +104,7 @@ class _SplashScreenState extends State<SplashScreen> {
     });
   }
 
+  @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
       // Android 15+ Edge-to-Edge를 위한 시스템 UI 설정
