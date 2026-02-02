@@ -137,6 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPreviousDay: () => _changeDate(-1),
                   onNextDay: () => _changeDate(1),
                   showCalendar: () => showCalendarDialog(context),
+                  selectedDate: provider.selectedDate,
                 ),
                 const SizedBox(height: 7),
                 ResetDateButton(onPressed: _resetDateToToday),

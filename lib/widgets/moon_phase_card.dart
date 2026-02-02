@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/astro_state.dart';
 import '../services/astro_calculator.dart';
+import '../themes.dart';
 
 class MoonPhaseCard extends StatelessWidget {
   final AstroState provider;
@@ -19,26 +20,10 @@ class MoonPhaseCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  const Color(0xFF1E3A5F),
-                  const Color(0xFF16213E),
-                ]
-              : [
-                  Colors.white,
-                  const Color(0xFFF8F6F0),
-                ],
+          colors: Themes.cardGradient(isDark),
         ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.3)
-                : Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        boxShadow: [Themes.cardShadow(isDark)],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(24),
@@ -56,7 +41,7 @@ class MoonPhaseCard extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        const Color(0xFFD4AF37).withOpacity(0.1),
+                        Themes.gold.withValues(alpha: 0.1),
                         Colors.transparent,
                       ],
                     ),
@@ -101,9 +86,7 @@ class MoonPhaseCard extends StatelessWidget {
                         Text(
                           'Moon Phase',
                           style: TextStyle(
-                            color: isDark
-                                ? const Color(0xFFD4AF37)
-                                : const Color(0xFF2C3E50),
+                            color: isDark ? Themes.gold : Themes.midnightBlue,
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.2,

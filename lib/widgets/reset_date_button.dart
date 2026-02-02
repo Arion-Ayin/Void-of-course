@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:void_of_course/services/ad_service.dart';
+import '../themes.dart';
 
 class ResetDateButton extends StatefulWidget {
   final VoidCallback onPressed;
@@ -12,6 +13,7 @@ class ResetDateButton extends StatefulWidget {
 
 class _ResetDateButtonState extends State<ResetDateButton> {
   final AdService _adService = AdService();
+  bool _isPressed = false;
 
   @override
   void initState() {
@@ -29,47 +31,51 @@ class _ResetDateButtonState extends State<ResetDateButton> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Center(
-      child: Container(
-        width: 60,
-        height: 60,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? [
-                    const Color(0xFFD4AF37),
-                    const Color(0xFFB8960C),
-                  ]
-                : [
-                    const Color(0xFF2C3E50),
-                    const Color(0xFF1A252F),
-                  ],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: isDark
-                  ? const Color(0xFFD4AF37).withOpacity(0.3)
-                  : const Color(0xFF2C3E50).withOpacity(0.3),
-              blurRadius: 5,
-              offset: const Offset(0, 4),
+      child: GestureDetector(
+        onTapDown: (_) => setState(() => _isPressed = true),
+        onTapUp: (_) => setState(() => _isPressed = false),
+        onTapCancel: () => setState(() => _isPressed = false),
+        child: AnimatedScale(
+          scale: _isPressed ? 0.9 : 1.0,
+          duration: const Duration(milliseconds: 100),
+          child: Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: isDark
+                    ? [Themes.gold, const Color(0xFFB8960C)]
+                    : [Themes.midnightBlue, const Color(0xFF1A252F)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (isDark ? Themes.gold : Themes.midnightBlue)
+                      .withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              widget.onPressed();
-              _adService.showAdIfNeeded(() {});
-            },
-            borderRadius: BorderRadius.circular(24),
-            child: const Center(
-              child: Icon(
-                Icons.refresh_rounded,
-                size: 35,
-                color: Colors.white,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  widget.onPressed();
+                  _adService.showAdIfNeeded(() {});
+                },
+                borderRadius: BorderRadius.circular(30),
+                splashColor: Colors.white.withValues(alpha: 0.3),
+                highlightColor: Colors.white.withValues(alpha: 0.1),
+                child: const Center(
+                  child: Icon(
+                    Icons.refresh_rounded,
+                    size: 35,
+                    color: Colors.white,
+                  ),
+                ),
               ),
             ),
           ),

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import '../themes.dart';
 
-class DateSelector extends StatelessWidget {
+class DateSelector extends StatefulWidget {
   final TextEditingController dateController;
   final VoidCallback showCalendar;
   final VoidCallback onNextDay;
   final VoidCallback onPreviousDay;
+  final DateTime selectedDate;
 
   const DateSelector({
     super.key,
@@ -12,38 +14,38 @@ class DateSelector extends StatelessWidget {
     required this.showCalendar,
     required this.onNextDay,
     required this.onPreviousDay,
+    required this.selectedDate,
   });
+
+  @override
+  State<DateSelector> createState() => _DateSelectorState();
+}
+
+class _DateSelectorState extends State<DateSelector> {
+  bool _isPrevPressed = false;
+  bool _isNextPressed = false;
+
+  bool get _isToday {
+    final now = DateTime.now();
+    return widget.selectedDate.year == now.year &&
+        widget.selectedDate.month == now.month &&
+        widget.selectedDate.day == now.day;
+  }
 
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal : 10 ),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isDark
-              ? [
-                  const Color(0xFF1E3A5F),
-                  const Color(0xFF16213E),
-                ]
-              : [
-                  Colors.white,
-                  const Color(0xFFF8F6F0),
-                ],
+          colors: Themes.cardGradient(isDark),
         ),
         borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withOpacity(0.3)
-                : Colors.black.withOpacity(0.06),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
+        boxShadow: [Themes.cardShadow(isDark)],
       ),
       child: Row(
         children: [
@@ -51,19 +53,20 @@ class DateSelector extends StatelessWidget {
           _buildNavButton(
             context,
             Icons.chevron_left_rounded,
-            onPreviousDay,
+            widget.onPreviousDay,
             isDark,
+            isPrev: true,
           ),
           // 날짜 표시 영역
           Expanded(
             child: GestureDetector(
-              onTap: showCalendar,
+              onTap: widget.showCalendar,
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 1),
                 decoration: BoxDecoration(
                   color: isDark
-                      ? Colors.white.withOpacity(0.05)
-                      : Colors.black.withOpacity(0.03),
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -72,17 +75,19 @@ class DateSelector extends StatelessWidget {
                     Icon(
                       Icons.calendar_today_rounded,
                       size: 18,
-                      color: isDark
-                          ? const Color(0xFFD4AF37)
-                          : const Color(0xFF2C3E50),
+                      color: _isToday
+                          ? Themes.gold
+                          : (isDark ? Themes.gold : Themes.midnightBlue),
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      dateController.text,
+                      widget.dateController.text,
                       style: TextStyle(
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
+                        color: _isToday
+                            ? Themes.gold
+                            : Theme.of(context).textTheme.bodyLarge?.color,
                         fontSize: 17,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: _isToday ? FontWeight.w700 : FontWeight.w600,
                         letterSpacing: 1,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
@@ -96,8 +101,9 @@ class DateSelector extends StatelessWidget {
           _buildNavButton(
             context,
             Icons.chevron_right_rounded,
-            onNextDay,
+            widget.onNextDay,
             isDark,
+            isPrev: false,
           ),
         ],
       ),
@@ -108,28 +114,57 @@ class DateSelector extends StatelessWidget {
     BuildContext context,
     IconData icon,
     VoidCallback onPressed,
-    bool isDark,
-  ) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: 60,
-          height: 60,
-          decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withOpacity(0.08)
-                : Colors.black.withOpacity(0.04),
+    bool isDark, {
+    required bool isPrev,
+  }) {
+    final isPressed = isPrev ? _isPrevPressed : _isNextPressed;
+
+    return GestureDetector(
+      onTapDown: (_) => setState(() {
+        if (isPrev) {
+          _isPrevPressed = true;
+        } else {
+          _isNextPressed = true;
+        }
+      }),
+      onTapUp: (_) => setState(() {
+        if (isPrev) {
+          _isPrevPressed = false;
+        } else {
+          _isNextPressed = false;
+        }
+      }),
+      onTapCancel: () => setState(() {
+        if (isPrev) {
+          _isPrevPressed = false;
+        } else {
+          _isNextPressed = false;
+        }
+      }),
+      child: AnimatedScale(
+        scale: isPressed ? 0.9 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onPressed,
             borderRadius: BorderRadius.circular(12),
-          ),
-          child: Icon(
-            icon,
-            size: 50,
-            color: isDark
-                ? const Color(0xFFD4AF37)
-                : const Color(0xFF2C3E50),
+            splashColor: (isDark ? Themes.gold : Themes.midnightBlue).withValues(alpha: 0.3),
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.08)
+                    : Colors.black.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                icon,
+                size: 50,
+                color: isDark ? Themes.gold : Themes.midnightBlue,
+              ),
+            ),
           ),
         ),
       ),

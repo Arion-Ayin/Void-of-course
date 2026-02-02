@@ -11,7 +11,7 @@ class Themes {
   static const Color _lightPrimary = Color(0xFF2C3E50); // 깊은 미드나잇 블루
   static const Color _lightSecondary = Color(0xFFD4AF37); // 골드
   static const Color _lightText = Color(0xFF1A1A2E); // 깊은 네이비
-  static const Color _lightTextSecondary = Color(0xFF4A4A5A); // 부드러운 그레이
+  static const Color _lightTextSecondary = Color(0xFF3A3A4A); // 부드러운 그레이 (대비 강화)
 
   // Dark Theme Colors
   static const Color _darkBackground = Color(0xFF0F0F1A); // 깊은 우주 블랙
@@ -21,6 +21,22 @@ class Themes {
   static const Color _darkSecondary = Color(0xFFD4AF37); // 골드
   static const Color _darkText = Color(0xFFF0EDE5); // 별빛 화이트
   static const Color _darkTextSecondary = Color(0xFFB8B5AD); // 부드러운 실버
+
+  // 공통 그림자 스타일
+  static BoxShadow cardShadow(bool isDark) => BoxShadow(
+    color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.08),
+    blurRadius: 15,
+    offset: const Offset(0, 5),
+  );
+
+  // 카드 그라데이션
+  static List<Color> cardGradient(bool isDark) => isDark
+      ? [const Color(0xFF1E3A5F), const Color(0xFF16213E)]
+      : [Colors.white, const Color(0xFFF8F6F0)];
+
+  // 강조색
+  static const Color gold = Color(0xFFD4AF37);
+  static const Color midnightBlue = Color(0xFF2C3E50);
 
   //light theme
   static final ThemeData lightTheme = ThemeData(

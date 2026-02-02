@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart'; // 플러터의 디자인 라이브러리를 가져와요.
+import '../themes.dart';
 
 // 설정 화면에 들어가는 한 줄짜리 카드를 만드는 위젯이에요.
 class SettingCard extends StatelessWidget {
@@ -31,22 +32,14 @@ class SettingCard extends StatelessWidget {
           end: Alignment.bottomRight, // 오른쪽 아래로 색이 변해요.
           colors: [
             Theme.of(context).cardColor, // 앱의 기본 카드 색상을 사용해요.
-            Theme.of(
-              context,
-            ).cardColor.withOpacity(0.8), // 기본 카드 색상을 살짝 투명하게 만들어요.
+            Theme.of(context).cardColor.withValues(alpha: 0.8), // 기본 카드 색상을 살짝 투명하게 만들어요.
           ],
         ),
         // 모서리를 둥글게 깎아줘요.
         borderRadius: BorderRadius.circular(20),
         // 그림자를 만들어서 입체적으로 보이게 해요.
         boxShadow: [
-          BoxShadow(
-            color: Theme.of(
-              context,
-            ).shadowColor.withOpacity(0.1), // 앱의 기본 그림자 색상을 아주 살짝 보이게 해요.
-            blurRadius: 10, // 그림자를 부드럽게 퍼지게 해요.
-            offset: const Offset(0, 5), // 그림자를 아래쪽으로 5만큼 이동시켜요.
-          ),
+          Themes.cardShadow(Theme.of(context).brightness == Brightness.dark),
         ],
       ),
       // 카드 안에 들어갈 내용(아이콘, 글자 등)을 설정해요.
@@ -57,9 +50,7 @@ class SettingCard extends StatelessWidget {
         // 왼쪽에 동그란 배경을 가진 아이콘을 보여줘요.
         leading: CircleAvatar(
           radius: 25, // 동그라미의 반지름은 25
-          backgroundColor: iconColor.withOpacity(
-            0.1,
-          ), // 아이콘 색깔을 아주 연하게 해서 배경색으로 써요.
+          backgroundColor: iconColor.withValues(alpha: 0.1), // 아이콘 색깔을 아주 연하게 해서 배경색으로 써요.
           child: Icon(
             icon,
             color: iconColor,
