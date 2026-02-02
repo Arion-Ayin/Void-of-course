@@ -140,26 +140,34 @@ class _MainAppScreenState extends State<MainAppScreen> {
     }
   }
 
+  void _onTabTapped(int index) {
+    if (_selectedIndex != index) {
+      setState(() => _selectedIndex = index);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // 현재 테마가 다크 모드인지 확인해요.
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
-    return Consumer<AstroState>(
-      builder: (context, astroState, child) {
-        if (!astroState.isInitialized) {
+    // Selector를 사용해서 초기화 상태만 확인 (불필요한 rebuild 방지)
+    return Selector<AstroState, ({bool isInitialized, String? lastError})>(
+      selector: (_, state) => (isInitialized: state.isInitialized, lastError: state.lastError),
+      builder: (context, state, child) {
+        if (!state.isInitialized) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );
         }
 
-        if (astroState.lastError != null) {
+        if (state.lastError != null) {
           return Scaffold(
             body: Center(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Text(
-                  '오류가 발생하여 앱을 실행할 수 없습니다.\n\n${astroState.lastError}',
+                  '오류가 발생하여 앱을 실행할 수 없습니다.\n\n${state.lastError}',
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: Colors.red, fontSize: 16),
                 ),
@@ -168,98 +176,92 @@ class _MainAppScreenState extends State<MainAppScreen> {
           );
         }
 
-        return PopScope(
-          canPop: false,
-          onPopInvoked: (didPop) async {
-            if (didPop) {
-              return;
-            }
-            final shouldPop = await showDialog<bool>(
-              context: context,
-              builder: (context) => const ExitConfirmationDialog(),
-            );
-            if (shouldPop ?? false) {
-              SystemNavigator.pop();
-            }
-          },
-          // ▼▼▼ [수정됨] Edge-to-Edge를 위한 시스템 UI 오버레이 설정 ▼▼▼
-          child: AnnotatedRegion<SystemUiOverlayStyle>(
-            value: SystemUiOverlayStyle(
-              // 상태바 배경색을 투명하게 해서 앱 배경색이 보이게 함
-              statusBarColor: Colors.transparent,
-              // 다크 모드면 아이콘을 밝게(흰색), 라이트 모드면 어둡게(검은색) 설정
-              statusBarIconBrightness:
-                  isDarkMode ? Brightness.light : Brightness.dark,
-              // iOS를 위한 설정
-              statusBarBrightness:
-                  isDarkMode ? Brightness.dark : Brightness.light,
-              // Android 15+ Edge-to-Edge: 내비게이션 바도 투명하게
-              systemNavigationBarColor: Colors.transparent,
-              systemNavigationBarDividerColor: Colors.transparent,
-              // 내비게이션 바 아이콘도 테마에 맞게 설정
-              systemNavigationBarIconBrightness:
-                  isDarkMode ? Brightness.light : Brightness.dark,
-            ),
-            child: Scaffold(
-              // SafeArea는 유지 (화면 가림 방지)
-              body: SafeArea(
-                child: Column(
-                  children: [
-                    Expanded(
-                      child: IndexedStack(
-                        index: _selectedIndex,
-                        children: _buildScreens(),
-                      ),
+        // 초기화 완료 후에는 child를 반환 (AstroState 변경에 반응하지 않음)
+        return child!;
+      },
+      child: PopScope(
+        canPop: false,
+        onPopInvoked: (didPop) async {
+          if (didPop) {
+            return;
+          }
+          final shouldPop = await showDialog<bool>(
+            context: context,
+            builder: (context) => const ExitConfirmationDialog(),
+          );
+          if (shouldPop ?? false) {
+            SystemNavigator.pop();
+          }
+        },
+        child: AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness:
+                isDarkMode ? Brightness.light : Brightness.dark,
+            statusBarBrightness:
+                isDarkMode ? Brightness.dark : Brightness.light,
+            systemNavigationBarColor: Colors.transparent,
+            systemNavigationBarDividerColor: Colors.transparent,
+            systemNavigationBarIconBrightness:
+                isDarkMode ? Brightness.light : Brightness.dark,
+          ),
+          child: Scaffold(
+            body: SafeArea(
+              child: Column(
+                children: [
+                  Expanded(
+                    child: IndexedStack(
+                      index: _selectedIndex,
+                      children: _buildScreens(),
                     ),
-                    const BannerAdWidget(),
-                  ],
-                ),
+                  ),
+                  const BannerAdWidget(),
+                ],
               ),
-              bottomNavigationBar: Container(
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  boxShadow: [
-                    BoxShadow(
-                      color:
-                          isDarkMode
-                              ? Colors.black.withOpacity(0.3)
-                              : Colors.grey.withOpacity(0.2),
-                      blurRadius: 10,
-                      offset: const Offset(0, -2),
-                    ),
-                  ],
-                ),
-                child: BottomNavigationBar(
-                  currentIndex: _selectedIndex,
-                  onTap: (index) => setState(() => _selectedIndex = index),
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  selectedItemColor:
-                      isDarkMode ? Colors.blue[300] : Colors.blue[600],
-                  unselectedItemColor:
-                      isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                  type: BottomNavigationBarType.fixed,
-                  items: [
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.home),
-                      label: AppLocalizations.of(context)!.home,
-                    ),
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.settings),
-                      label: AppLocalizations.of(context)!.settings,
-                    ),
-                    BottomNavigationBarItem(
-                      icon: const Icon(Icons.description),
-                      label: AppLocalizations.of(context)!.infoScreenTitle,
-                    ),
-                  ],
-                ),
+            ),
+            bottomNavigationBar: Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                boxShadow: [
+                  BoxShadow(
+                    color:
+                        isDarkMode
+                            ? Colors.black.withOpacity(0.3)
+                            : Colors.grey.withOpacity(0.2),
+                    blurRadius: 10,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: BottomNavigationBar(
+                currentIndex: _selectedIndex,
+                onTap: _onTabTapped,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                selectedItemColor:
+                    isDarkMode ? Colors.yellow[300] : Colors.black,
+                unselectedItemColor:
+                    isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                type: BottomNavigationBarType.fixed,
+                items: [
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.home),
+                    label: AppLocalizations.of(context)!.home,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.settings),
+                    label: AppLocalizations.of(context)!.settings,
+                  ),
+                  BottomNavigationBarItem(
+                    icon: const Icon(Icons.description),
+                    label: AppLocalizations.of(context)!.infoScreenTitle,
+                  ),
+                ],
               ),
             ),
           ),
-          // ▲▲▲ 여기까지 ▲▲▲
-        );
-      },
+        ),
+      ),
     );
   }
 

@@ -162,11 +162,8 @@ class AstroState with ChangeNotifier {
       if (hasExactAlarmPermission) {
         _voidAlarmEnabled = true;
         await prefs.setBool('voidAlarmEnabled', true);
+        // _schedulePreVoidAlarm에서 pre-void 시작 여부에 따라 서비스 시작 결정
         await _schedulePreVoidAlarm(isToggleOn: true);
-
-        // Start Background Service
-        final service = FlutterBackgroundService();
-        await service.startService();
 
         notifyListeners();
         return AlarmPermissionStatus.granted;
@@ -218,6 +215,9 @@ class AstroState with ChangeNotifier {
     // 백그라운드 서비스용 pre-void 시간 동기화
     await prefs.setInt('cached_pre_void_hours', _preVoidAlarmHours);
 
+    DateTime? foundVocStart;
+    DateTime? foundVocEnd;
+
     for (int i = 0; i < 10; i++) {
       final vocTimes = _calculator.findVoidOfCoursePeriod(searchDate);
       final vocStart = vocTimes['start'];
@@ -238,6 +238,9 @@ class AstroState with ChangeNotifier {
       await prefs.setString('cached_voc_start', vocStart.toIso8601String());
       await prefs.setString('cached_voc_end', vocEnd.toIso8601String());
 
+      foundVocStart = vocStart;
+      foundVocEnd = vocEnd;
+
       if (kDebugMode) {
         print("Cached VOC: start=$vocStart, end=$vocEnd");
       }
@@ -245,17 +248,31 @@ class AstroState with ChangeNotifier {
       break; // 첫 번째 유효한 VOC만 캐시하면 됨
     }
 
-    // 백그라운드 서비스가 모든 알림(1번: Pre-Void, 2번: VOC Active, 3번: VOC Ended)을 처리함
-    // 여기서는 VOC 시간만 캐시하고, 알림은 백그라운드 서비스에서 1초마다 업데이트
-
-    // 백그라운드 서비스가 실행 중이 아니면 시작
+    // 백그라운드 서비스는 pre-void 시작 이후에만 필요
+    // pre-void 시작 전이면 서비스를 시작하지 않음 (빈 알림 방지)
     final service = FlutterBackgroundService();
     final isRunning = await service.isRunning();
-    if (!isRunning && _voidAlarmEnabled) {
-      await service.startService();
-      if (kDebugMode) {
-        print("Background service restarted for next VOC monitoring");
+
+    if (foundVocStart != null && foundVocEnd != null) {
+      final preVoidStart = foundVocStart.subtract(Duration(hours: _preVoidAlarmHours));
+      final shouldServiceRun = now.isAfter(preVoidStart) || now.isAtSameMomentAs(preVoidStart);
+
+      if (shouldServiceRun && !isRunning && _voidAlarmEnabled) {
+        // pre-void 이상이면 서비스 시작
+        await service.startService();
+        if (kDebugMode) {
+          print("Background service started for VOC monitoring (pre-void active)");
+        }
+      } else if (!shouldServiceRun && isRunning) {
+        // pre-void 전인데 서비스가 실행 중이면 종료
+        service.invoke("stopService");
+        if (kDebugMode) {
+          print("Background service stopped (pre-void not yet started)");
+        }
       }
+    } else if (isRunning) {
+      // VOC 데이터가 없으면 서비스 종료
+      service.invoke("stopService");
     }
 
     notifyListeners();

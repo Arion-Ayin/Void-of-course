@@ -110,7 +110,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color:
                   Theme.of(
                     context,
-                  ).colorScheme.secondary, // 앱 테마에 맞는 두 번째 색깔을 사용해요.
+                  ).colorScheme.primary, // 앱 테마에 맞는 주요 색깔을 사용해요.
               size: 24, // 아이콘 크기는 24
             ),
             const SizedBox(width: 8), // 아이콘과 글자 사이에 작은 공간을 만들어요.

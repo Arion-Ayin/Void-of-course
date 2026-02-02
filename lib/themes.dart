@@ -5,9 +5,9 @@ class Themes {
   //light theme
   static final ThemeData lightTheme = ThemeData(
     brightness: Brightness.light, // 이 테마는 밝은 모드예요.
-    primarySwatch: Colors.blue, // 앱의 주요 색상으로 파란색 계열을 사용해요. (여러 파란색 농도를 자동으로 만들어줘요)
+    primarySwatch: Colors.grey, // 앱의 주요 색상으로 회색 계열을 사용해요. (여러 회색 농도를 자동으로 만들어줘요)
     colorScheme: const ColorScheme.light( // 밝은 테마에 맞는 색상들을 자세히 정해요.
-      primary: Colors.blue, // 주요 색상 (버튼, 아이콘 등)
+      primary: Colors.black87, // 주요 색상 (버튼, 아이콘 등)
       onPrimary: Colors.white, // 주요 색상 위에 올라가는 글자나 아이콘 색상
       secondary: Colors.orange, // 강조 색상 (특별한 아이콘이나 요소)
       onSecondary: Colors.white, // 강조 색상 위에 올라가는 글자나 아이콘 색상
@@ -38,7 +38,7 @@ class Themes {
     iconTheme: const IconThemeData(color: Colors.black54), // 앱의 모든 아이콘 색상을 회색으로 해요.
     bottomNavigationBarTheme: const BottomNavigationBarThemeData( // 하단 내비게이션 바의 디자인을 정해요.
       backgroundColor: Colors.white, // 배경색은 하얀색
-      selectedItemColor: Colors.blue, // 선택된 항목의 색상은 파란색
+      selectedItemColor: Colors.black, // 선택된 항목의 색상은 검정색
       unselectedItemColor: Colors.grey, // 선택되지 않은 항목의 색상은 회색
       type: BottomNavigationBarType.fixed, // 항목들의 크기를 고정해요.
       elevation: 8, // 그림자를 8만큼 만들어요.
@@ -48,9 +48,9 @@ class Themes {
   //dark theme
   static final ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark, // 이 테마는 어두운 모드예요.
-    primarySwatch: Colors.blue, // 앱의 주요 색상으로 파란색 계열을 사용해요.
+    primarySwatch: Colors.grey, // 앱의 주요 색상으로 회색 계열을 사용해요.
     colorScheme: ColorScheme.dark( // 어두운 테마에 맞는 색상들을 자세히 정해요.
-      primary: Colors.blue[300]!, // 주요 색상 (밝은 파란색)
+      primary: const Color.fromARGB(255, 255, 230, 0)!, // 주요 색상 (밝은 파란색)
       onPrimary: Colors.white, // 주요 색상 위에 올라가는 글자나 아이콘 색상
       secondary: Colors.orange[300]!, // 강조 색상 (밝은 주황색)
       onSecondary: Colors.white, // 강조 색상 위에 올라가는 글자나 아이콘 색상
@@ -81,7 +81,7 @@ class Themes {
     iconTheme: const IconThemeData(color: Colors.white70), // 앱의 모든 아이콘 색상을 살짝 투명한 하얀색으로 해요.
     bottomNavigationBarTheme: BottomNavigationBarThemeData( // 하단 내비게이션 바의 디자인을 정해요.
       backgroundColor: Colors.grey[900], // 배경색은 아주 어두운 회색
-      selectedItemColor: Colors.blue[300], // 선택된 항목의 색상은 밝은 파란색
+      selectedItemColor: Colors.yellow[300], // 선택된 항목의 색상은 밝은 노란색
       unselectedItemColor: Colors.grey[400], // 선택되지 않은 항목의 색상은 밝은 회색
       type: BottomNavigationBarType.fixed, // 항목들의 크기를 고정해요.
       elevation: 8, // 그림자를 8만큼 만들어요.

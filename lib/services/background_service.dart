@@ -10,10 +10,11 @@ const int statePreVoid = 1;
 const int stateVocActive = 2;
 const int stateVocEnded = 3;
 
-// 알림 ID 상수
-const int foregroundNotificationId = 888; // 포그라운드 서비스 알림 (카운트다운, 삭제 불가)
-const int alertNotificationId = 777;      // 상태 변경 알림 (소리/진동 1회)
-const int vocEndNotificationId = 999;     // 종료 알림 (삭제 가능)
+// 알림 ID 상수 - 4개의 독립적인 알림
+const int preVoidNotificationId = 888;    // 1. Pre-void 카운트다운 (삭제 불가, 무음)
+const int vocStartNotificationId = 777;   // 2. Void 시작 알림 (10초 후 자동 삭제, 진동)
+const int vocActiveNotificationId = 889;  // 3. Void 중 카운트다운 (삭제 불가, 무음)
+const int vocEndNotificationId = 999;     // 4. Void 종료 알림 (삭제 가능, 진동)
 
 Future<void> initializeBackgroundService() async {
   final service = FlutterBackgroundService();
@@ -70,7 +71,7 @@ Future<void> initializeBackgroundService() async {
       notificationChannelId: 'void_service_channel',
       initialNotificationTitle: '',
       initialNotificationContent: '',
-      foregroundServiceNotificationId: foregroundNotificationId,
+      foregroundServiceNotificationId: preVoidNotificationId,
     ),
     iosConfiguration: IosConfiguration(
       autoStart: false,
@@ -158,7 +159,10 @@ void onStart(ServiceInstance service) async {
         final bool isKorean = languageCode.startsWith('ko');
 
         if (!isEnabled) {
-          await notificationsPlugin.cancel(alertNotificationId);
+          // 알림 비활성화 - 모든 알림 삭제 후 서비스 종료
+          await notificationsPlugin.cancel(preVoidNotificationId);
+          await notificationsPlugin.cancel(vocStartNotificationId);
+          await notificationsPlugin.cancel(vocActiveNotificationId);
           await notificationsPlugin.cancel(vocEndNotificationId);
           previousState = stateNone;
           timer.cancel();
@@ -177,8 +181,14 @@ void onStart(ServiceInstance service) async {
           String content = '';
 
           if (now.isBefore(preVoidStart)) {
-            // 대기 중 - 알림 표시 안함
-            currentState = stateNone;
+            // 대기 중 (pre-void 시작 전) - 서비스 필요 없음, 종료
+            await notificationsPlugin.cancel(preVoidNotificationId);
+            await notificationsPlugin.cancel(vocStartNotificationId);
+            await notificationsPlugin.cancel(vocActiveNotificationId);
+            await notificationsPlugin.cancel(vocEndNotificationId);
+            timer.cancel();
+            service.stopSelf();
+            return;
           } else if (now.isBefore(vocStart)) {
             // Pre-Void
             currentState = statePreVoid;
@@ -200,26 +210,25 @@ void onStart(ServiceInstance service) async {
 
           // 상태 전환 처리
           if (currentState != previousState) {
-            // 이전 alert 알림 제거
-            await notificationsPlugin.cancel(alertNotificationId);
-
             if (currentState == statePreVoid) {
-              // Pre-Void 시작 - 알림음 1회
+              // 1. Pre-Void 시작 - 이전 알림들 정리
+              await notificationsPlugin.cancel(vocStartNotificationId);
+              await notificationsPlugin.cancel(vocActiveNotificationId);
               await notificationsPlugin.cancel(vocEndNotificationId);
-              await _showAlertNotification(
-                notificationsPlugin,
-                isKorean ? '⏰ 보이드가 곧 시작됩니다' : '⏰ Void of Course Starting',
-                isKorean ? '보이드 시간이 다가오고 있습니다.' : 'Void period is approaching.',
-              );
             } else if (currentState == stateVocActive) {
-              // Void Active 시작 - 알림음 1회
-              await _showAlertNotification(
+              // 2. Void 시작 - Pre-void 알림(1번) 삭제, Void 시작 알림(2번) 표시
+              await notificationsPlugin.cancel(preVoidNotificationId);
+              await _showVocStartNotification(
                 notificationsPlugin,
                 isKorean ? '🌑 보이드가 시작되었습니다!' : '🌑 Void of Course Started!',
                 isKorean ? '중요한 결정을 피하세요.' : 'Avoid important decisions.',
               );
             } else if (currentState == stateVocEnded) {
-              // Void 종료 - 종료 알림 표시 후 서비스 종료
+              // 4. Void 종료 - Void 중 알림(3번) 삭제, Void 종료 알림(4번) 표시
+              await notificationsPlugin.cancel(preVoidNotificationId);
+              await notificationsPlugin.cancel(vocStartNotificationId);
+              await notificationsPlugin.cancel(vocActiveNotificationId);
+
               await notificationsPlugin.show(
                 vocEndNotificationId,
                 isKorean ? '✅ 보이드 종료!' : '✅ Void of Course Ended!',
@@ -248,9 +257,10 @@ void onStart(ServiceInstance service) async {
           }
 
           // 카운트다운 알림 업데이트 (소리/진동 없이, 삭제 불가)
-          if (currentState == statePreVoid || currentState == stateVocActive) {
+          if (currentState == statePreVoid) {
+            // 1. Pre-void 카운트다운
             await notificationsPlugin.show(
-              foregroundNotificationId,
+              preVoidNotificationId,
               title,
               content,
               const NotificationDetails(
@@ -269,12 +279,12 @@ void onStart(ServiceInstance service) async {
                 ),
               ),
             );
-          } else {
-            // 대기 중 - 알림 내용 최소화 (빈 내용)
+          } else if (currentState == stateVocActive) {
+            // 3. Void 중 카운트다운
             await notificationsPlugin.show(
-              foregroundNotificationId,
-              '',
-              '',
+              vocActiveNotificationId,
+              title,
+              content,
               const NotificationDetails(
                 android: AndroidNotificationDetails(
                   'void_service_channel',
@@ -293,27 +303,14 @@ void onStart(ServiceInstance service) async {
             );
           }
         } else {
-          // 데이터 없음 - 알림 숨김
-          await notificationsPlugin.show(
-            foregroundNotificationId,
-            '',
-            '',
-            const NotificationDetails(
-              android: AndroidNotificationDetails(
-                'void_service_channel',
-                'Void Countdown',
-                channelDescription: 'Shows countdown timer for Void of Course',
-                importance: Importance.low,
-                priority: Priority.low,
-                ongoing: true,
-                autoCancel: false,
-                playSound: false,
-                enableVibration: false,
-                onlyAlertOnce: true,
-                icon: '@drawable/ic_notification',
-              ),
-            ),
-          );
+          // 데이터 없음 - 모든 알림 삭제 후 서비스 종료
+          await notificationsPlugin.cancel(preVoidNotificationId);
+          await notificationsPlugin.cancel(vocStartNotificationId);
+          await notificationsPlugin.cancel(vocActiveNotificationId);
+          await notificationsPlugin.cancel(vocEndNotificationId);
+          timer.cancel();
+          service.stopSelf();
+          return;
         }
       }
     } finally {
@@ -322,14 +319,14 @@ void onStart(ServiceInstance service) async {
   });
 }
 
-// 상태 변경 시 알림음 1회 (자동 삭제)
-Future<void> _showAlertNotification(
+// 2. Void 시작 알림 (10초 후 자동 삭제, 진동)
+Future<void> _showVocStartNotification(
   FlutterLocalNotificationsPlugin plugin,
   String title,
   String body,
 ) async {
   await plugin.show(
-    alertNotificationId,
+    vocStartNotificationId,
     title,
     body,
     const NotificationDetails(
