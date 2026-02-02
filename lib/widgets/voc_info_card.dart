@@ -91,8 +91,8 @@ class _VocInfoCardState extends State<VocInfoCard>
       }
     } else if (doesSelectedDateHaveVoc) {
       vocStatusText = "Void Today";
-      vocIcon = '⚠️';
-      vocColor = const Color(0xFFFF9800);
+      vocIcon = '🔔';
+      vocColor = const Color.fromARGB(255, 235, 88, 4);
       vocBgColor = isDark ? const Color(0xFF3D2E1F) : const Color(0xFFFFF8E1);
       _pulseController.stop();
       _pulseController.reset();
@@ -291,27 +291,21 @@ class _VocInfoCardState extends State<VocInfoCard>
 
   Widget _buildTimeRow(
       BuildContext context, String label, String time, bool isDark) {
+    final textStyle = TextStyle(
+      color: Theme.of(context).textTheme.bodyLarge?.color,
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+    );
     return Row(
       children: [
         SizedBox(
-          width: 40,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isDark
-                  ? const Color(0xFFB8B5AD)
-                  : const Color(0xFF6B7280),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          width: 38,
+          child: Text(label, style: textStyle),
         ),
+        Text(' : ', style: textStyle),
         Text(
           time,
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyLarge?.color,
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
+          style: textStyle.copyWith(
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),

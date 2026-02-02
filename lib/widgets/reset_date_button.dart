@@ -39,8 +39,8 @@ class _ResetDateButtonState extends State<ResetDateButton> {
           scale: _isPressed ? 0.9 : 1.0,
           duration: const Duration(milliseconds: 100),
           child: Container(
-            width: 60,
-            height: 60,
+            width: 65,
+            height: 65,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
@@ -72,7 +72,7 @@ class _ResetDateButtonState extends State<ResetDateButton> {
                 child: const Center(
                   child: Icon(
                     Icons.refresh_rounded,
-                    size: 35,
+                    size: 45,
                     color: Colors.white,
                   ),
                 ),

@@ -132,27 +132,21 @@ class MoonPhaseCard extends StatelessWidget {
   }
 
   Widget _buildTimeRow(BuildContext context, String label, String time, bool isDark) {
+    final textStyle = TextStyle(
+      color: Theme.of(context).textTheme.bodyLarge?.color,
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+    );
     return Row(
       children: [
         SizedBox(
-          width: 40,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isDark
-                  ? const Color(0xFFB8B5AD)
-                  : const Color(0xFF6B7280),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          width: 38,
+          child: Text(label, style: textStyle),
         ),
+        Text(' : ', style: textStyle),
         Text(
           time,
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyLarge?.color,
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
+          style: textStyle.copyWith(
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),

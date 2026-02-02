@@ -149,21 +149,12 @@ class MoonSignCard extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Moon in',
+                          'Moon in ${provider.moonInSign}',
                           style: TextStyle(
                             color: isDark ? Themes.gold : Themes.midnightBlue,
                             fontSize: 17,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 1),
-                        Text(
-                          provider.moonInSign,
-                          style: TextStyle(
-                            color: Theme.of(context).textTheme.titleLarge?.color,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
                           ),
                         ),
                         const SizedBox(height: 1),
@@ -195,27 +186,21 @@ class MoonSignCard extends StatelessWidget {
   }
 
   Widget _buildTimeRow(BuildContext context, String label, String time, bool isDark) {
+    final textStyle = TextStyle(
+      color: Theme.of(context).textTheme.bodyLarge?.color,
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+    );
     return Row(
       children: [
         SizedBox(
-          width: 40,
-          child: Text(
-            label,
-            style: TextStyle(
-              color: isDark
-                  ? const Color(0xFFB8B5AD)
-                  : const Color(0xFF6B7280),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+          width: 38,
+          child: Text(label, style: textStyle),
         ),
+        Text(' : ', style: textStyle),
         Text(
           time,
-          style: TextStyle(
-            color: Theme.of(context).textTheme.bodyLarge?.color,
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
+          style: textStyle.copyWith(
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),
