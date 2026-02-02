@@ -221,15 +221,16 @@ class _MainAppScreenState extends State<MainAppScreen> {
             ),
             bottomNavigationBar: Container(
               decoration: BoxDecoration(
-                color: Theme.of(context).cardColor,
+                color: isDarkMode
+                    ? const Color(0xFF1A1A2E)
+                    : Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color:
-                        isDarkMode
-                            ? Colors.black.withOpacity(0.3)
-                            : Colors.grey.withOpacity(0.2),
-                    blurRadius: 10,
-                    offset: const Offset(0, -2),
+                    color: isDarkMode
+                        ? Colors.black.withOpacity(0.4)
+                        : Colors.black.withOpacity(0.08),
+                    blurRadius: 15,
+                    offset: const Offset(0, -3),
                   ),
                 ],
               ),
@@ -239,9 +240,9 @@ class _MainAppScreenState extends State<MainAppScreen> {
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 selectedItemColor:
-                    isDarkMode ? Colors.yellow[300] : Colors.black,
+                    isDarkMode ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
                 unselectedItemColor:
-                    isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    isDarkMode ? const Color(0xFFB8B5AD) : const Color(0xFF6B7280),
                 type: BottomNavigationBarType.fixed,
                 items: [
                   BottomNavigationBarItem(

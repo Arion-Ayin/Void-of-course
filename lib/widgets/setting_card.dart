@@ -22,7 +22,7 @@ class SettingCard extends StatelessWidget {
     // 카드를 담을 상자를 만들어요.
     return Container(
       // 위아래로 8만큼의 여백을 줘서 다른 카드와 간격을 만들어요.
-      margin: const EdgeInsets.symmetric(vertical: 8.0),
+      margin: const EdgeInsets.symmetric(vertical: 4.0),
       // 상자를 예쁘게 꾸며줘요.
       decoration: BoxDecoration(
         // 배경색을 두 가지 색이 섞이도록 만들어요.

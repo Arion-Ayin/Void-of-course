@@ -2,155 +2,241 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/astro_state.dart';
 
-// 달이 어떤 별자리에 있는지 보여주는 카드를 만드는 위젯이에요.
 class MoonSignCard extends StatelessWidget {
-  // 이 카드는 별자리 정보가 필요해요.
   final AstroState provider;
 
-  // 카드를 만들 때 이 정보들을 꼭 받아야 해요.
   const MoonSignCard({
     super.key,
     required this.provider,
   });
 
-  // 별자리 이름에 맞는 이모티콘(그림 아이콘)을 찾아주는 함수예요.
   String getZodiacEmoji(String sign) {
-    // 만약 별자리 이름이 'Aries'(양자리)이면, 양자리 이모티콘을 돌려줘요.
     switch (sign) {
       case 'Aries':
-        return '♈︎'; // 양자리
+        return '♈︎';
       case 'Taurus':
-        return '♉︎'; // 황소자리
+        return '♉︎';
       case 'Gemini':
-        return '♊︎'; // 쌍둥이자리
+        return '♊︎';
       case 'Cancer':
-        return '♋︎'; // 게자리
+        return '♋︎';
       case 'Leo':
-        return '♌︎'; // 사자자리
+        return '♌︎';
       case 'Virgo':
-        return '♍︎'; // 처녀자리
+        return '♍︎';
       case 'Libra':
-        return '♎︎'; // 천칭자리
+        return '♎︎';
       case 'Scorpio':
-        return '♏︎'; // 전갈자리
+        return '♏︎';
       case 'Sagittarius':
-        return '♐︎'; // 사수자리
+        return '♐︎';
       case 'Capricorn':
-        return '♑︎'; // 염소자리
+        return '♑︎';
       case 'Aquarius':
-        return '♒︎'; // 물병자리
+        return '♒︎';
       case 'Pisces':
-        return '♓︎'; // 물고기자리
+        return '♓︎';
       default:
-        return '❔'; // 아는 별자리가 없으면 물음표를 보여줘요.
+        return '❔';
+    }
+  }
+
+  Color _getSignColor(String sign, bool isDark) {
+    // 원소별 색상 (불, 흙, 공기, 물)
+    switch (sign) {
+      case 'Aries':
+      case 'Leo':
+      case 'Sagittarius':
+        return isDark ? const Color(0xFFE57373) : const Color(0xFFD32F2F); // 불
+      case 'Taurus':
+      case 'Virgo':
+      case 'Capricorn':
+        return isDark ? const Color(0xFFA1887F) : const Color(0xFF5D4037); // 흙
+      case 'Gemini':
+      case 'Libra':
+      case 'Aquarius':
+        return isDark ? const Color(0xFF90CAF9) : const Color(0xFF1976D2); // 공기
+      case 'Cancer':
+      case 'Scorpio':
+      case 'Pisces':
+        return isDark ? const Color(0xFF80DEEA) : const Color(0xFF00838F); // 물
+      default:
+        return isDark ? const Color(0xFFB8B5AD) : const Color(0xFF6B7280);
     }
   }
 
   @override
-  // 이 위젯이 화면에 어떻게 보일지 정하는 부분이에요.
   Widget build(BuildContext context) {
-    // 다음 별자리 시간 텍스트를 포맷팅합니다.
     final nextSignTime = provider.nextSignTime?.toLocal();
     final formattedNextSignTime =
         nextSignTime != null
             ? DateFormat('MM/dd HH:mm').format(nextSignTime)
             : 'N/A';
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final signColor = _getSignColor(provider.moonInSign, isDark);
 
-    // 카드를 담을 상자를 만들어요.
     return Container(
-      // 상자를 예쁘게 꾸며줘요.
       decoration: BoxDecoration(
-        // 배경색을 두 가지 색이 섞이도록 만들어요.
         gradient: LinearGradient(
-          begin: Alignment.topLeft, // 왼쪽 위에서 시작해서
-          end: Alignment.bottomRight, // 오른쪽 아래로 색이 변해요.
-          colors: [
-            Theme.of(context).cardColor, // 앱의 기본 카드 색상을 사용해요.
-            Theme.of(
-              context,
-            ).cardColor.withOpacity(0.8), // 기본 카드 색상을 살짝 투명하게 만들어요.
-          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  const Color(0xFF1E3A5F),
+                  const Color(0xFF16213E),
+                ]
+              : [
+                  Colors.white,
+                  const Color(0xFFF8F6F0),
+                ],
         ),
-        // 모서리를 둥글게 깎아줘요.
-        borderRadius: BorderRadius.circular(20),
-        // 그림자를 만들어서 입체적으로 보이게 해요.
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(
-              context,
-            ).shadowColor.withOpacity(0.1), // 앱의 기본 그림자 색상을 아주 살짝 보이게 해요.
-            blurRadius: 10, // 그림자를 부드럽게 퍼지게 해요.
-            offset: const Offset(0, 5), // 그림자를 아래쪽으로 5만큼 이동시켜요.
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : Colors.black.withOpacity(0.08),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(5), // 전체 컨테이너에 패딩을 충분히 줘요.
-      // 카드 안에 들어갈 내용(아이콘, 글자 등)을 가로로 배열해요.
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center, // 아이콘과 텍스트를 수직 중앙 정렬해요.
-        children: [
-          // ⭐️ 이모지(아이콘)를 표시하는 부분
-          SizedBox(
-            width: 90, // 이모지 컨테이너의 너비를 충분히 확보
-            height: 90, // 이모지 컨테이너의 높이를 충분히 확보
-            child: Center(
-              child: Text(
-                getZodiacEmoji(provider.moonInSign), // 별자리 이름으로 이모티콘을 찾아서 보여줘요.
-                style: const TextStyle(
-                  fontSize: 55, // 폰트 크기를 더 크게 설정
-                  color: Colors.white, // 이모지 색상을 흰색으로 명시하여 선명하게 보이게 해요.
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            // 별자리 원소 색상 악센트
+            Positioned(
+              left: -30,
+              bottom: -30,
+              child: Container(
+                width: 120,
+                height: 120,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      signColor.withOpacity(0.15),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 16), // 이모지와 텍스트 사이의 간격 추가
-          // ⭐️ 텍스트 부분을 표시하는 부분
-          Expanded(
-            child: Column(
-              crossAxisAlignment:
-                  CrossAxisAlignment.start, // 글자들을 왼쪽부터 시작하도록 정렬해요.
-              mainAxisSize: MainAxisSize.min, // 내용물 크기만큼만 공간을 차지하게 해요.
-              children: [
-                // 달이 있는 별자리 이름을 보여줘요.
-                Text(
-                  'Moon in ${provider.moonInSign}', // '달은 양자리에 있어요' 처럼 보여줘요.
-                  style: TextStyle(
-                    color:
-                        Theme.of(
-                          context,
-                        ).textTheme.titleLarge?.color, // 앱의 큰 제목 글자 색상을 사용해요.
-                    fontSize: 18, // 글자 크기는 18
-                    fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요.
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // 별자리 심볼 영역
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: isDark
+                            ? [
+                                signColor.withOpacity(0.3),
+                                const Color(0xFF1E3A5F),
+                              ]
+                            : [
+                                signColor.withOpacity(0.15),
+                                const Color(0xFFF0EDE5),
+                              ],
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        getZodiacEmoji(provider.moonInSign),
+                        style: TextStyle(
+                          fontSize: 50,
+                          color: signColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-                // 다음 별자리로 바뀌는 시간을 보여줘요.
-                Text(
-                  'Start : ${provider.currentSignStartTime != null ? DateFormat('MM/dd HH:mm').format(provider.currentSignStartTime!.toLocal()) : 'N/A'}',
-                  style: TextStyle(
-                    color:
-                        Theme.of(
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Moon in',
+                          style: TextStyle(
+                            color: isDark
+                                ? const Color(0xFFD4AF37)
+                                : const Color(0xFF2C3E50),
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        Text(
+                          provider.moonInSign,
+                          style: TextStyle(
+                            color: Theme.of(context).textTheme.titleLarge?.color,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        _buildTimeRow(
                           context,
-                        ).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
-                    fontSize: 17, // 글자 크기는 17
-                    fontWeight: FontWeight.w900, // 글자를 매우 두껍게 만들어요.
-                  ),
-                ),
-                Text(
-                  'End   : $formattedNextSignTime', // 포맷팅된 시간을 보여줘요.
-                  style: TextStyle(
-                    color:
-                        Theme.of(
+                          'Start',
+                          provider.currentSignStartTime != null
+                              ? DateFormat('MM/dd HH:mm').format(provider.currentSignStartTime!.toLocal())
+                              : 'N/A',
+                          isDark,
+                        ),
+                        const SizedBox(height: 1),
+                        _buildTimeRow(
                           context,
-                        ).textTheme.bodyMedium?.color, // 앱의 보통 글자 색상을 사용해요.
-                    fontSize: 17, // 글자 크기는 17
-                    fontWeight: FontWeight.w900, // 글자를 매우 두껍게 만들어요.
+                          'End',
+                          formattedNextSignTime,
+                          isDark,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimeRow(BuildContext context, String label, String time, bool isDark) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 40,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isDark
+                  ? const Color(0xFFB8B5AD)
+                  : const Color(0xFF6B7280),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
             ),
           ),
-        ],
-      ),
+        ),
+        Text(
+          time,
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
     );
   }
 }

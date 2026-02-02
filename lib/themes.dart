@@ -2,89 +2,123 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class Themes {
+  // 우주적 색상 팔레트 - 달과 별의 신비로움을 담다
+
+  // Light Theme Colors
+  static const Color _lightBackground = Color(0xFFF8F6F0); // 따뜻한 아이보리
+  static const Color _lightSurface = Color(0xFFFFFDF8); // 부드러운 크림색
+  static const Color _lightCard = Color(0xFFFFFFFF); // 순백
+  static const Color _lightPrimary = Color(0xFF2C3E50); // 깊은 미드나잇 블루
+  static const Color _lightSecondary = Color(0xFFD4AF37); // 골드
+  static const Color _lightText = Color(0xFF1A1A2E); // 깊은 네이비
+  static const Color _lightTextSecondary = Color(0xFF4A4A5A); // 부드러운 그레이
+
+  // Dark Theme Colors
+  static const Color _darkBackground = Color(0xFF0F0F1A); // 깊은 우주 블랙
+  static const Color _darkSurface = Color(0xFF1A1A2E); // 미드나잇 네이비
+  static const Color _darkCard = Color(0xFF16213E); // 깊은 인디고
+  static const Color _darkPrimary = Color(0xFFE8D5B7); // 달빛 크림
+  static const Color _darkSecondary = Color(0xFFD4AF37); // 골드
+  static const Color _darkText = Color(0xFFF0EDE5); // 별빛 화이트
+  static const Color _darkTextSecondary = Color(0xFFB8B5AD); // 부드러운 실버
+
   //light theme
   static final ThemeData lightTheme = ThemeData(
-    brightness: Brightness.light, // 이 테마는 밝은 모드예요.
-    primarySwatch: Colors.grey, // 앱의 주요 색상으로 회색 계열을 사용해요. (여러 회색 농도를 자동으로 만들어줘요)
-    colorScheme: const ColorScheme.light( // 밝은 테마에 맞는 색상들을 자세히 정해요.
-      primary: Colors.black87, // 주요 색상 (버튼, 아이콘 등)
-      onPrimary: Colors.white, // 주요 색상 위에 올라가는 글자나 아이콘 색상
-      secondary: Colors.orange, // 강조 색상 (특별한 아이콘이나 요소)
-      onSecondary: Colors.white, // 강조 색상 위에 올라가는 글자나 아이콘 색상
-      surface: Colors.white, // 카드나 배경처럼 평평한 면의 색상
-      onSurface: Colors.black87, // 평평한 면 위에 올라가는 글자나 아이콘 색상
-      background: Colors.white, // 일반적인 화면 배경색
-      onBackground: Colors.black87, // 배경 위에 올라가는 글자나 아이콘 색상
+    brightness: Brightness.light,
+    primarySwatch: Colors.blueGrey,
+    colorScheme: const ColorScheme.light(
+      primary: _lightPrimary,
+      onPrimary: Colors.white,
+      secondary: _lightSecondary,
+      onSecondary: Colors.white,
+      surface: _lightSurface,
+      onSurface: _lightText,
+      background: _lightBackground,
+      onBackground: _lightText,
     ),
-    scaffoldBackgroundColor: Colors.white, // Scaffold(앱의 기본 뼈대)의 배경색을 하얀색으로 해요.
-    cardColor: Colors.white, // 카드 위젯의 배경색을 하얀색으로 해요. (colorScheme.surface와 중복될 수 있지만, 기존 사용을 위해 유지해요)
-    appBarTheme: const AppBarTheme( // 앱 바(화면 상단 제목 부분)의 디자인을 정해요.
-      backgroundColor: Colors.white, // 앱 바의 배경색은 하얀색
-      foregroundColor: Colors.black87, // 앱 바의 글자나 아이콘 색상은 거의 검은색
-      elevation: 4, // 앱 바 아래에 그림자를 4만큼 만들어요.
-      shadowColor: Colors.black12, // 그림자 색상은 살짝 투명한 검은색
-      systemOverlayStyle: const SystemUiOverlayStyle(
+    scaffoldBackgroundColor: _lightBackground,
+    cardColor: _lightCard,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: _lightBackground,
+      foregroundColor: _lightPrimary,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.dark,
         systemNavigationBarColor: Colors.transparent,
         systemNavigationBarIconBrightness: Brightness.dark,
-      ), // 시스템 UI(상태표시줄)의 글자나 아이콘을 어둡게 보여줘요.
-      titleTextStyle: TextStyle(color: Colors.black, fontSize: 22, fontWeight: FontWeight.bold), // 제목 글자 스타일
+      ),
+      titleTextStyle: TextStyle(
+        color: _lightPrimary,
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
+      ),
     ),
-    textTheme: const TextTheme( // 앱의 글자 스타일을 정해요.
-      titleMedium: TextStyle(color: Colors.black87, fontSize: 18), // 중간 크기 제목 글자색은 거의 검은색, 크기는 18
-      bodyMedium: TextStyle(color: Colors.black54, fontSize: 14), // 일반 본문 글자색은 회색, 크기는 14
+    textTheme: const TextTheme(
+      titleLarge: TextStyle(color: _lightText, fontSize: 20, fontWeight: FontWeight.w600),
+      titleMedium: TextStyle(color: _lightText, fontSize: 18, fontWeight: FontWeight.w500),
+      bodyLarge: TextStyle(color: _lightText, fontSize: 16),
+      bodyMedium: TextStyle(color: _lightTextSecondary, fontSize: 14),
     ),
-    iconTheme: const IconThemeData(color: Colors.black54), // 앱의 모든 아이콘 색상을 회색으로 해요.
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData( // 하단 내비게이션 바의 디자인을 정해요.
-      backgroundColor: Colors.white, // 배경색은 하얀색
-      selectedItemColor: Colors.black, // 선택된 항목의 색상은 검정색
-      unselectedItemColor: Colors.grey, // 선택되지 않은 항목의 색상은 회색
-      type: BottomNavigationBarType.fixed, // 항목들의 크기를 고정해요.
-      elevation: 8, // 그림자를 8만큼 만들어요.
+    iconTheme: const IconThemeData(color: _lightPrimary),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: _lightCard,
+      selectedItemColor: _lightPrimary,
+      unselectedItemColor: _lightTextSecondary,
+      type: BottomNavigationBarType.fixed,
+      elevation: 8,
     ),
   );
 
   //dark theme
   static final ThemeData darkTheme = ThemeData(
-    brightness: Brightness.dark, // 이 테마는 어두운 모드예요.
-    primarySwatch: Colors.grey, // 앱의 주요 색상으로 회색 계열을 사용해요.
-    colorScheme: ColorScheme.dark( // 어두운 테마에 맞는 색상들을 자세히 정해요.
-      primary: const Color.fromARGB(255, 255, 230, 0)!, // 주요 색상 (밝은 파란색)
-      onPrimary: Colors.white, // 주요 색상 위에 올라가는 글자나 아이콘 색상
-      secondary: Colors.orange[300]!, // 강조 색상 (밝은 주황색)
-      onSecondary: Colors.white, // 강조 색상 위에 올라가는 글자나 아이콘 색상
-      surface: Colors.grey[800]!, // 카드나 배경처럼 평평한 면의 색상 (어두운 회색)
-      onSurface: Colors.white, // 평평한 면 위에 올라가는 글자나 아이콘 색상
-      background: Colors.grey[900]!, // 일반적인 화면 배경색 (아주 어두운 회색)
-      onBackground: Colors.white, // 배경 위에 올라가는 글자나 아이콘 색상
+    brightness: Brightness.dark,
+    primarySwatch: Colors.blueGrey,
+    colorScheme: const ColorScheme.dark(
+      primary: _darkPrimary,
+      onPrimary: _darkBackground,
+      secondary: _darkSecondary,
+      onSecondary: _darkBackground,
+      surface: _darkSurface,
+      onSurface: _darkText,
+      background: _darkBackground,
+      onBackground: _darkText,
     ),
-    scaffoldBackgroundColor: Colors.grey[900], // Scaffold(앱의 기본 뼈대)의 배경색을 아주 어두운 회색으로 해요.
-    cardColor: Colors.grey[800], // 카드 위젯의 배경색을 어두운 회색으로 해요.
-    appBarTheme: AppBarTheme( // 앱 바(화면 상단 제목 부분)의 디자인을 정해요.
-      backgroundColor: Colors.grey[900], // 앱 바의 배경색은 아주 어두운 회색
-      foregroundColor: Colors.white, // 앱 바의 글자나 아이콘 색상은 하얀색
-      elevation: 0, // 앱 바 아래에 그림자를 없애요.
-      shadowColor: Colors.transparent, // 그림자가 없다는 뜻
-      systemOverlayStyle: const SystemUiOverlayStyle(
+    scaffoldBackgroundColor: _darkBackground,
+    cardColor: _darkCard,
+    appBarTheme: const AppBarTheme(
+      backgroundColor: _darkBackground,
+      foregroundColor: _darkPrimary,
+      elevation: 0,
+      shadowColor: Colors.transparent,
+      systemOverlayStyle: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
         statusBarIconBrightness: Brightness.light,
         systemNavigationBarColor: Colors.transparent,
         systemNavigationBarIconBrightness: Brightness.light,
-      ), // 시스템 UI(상태표시줄)의 글자나 아이콘을 밝게 보여줘요.
-      titleTextStyle: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold), // 제목 글자 스타일
+      ),
+      titleTextStyle: TextStyle(
+        color: _darkPrimary,
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 0.5,
+      ),
     ),
-    textTheme: const TextTheme( // 앱의 글자 스타일을 정해요.
-      titleMedium: TextStyle(color: Colors.white, fontSize: 18), // 중간 크기 제목 글자색은 하얀색, 크기는 18
-      bodyMedium: TextStyle(color: Colors.white70, fontSize: 14), // 일반 본문 글자색은 살짝 투명한 하얀색, 크기는 14
+    textTheme: const TextTheme(
+      titleLarge: TextStyle(color: _darkText, fontSize: 20, fontWeight: FontWeight.w600),
+      titleMedium: TextStyle(color: _darkText, fontSize: 18, fontWeight: FontWeight.w500),
+      bodyLarge: TextStyle(color: _darkText, fontSize: 16),
+      bodyMedium: TextStyle(color: _darkTextSecondary, fontSize: 14),
     ),
-    iconTheme: const IconThemeData(color: Colors.white70), // 앱의 모든 아이콘 색상을 살짝 투명한 하얀색으로 해요.
-    bottomNavigationBarTheme: BottomNavigationBarThemeData( // 하단 내비게이션 바의 디자인을 정해요.
-      backgroundColor: Colors.grey[900], // 배경색은 아주 어두운 회색
-      selectedItemColor: Colors.yellow[300], // 선택된 항목의 색상은 밝은 노란색
-      unselectedItemColor: Colors.grey[400], // 선택되지 않은 항목의 색상은 밝은 회색
-      type: BottomNavigationBarType.fixed, // 항목들의 크기를 고정해요.
-      elevation: 8, // 그림자를 8만큼 만들어요.
+    iconTheme: const IconThemeData(color: _darkPrimary),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+      backgroundColor: _darkSurface,
+      selectedItemColor: _darkSecondary,
+      unselectedItemColor: _darkTextSecondary,
+      type: BottomNavigationBarType.fixed,
+      elevation: 0,
     ),
   );
 }

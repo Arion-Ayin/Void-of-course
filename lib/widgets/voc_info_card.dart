@@ -18,6 +18,7 @@ class VocInfoCard extends StatelessWidget {
     final vocEnd = provider.vocEnd;
     final now = DateTime.now().toUtc();
     final selectedDate = provider.selectedDate;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     bool isVocNow = false;
     if (vocStart != null && vocEnd != null) {
@@ -49,19 +50,23 @@ class VocInfoCard extends StatelessWidget {
     String vocStatusText;
     String vocIcon;
     Color vocColor;
+    Color vocBgColor;
 
     if (isVocNow) {
-      vocStatusText = "There's a void Now";
-      vocColor = const Color.fromRGBO(252, 17, 0, 1);
+      vocStatusText = "Void Now";
+      vocColor = const Color(0xFFE53935);
+      vocBgColor = isDark ? const Color(0xFF3D1F1F) : const Color(0xFFFFF0F0);
       vocIcon = '🚫';
     } else if (doesSelectedDateHaveVoc) {
-      vocStatusText = "There's a void today";
-      vocIcon = '🔔';
-      vocColor = Colors.orange;
+      vocStatusText = "Void Today";
+      vocIcon = '⚠️';
+      vocColor = const Color(0xFFFF9800);
+      vocBgColor = isDark ? const Color(0xFF3D2E1F) : const Color(0xFFFFF8E1);
     } else {
-      vocStatusText = "It's not a void";
+      vocStatusText = "Clear";
       vocIcon = '✅';
-      vocColor = const Color.fromARGB(255, 72, 189, 76);
+      vocColor = const Color(0xFF4CAF50);
+      vocBgColor = isDark ? const Color(0xFF1F3D2A) : const Color(0xFFF0FFF4);
     }
 
     return Container(
@@ -69,155 +74,234 @@ class VocInfoCard extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Theme.of(context).cardColor,
-            Theme.of(context).cardColor.withOpacity(0.8),
-          ],
+          colors: isDark
+              ? [
+                  vocBgColor,
+                  const Color(0xFF16213E),
+                ]
+              : [
+                  vocBgColor,
+                  Colors.white,
+                ],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Theme.of(context).shadowColor.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+            color: isDark
+                ? Colors.black.withOpacity(0.3)
+                : vocColor.withOpacity(0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(5), // ⭐️ 전체 컨테이너에 충분한 패딩을 줍니다.
-      child: Row(
-        crossAxisAlignment:
-            CrossAxisAlignment.center, // ⭐️ Row의 자식들을 수직 중앙 정렬합니다.
-        children: [
-          // ⭐️ 아이콘 부분을 담당하는 SizedBox와 Text 위젯
-          SizedBox(
-            width: 90, // 아이콘의 컨테이너 너비를 충분히 확보합니다.
-            height: 100, // 아이콘의 컨테이너 높이를 충분히 확보합니다.
-            child: Center(
-              child: Text(
-                vocIcon,
-                style: TextStyle(
-                  fontSize: 55, // ⭐️ 아이콘의 크기를 더 크게 설정합니다.
-                  color: vocColor, // ⭐️ 상태에 따라 아이콘 색상을 적용합니다.
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            // 상태 색상 악센트
+            Positioned(
+              right: -40,
+              top: -40,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      vocColor.withOpacity(0.2),
+                      Colors.transparent,
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 16), // ⭐️ 아이콘과 텍스트 사이의 간격을 줍니다.
-          // ⭐️ 텍스트 부분을 담당하는 Expanded와 Column 위젯
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'Void of Course',
-                      style: TextStyle(
-                        color: Theme.of(context).textTheme.titleLarge?.color,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // 상태 아이콘 영역
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          vocColor.withOpacity(isDark ? 0.3 : 0.2),
+                          vocColor.withOpacity(isDark ? 0.1 : 0.05),
+                        ],
                       ),
                     ),
-                    if (provider.vocAspect != null &&
-                        provider.vocPlanet != null) ...[
-                      const SizedBox(width: 8),
-                      Text(
-                        '${provider.vocAspect}',
-                        style: TextStyle(
-                          color: _getAspectColor(provider.vocAspect!),
-                          fontSize: 16,
-                          fontWeight: _getAspectFontWeight(provider.vocAspect!),
-                        ),
+                    child: Center(
+                      child: Text(
+                        vocIcon,
+                        style: const TextStyle(fontSize: 42),
                       ),
-                      Text(
-                        ', ',
-                        style: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.color?.withOpacity(0.7),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      Text(
-                        '${provider.vocPlanet}',
-                        style: TextStyle(
-                          color: _getPlanetColor(provider.vocPlanet!),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  'Start : ${_formatDateTime(provider.vocStart)}\n'
-                  'End  : ${_formatDateTime(provider.vocEnd)}',
-                  style: TextStyle(
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 1),
-                Text(
-                  vocStatusText,
-                  style: TextStyle(
-                    color: vocColor,
-                    fontSize: 21,
-                    fontWeight: FontWeight.w900,
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            Text(
+                              'Void of Course',
+                              style: TextStyle(
+                                color: isDark
+                                    ? const Color(0xFFD4AF37)
+                                    : const Color(0xFF2C3E50),
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            if (provider.vocAspect != null && provider.vocPlanet != null) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: isDark
+                                      ? Colors.white.withOpacity(0.1)
+                                      : Colors.black.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '${provider.vocAspect}',
+                                      style: TextStyle(
+                                        color: _getAspectColor(provider.vocAspect!),
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                    Text(
+                                      ' ${provider.vocPlanet}',
+                                      style: TextStyle(
+                                        color: _getPlanetColor(provider.vocPlanet!),
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                        const SizedBox(height: 1),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: vocColor.withOpacity(isDark ? 0.25 : 0.15),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            vocStatusText,
+                            style: TextStyle(
+                              color: vocColor,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 1),
+                        _buildTimeRow(
+                          context,
+                          'Start',
+                          _formatDateTime(provider.vocStart),
+                          isDark,
+                        ),
+                        const SizedBox(height: 1),
+                        _buildTimeRow(
+                          context,
+                          'End',
+                          _formatDateTime(provider.vocEnd),
+                          isDark,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
+  Widget _buildTimeRow(BuildContext context, String label, String time, bool isDark) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 40,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isDark
+                  ? const Color(0xFFB8B5AD)
+                  : const Color(0xFF6B7280),
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Text(
+          time,
+          style: TextStyle(
+            color: Theme.of(context).textTheme.bodyLarge?.color,
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
+  }
+
   Color _getAspectColor(String aspect) {
-    // Hard aspects: Conjunction (☌), Square (▢), Opposition (☍) -> Red
     if (['☌', '□', '☍'].contains(aspect)) {
-      return const Color.fromARGB(255, 255, 0, 0);
+      return const Color(0xFFE53935); // Hard aspects - Red
     }
-    // Soft aspects: Sextile (✶), Trine (▵) -> Blue
     if (['✶', '△'].contains(aspect)) {
-      return const Color.fromARGB(255, 0, 0, 255);
+      return const Color(0xFF2196F3); // Soft aspects - Blue
     }
-    return Colors.grey;
+    return const Color(0xFF9E9E9E);
   }
 
   Color _getPlanetColor(String planet) {
     switch (planet) {
-      case '☉': // Sun
-        return Colors.brown;
-      case '☾': // Moon
-        return Colors.brown;
-      case '☿': // Mercury
-        return Colors.purple;
-      case '♀': // Venus
-        return const Color(0xFF00C4B4); // Mint (Teal-ish)
-      case '♂': // Mars
-        return Colors.red;
-      case '♃': // Jupiter
-        return Colors.grey[800]!; // Dark Grey
-      case '♄': // Saturn
-        return const Color(0xFFA52A2A); // Reddish Brown
-      case '♅': // Uranus
-        return const Color.fromARGB(223, 12, 26, 223); // Mint
-      case '♆': // Neptune
-        return const Color(0xFF00C4B4); // Mint
-      case '⯓': // Pluto
-        return const Color(0xFFA52A2A); // Reddish Brown
+      case '☉':
+        return const Color(0xFFFF9800); // Sun - Orange
+      case '☾':
+        return const Color(0xFF9E9E9E); // Moon - Silver
+      case '☿':
+        return const Color(0xFF9C27B0); // Mercury - Purple
+      case '♀':
+        return const Color(0xFF4CAF50); // Venus - Green
+      case '♂':
+        return const Color(0xFFE53935); // Mars - Red
+      case '♃':
+        return const Color(0xFF3F51B5); // Jupiter - Indigo
+      case '♄':
+        return const Color(0xFF795548); // Saturn - Brown
+      case '♅':
+        return const Color(0xFF00BCD4); // Uranus - Cyan
+      case '♆':
+        return const Color(0xFF2196F3); // Neptune - Blue
+      case '⯓':
+        return const Color(0xFF673AB7); // Pluto - Deep Purple
       default:
-        return Colors.grey;
+        return const Color(0xFF9E9E9E);
     }
   }
-}
-
-FontWeight _getAspectFontWeight(String aspect) {
-  return FontWeight.w900;
 }

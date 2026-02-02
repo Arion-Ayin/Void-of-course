@@ -353,11 +353,13 @@ Warm reviews are a great strength to the developer.
                                                             content: Text(
                                                               appLocalizations
                                                                   .msgEmailCopied,
-                                                            ), // 지역화된 메시지
+                                                            ),
                                                             duration:
                                                                 const Duration(
                                                                   seconds: 2,
                                                                 ),
+                                                            behavior: SnackBarBehavior.floating,
+                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                                           ),
                                                         );
                                                       } else {
@@ -368,11 +370,13 @@ Warm reviews are a great strength to the developer.
                                                             content: Text(
                                                               appLocalizations
                                                                   .msgAppNotFound,
-                                                            ), // 지역화된 메시지
+                                                            ),
                                                             duration:
                                                                 const Duration(
                                                                   seconds: 2,
                                                                 ),
+                                                            behavior: SnackBarBehavior.floating,
+                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                                                           ),
                                                         );
                                                       }

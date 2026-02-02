@@ -83,7 +83,11 @@ class SettingScreen extends StatelessWidget {
 
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Could not launch $url')),
+                      SnackBar(
+                        content: Text('Could not launch $url'),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
                     );
                   }
                 }
@@ -196,8 +200,10 @@ class SettingScreen extends StatelessWidget {
                         // 화면 아래에 알림 메시지를 잠깐 띄워줘요.
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(message), // 위에서 정한 메시지를 보여줘요.
-                            duration: const Duration(seconds: 2), // 2초 동안 보여줘요.
+                            content: Text(message),
+                            duration: const Duration(seconds: 2),
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                         );
                       },
@@ -288,8 +294,10 @@ class SettingScreen extends StatelessWidget {
                     // 화면 아래에 언어 변경 알림 메시지를 잠깐 띄워줘요.
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text(message), // 위에서 정한 메시지를 보여줘요.
-                        duration: const Duration(seconds: 1), // 2초 동안 보여줘요.
+                        content: Text(message),
+                        duration: const Duration(seconds: 1),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                     );
                   },
