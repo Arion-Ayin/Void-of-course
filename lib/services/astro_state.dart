@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'astro_calculator.dart';
 import 'notification_service.dart';
+import 'alarm_service.dart';
 import 'package:sweph/sweph.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
 
@@ -14,6 +15,8 @@ enum AlarmPermissionStatus { granted, notificationDenied, exactAlarmDenied }
 class AstroState with ChangeNotifier {
   Timer? _timer;
   final NotificationService _notificationService = NotificationService();
+  final AlarmService _alarmService = AlarmService();
+  SharedPreferences? _prefs; // 캐시된 SharedPreferences 인스턴스
   bool _voidAlarmEnabled = false;
   int _preVoidAlarmHours = 6;
 
@@ -75,6 +78,13 @@ class AstroState with ChangeNotifier {
     notifyListeners();
   }
 
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _timer = null;
+    super.dispose();
+  }
+
   Future<void> followTime() async {
     if (_isFollowingTime) return;
     _isFollowingTime = true;
@@ -94,13 +104,25 @@ class AstroState with ChangeNotifier {
       _currentLocale = Intl.getCurrentLocale();
       //알림 서비스 초기화
       await _notificationService.init();
-      //shared preferences 초기화
-      final prefs = await SharedPreferences.getInstance();
+      //알람 매니저 초기화 (앱 종료 후에도 백그라운드 서비스 시작 가능)
+      await _alarmService.init();
+      //shared preferences 초기화 (캐싱)
+      _prefs = await SharedPreferences.getInstance();
       //void alarm enabled 상태 저장
-      _voidAlarmEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
-      _preVoidAlarmHours = prefs.getInt('preVoidAlarmHours') ?? 6;
+      _voidAlarmEnabled = _prefs!.getBool('voidAlarmEnabled') ?? false;
+      _preVoidAlarmHours = _prefs!.getInt('preVoidAlarmHours') ?? 6;
 
       await _updateData();
+
+      // 알람이 활성화되어 있으면 예약 알림 설정 (앱 재시작 시에도 동작)
+      // 단, 서비스가 이미 실행 중이면 다시 스케줄링하지 않음 (중복 알림 방지)
+      if (_voidAlarmEnabled) {
+        final service = FlutterBackgroundService();
+        final isRunning = await service.isRunning();
+        if (!isRunning) {
+          await _schedulePreVoidAlarm();
+        }
+      }
 
       _isInitialized = true;
       _lastError = null;
@@ -116,8 +138,7 @@ class AstroState with ChangeNotifier {
   //
   Future<void> updateLocale(String languageCode) async {
     _currentLocale = languageCode;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('cached_language_code', languageCode);
+    await _prefs?.setString('cached_language_code', languageCode);
 
     if (_voidAlarmEnabled) {
       await _schedulePreVoidAlarm();
@@ -137,8 +158,6 @@ class AstroState with ChangeNotifier {
   }
 
   Future<AlarmPermissionStatus> toggleVoidAlarm(bool enable) async {
-    final prefs = await SharedPreferences.getInstance();
-
     if (enable) {
       final bool hasNotificationPermission =
           await _notificationService.requestPermissions();
@@ -161,7 +180,7 @@ class AstroState with ChangeNotifier {
 
       if (hasExactAlarmPermission) {
         _voidAlarmEnabled = true;
-        await prefs.setBool('voidAlarmEnabled', true);
+        await _prefs?.setBool('voidAlarmEnabled', true);
         // _schedulePreVoidAlarm에서 pre-void 시작 여부에 따라 서비스 시작 결정
         await _schedulePreVoidAlarm(isToggleOn: true);
 
@@ -169,14 +188,15 @@ class AstroState with ChangeNotifier {
         return AlarmPermissionStatus.granted;
       } else {
         _voidAlarmEnabled = false;
-        await prefs.setBool('voidAlarmEnabled', false);
+        await _prefs?.setBool('voidAlarmEnabled', false);
         notifyListeners();
         return AlarmPermissionStatus.exactAlarmDenied;
       }
     } else {
       _voidAlarmEnabled = false;
-      await prefs.setBool('voidAlarmEnabled', false);
+      await _prefs?.setBool('voidAlarmEnabled', false);
       await _notificationService.cancelAllNotifications();
+      await _alarmService.cancelAlarm();
 
       // Stop Background Service
       final service = FlutterBackgroundService();
@@ -189,17 +209,18 @@ class AstroState with ChangeNotifier {
 
   Future<void> setPreVoidAlarmHours(int hours) async {
     _preVoidAlarmHours = hours;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('preVoidAlarmHours', hours);
+    await _prefs?.setInt('preVoidAlarmHours', hours);
     await _schedulePreVoidAlarm(isToggleOn: false);
     notifyListeners();
   }
 
   Future<void> _schedulePreVoidAlarm({bool isToggleOn = false}) async {
-    // 기존 예약된 알림들 취소 (1000~1100번)
-    for (int i = 0; i < 100; i++) {
-      await _notificationService.cancelNotification(1000 + i);
-    }
+    // 기존 예약된 알림들 병렬로 취소 (1000~1100번)
+    await Future.wait([
+      for (int i = 0; i < 100; i++)
+        _notificationService.cancelNotification(1000 + i),
+      _alarmService.cancelAlarm(), // AlarmManager 알람도 함께 취소
+    ]);
 
     if (!_voidAlarmEnabled) {
       notifyListeners();
@@ -209,11 +230,8 @@ class AstroState with ChangeNotifier {
     final now = DateTime.now();
     DateTime searchDate = now;
 
-    // 다음 유효한 VOC 찾기 및 캐시
-    final prefs = await SharedPreferences.getInstance();
-
     // 백그라운드 서비스용 pre-void 시간 동기화
-    await prefs.setInt('cached_pre_void_hours', _preVoidAlarmHours);
+    await _prefs?.setInt('cached_pre_void_hours', _preVoidAlarmHours);
 
     DateTime? foundVocStart;
     DateTime? foundVocEnd;
@@ -235,8 +253,8 @@ class AstroState with ChangeNotifier {
       }
 
       // 첫 번째 유효한 VOC를 백그라운드 서비스용으로 캐시
-      await prefs.setString('cached_voc_start', vocStart.toIso8601String());
-      await prefs.setString('cached_voc_end', vocEnd.toIso8601String());
+      await _prefs?.setString('cached_voc_start', vocStart.toIso8601String());
+      await _prefs?.setString('cached_voc_end', vocEnd.toIso8601String());
 
       foundVocStart = vocStart;
       foundVocEnd = vocEnd;
@@ -269,6 +287,20 @@ class AstroState with ChangeNotifier {
         if (kDebugMode) {
           print("Background service stopped (pre-void not yet started)");
         }
+      }
+
+      // 앱이 꺼져있어도 백그라운드 서비스가 시작되도록 AlarmManager로 예약
+      // pre-void 시작 시점에 알람 예약 (아직 시작 전일 때만)
+      if (preVoidStart.isAfter(now)) {
+        // AlarmManager로 백그라운드 서비스 자동 시작 예약
+        await _alarmService.schedulePreVoidAlarm(preVoidStart);
+
+        if (kDebugMode) {
+          print("Scheduled AlarmManager for pre-void at: $preVoidStart");
+        }
+      } else {
+        // 이미 pre-void가 시작되었으면 알람 취소
+        await _alarmService.cancelAlarm();
       }
     } else if (isRunning) {
       // VOC 데이터가 없으면 서비스 종료
@@ -466,12 +498,11 @@ class AstroState with ChangeNotifier {
     _moonPhaseEndTime = result['moonPhaseEndTime'] as DateTime?;
 
     // Cache VOC times and settings for background service
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('cached_pre_void_hours', _preVoidAlarmHours);
+    await _prefs?.setInt('cached_pre_void_hours', _preVoidAlarmHours);
 
     // 수정: _currentLocale이 초기화되지 않았을 경우를 대비해 예외 처리
     try {
-      await prefs.setString('cached_language_code', _currentLocale);
+      await _prefs?.setString('cached_language_code', _currentLocale);
     } catch (_) {
       // 초기화 전이라면 무시하거나 기본값 사용
     }

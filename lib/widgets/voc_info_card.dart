@@ -12,28 +12,7 @@ class VocInfoCard extends StatefulWidget {
   State<VocInfoCard> createState() => _VocInfoCardState();
 }
 
-class _VocInfoCardState extends State<VocInfoCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
-      vsync: this,
-    );
-    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.15).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
-  }
+class _VocInfoCardState extends State<VocInfoCard> {
 
   String _formatDateTime(DateTime? dateTime) {
     if (dateTime == null) return 'N/A';
@@ -85,24 +64,16 @@ class _VocInfoCardState extends State<VocInfoCard>
       vocColor = const Color(0xFFE53935);
       vocBgColor = isDark ? const Color(0xFF3D1F1F) : const Color(0xFFFFF0F0);
       vocIcon = '🚫';
-      // 펄스 애니메이션 시작
-      if (!_pulseController.isAnimating) {
-        _pulseController.repeat(reverse: true);
-      }
     } else if (doesSelectedDateHaveVoc) {
       vocStatusText = "Void Today";
       vocIcon = '🔔';
       vocColor = const Color.fromARGB(255, 235, 88, 4);
       vocBgColor = isDark ? const Color(0xFF3D2E1F) : const Color(0xFFFFF8E1);
-      _pulseController.stop();
-      _pulseController.reset();
     } else {
       vocStatusText = "Clear";
       vocIcon = '✅';
       vocColor = const Color(0xFF4CAF50);
       vocBgColor = isDark ? const Color(0xFF1F3D2A) : const Color(0xFFF0FFF4);
-      _pulseController.stop();
-      _pulseController.reset();
     }
 
     return Container(
@@ -152,42 +123,34 @@ class _VocInfoCardState extends State<VocInfoCard>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // 상태 아이콘 영역 (펄스 애니메이션 적용)
-                  AnimatedBuilder(
-                    animation: _pulseAnimation,
-                    builder: (context, child) {
-                      return Transform.scale(
-                        scale: isVocNow ? _pulseAnimation.value : 1.0,
-                        child: Container(
-                          width: 72,
-                          height: 72,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: RadialGradient(
-                              colors: [
-                                vocColor.withValues(alpha: isDark ? 0.3 : 0.2),
-                                vocColor.withValues(alpha: isDark ? 0.1 : 0.05),
-                              ],
-                            ),
-                            boxShadow: isVocNow
-                                ? [
-                                    BoxShadow(
-                                      color: vocColor.withValues(alpha: 0.4),
-                                      blurRadius: 15,
-                                      spreadRadius: 2,
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: Center(
-                            child: Text(
-                              vocIcon,
-                              style: const TextStyle(fontSize: 42),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
+                  // 상태 아이콘 영역
+                  Container(
+                    width: 72,
+                    height: 72,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          vocColor.withValues(alpha: isDark ? 0.3 : 0.2),
+                          vocColor.withValues(alpha: isDark ? 0.1 : 0.05),
+                        ],
+                      ),
+                      boxShadow: isVocNow
+                          ? [
+                              BoxShadow(
+                                color: vocColor.withValues(alpha: 0.4),
+                                blurRadius: 15,
+                                spreadRadius: 2,
+                              ),
+                            ]
+                          : null,
+                    ),
+                    child: Center(
+                      child: Text(
+                        vocIcon,
+                        style: const TextStyle(fontSize: 42),
+                      ),
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(

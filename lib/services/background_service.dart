@@ -10,11 +10,11 @@ const int statePreVoid = 1;
 const int stateVocActive = 2;
 const int stateVocEnded = 3;
 
-// 알림 ID 상수 - 4개의 독립적인 알림
-const int preVoidNotificationId = 888;    // 1. Pre-void 카운트다운 (삭제 불가, 무음)
-const int vocStartNotificationId = 777;   // 2. Void 시작 알림 (10초 후 자동 삭제, 진동)
-const int vocActiveNotificationId = 889;  // 3. Void 중 카운트다운 (삭제 불가, 무음)
-const int vocEndNotificationId = 999;     // 4. Void 종료 알림 (삭제 가능, 진동)
+// 알림 ID 상수
+// 포그라운드 서비스 알림 ID와 카운트다운 알림 ID를 동일하게 사용해야 빈 알림 문제가 해결됨
+const int countdownNotificationId = 888;  // 카운트다운 알림 (pre-void, void active 모두 사용)
+const int vocStartNotificationId = 777;   // Void 시작 알림 (10초 후 자동 삭제, 진동)
+const int vocEndNotificationId = 999;     // Void 종료 알림 (삭제 가능, 진동)
 
 Future<void> initializeBackgroundService() async {
   final service = FlutterBackgroundService();
@@ -71,7 +71,7 @@ Future<void> initializeBackgroundService() async {
       notificationChannelId: 'void_service_channel',
       initialNotificationTitle: '',
       initialNotificationContent: '',
-      foregroundServiceNotificationId: preVoidNotificationId,
+      foregroundServiceNotificationId: countdownNotificationId,
     ),
     iosConfiguration: IosConfiguration(
       autoStart: false,
@@ -94,6 +94,14 @@ void onStart(ServiceInstance service) async {
 
   final FlutterLocalNotificationsPlugin notificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  // stopService 이벤트 핸들러 등록
+  service.on("stopService").listen((event) async {
+    await notificationsPlugin.cancel(countdownNotificationId);
+    await notificationsPlugin.cancel(vocStartNotificationId);
+    await notificationsPlugin.cancel(vocEndNotificationId);
+    await service.stopSelf();
+  });
 
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@drawable/ic_notification');
@@ -142,6 +150,65 @@ void onStart(ServiceInstance service) async {
 
   int previousState = stateNone;
   bool isProcessing = false;
+  int tickCount = 0;
+
+  // 캐시된 설정값 (매초 reload 대신 30초마다 갱신)
+  String? cachedStartStr = prefs.getString('cached_voc_start');
+  String? cachedEndStr = prefs.getString('cached_voc_end');
+  int cachedPreHours = prefs.getInt('cached_pre_void_hours') ?? 6;
+  bool cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
+  String cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
+
+  // 서비스 시작 직후 즉시 알림 업데이트 (빈 알림 방지)
+  // Timer.periodic 전에 먼저 실행하여 빈 포그라운드 알림을 덮어씀
+  if (cachedIsEnabled && cachedStartStr != null && cachedEndStr != null) {
+    final DateTime now = DateTime.now();
+    final DateTime vocStart = DateTime.parse(cachedStartStr);
+    final DateTime vocEnd = DateTime.parse(cachedEndStr);
+    final DateTime preVoidStart = vocStart.subtract(Duration(hours: cachedPreHours));
+    final bool isKorean = cachedLanguageCode.startsWith('ko');
+
+    String? title;
+    String? content;
+
+    if (now.isAfter(preVoidStart) && now.isBefore(vocStart)) {
+      // Pre-Void 상태
+      final Duration timeLeft = vocStart.difference(now);
+      title = isKorean ? '⏰ 보이드 시작 알림' : '⏰ Void Starting Soon';
+      content = isKorean ? '보이드 시작까지: ${_formatDuration(timeLeft)}' : 'Starts in: ${_formatDuration(timeLeft)}';
+      previousState = statePreVoid;
+    } else if (now.isAfter(vocStart) && now.isBefore(vocEnd)) {
+      // Void Active 상태
+      final Duration timeLeft = vocEnd.difference(now);
+      title = isKorean ? '🌑 지금은 보이드입니다!' : '🌑 Void of Course Active!';
+      content = isKorean ? '보이드 종료까지: ${_formatDuration(timeLeft)}' : 'Ends in: ${_formatDuration(timeLeft)}';
+      previousState = stateVocActive;
+    }
+
+    // 즉시 알림 표시 (빈 알림 덮어쓰기)
+    if (title != null && content != null) {
+      await notificationsPlugin.show(
+        countdownNotificationId,
+        title,
+        content,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            'void_service_channel',
+            'Void Countdown',
+            channelDescription: 'Shows countdown timer for Void of Course',
+            importance: Importance.low,
+            priority: Priority.low,
+            ongoing: true,
+            autoCancel: false,
+            playSound: false,
+            enableVibration: false,
+            onlyAlertOnce: true,
+            icon: '@drawable/ic_notification',
+          ),
+        ),
+      );
+    }
+  }
 
   Timer.periodic(const Duration(seconds: 1), (timer) async {
     if (isProcessing) return;
@@ -149,20 +216,29 @@ void onStart(ServiceInstance service) async {
 
     try {
       if (service is AndroidServiceInstance) {
-        await prefs.reload();
+        // 30초마다 한 번씩만 SharedPreferences 갱신 (I/O 최소화)
+        tickCount++;
+        if (tickCount >= 30) {
+          tickCount = 0;
+          await prefs.reload();
+          cachedStartStr = prefs.getString('cached_voc_start');
+          cachedEndStr = prefs.getString('cached_voc_end');
+          cachedPreHours = prefs.getInt('cached_pre_void_hours') ?? 6;
+          cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
+          cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
+        }
 
-        final String? startStr = prefs.getString('cached_voc_start');
-        final String? endStr = prefs.getString('cached_voc_end');
-        final int preHours = prefs.getInt('cached_pre_void_hours') ?? 6;
-        final bool isEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
-        final String languageCode = prefs.getString('cached_language_code') ?? 'en';
-        final bool isKorean = languageCode.startsWith('ko');
+        // 캐시된 값 사용 (30초마다 갱신됨)
+        final String? startStr = cachedStartStr;
+        final String? endStr = cachedEndStr;
+        final int preHours = cachedPreHours;
+        final bool isEnabled = cachedIsEnabled;
+        final bool isKorean = cachedLanguageCode.startsWith('ko');
 
         if (!isEnabled) {
           // 알림 비활성화 - 모든 알림 삭제 후 서비스 종료
-          await notificationsPlugin.cancel(preVoidNotificationId);
+          await notificationsPlugin.cancel(countdownNotificationId);
           await notificationsPlugin.cancel(vocStartNotificationId);
-          await notificationsPlugin.cancel(vocActiveNotificationId);
           await notificationsPlugin.cancel(vocEndNotificationId);
           previousState = stateNone;
           timer.cancel();
@@ -182,9 +258,8 @@ void onStart(ServiceInstance service) async {
 
           if (now.isBefore(preVoidStart)) {
             // 대기 중 (pre-void 시작 전) - 서비스 필요 없음, 종료
-            await notificationsPlugin.cancel(preVoidNotificationId);
+            await notificationsPlugin.cancel(countdownNotificationId);
             await notificationsPlugin.cancel(vocStartNotificationId);
-            await notificationsPlugin.cancel(vocActiveNotificationId);
             await notificationsPlugin.cancel(vocEndNotificationId);
             timer.cancel();
             service.stopSelf();
@@ -213,21 +288,18 @@ void onStart(ServiceInstance service) async {
             if (currentState == statePreVoid) {
               // 1. Pre-Void 시작 - 이전 알림들 정리
               await notificationsPlugin.cancel(vocStartNotificationId);
-              await notificationsPlugin.cancel(vocActiveNotificationId);
               await notificationsPlugin.cancel(vocEndNotificationId);
             } else if (currentState == stateVocActive) {
-              // 2. Void 시작 - Pre-void 알림(1번) 삭제, Void 시작 알림(2번) 표시
-              await notificationsPlugin.cancel(preVoidNotificationId);
+              // 2. Void 시작 - Void 시작 알림 표시 (카운트다운 알림은 같은 ID로 덮어씀)
               await _showVocStartNotification(
                 notificationsPlugin,
                 isKorean ? '🌑 보이드가 시작되었습니다!' : '🌑 Void of Course Started!',
                 isKorean ? '중요한 결정을 피하세요.' : 'Avoid important decisions.',
               );
             } else if (currentState == stateVocEnded) {
-              // 4. Void 종료 - Void 중 알림(3번) 삭제, Void 종료 알림(4번) 표시
-              await notificationsPlugin.cancel(preVoidNotificationId);
+              // 4. Void 종료 - 카운트다운 알림 삭제, Void 종료 알림 표시
+              await notificationsPlugin.cancel(countdownNotificationId);
               await notificationsPlugin.cancel(vocStartNotificationId);
-              await notificationsPlugin.cancel(vocActiveNotificationId);
 
               await notificationsPlugin.show(
                 vocEndNotificationId,
@@ -257,32 +329,10 @@ void onStart(ServiceInstance service) async {
           }
 
           // 카운트다운 알림 업데이트 (소리/진동 없이, 삭제 불가)
-          if (currentState == statePreVoid) {
-            // 1. Pre-void 카운트다운
+          // pre-void와 void active 모두 같은 ID를 사용하여 포그라운드 서비스 알림을 덮어씀
+          if (currentState == statePreVoid || currentState == stateVocActive) {
             await notificationsPlugin.show(
-              preVoidNotificationId,
-              title,
-              content,
-              const NotificationDetails(
-                android: AndroidNotificationDetails(
-                  'void_service_channel',
-                  'Void Countdown',
-                  channelDescription: 'Shows countdown timer for Void of Course',
-                  importance: Importance.low,
-                  priority: Priority.low,
-                  ongoing: true,
-                  autoCancel: false,
-                  playSound: false,
-                  enableVibration: false,
-                  onlyAlertOnce: true,
-                  icon: '@drawable/ic_notification',
-                ),
-              ),
-            );
-          } else if (currentState == stateVocActive) {
-            // 3. Void 중 카운트다운
-            await notificationsPlugin.show(
-              vocActiveNotificationId,
+              countdownNotificationId,
               title,
               content,
               const NotificationDetails(
@@ -304,9 +354,8 @@ void onStart(ServiceInstance service) async {
           }
         } else {
           // 데이터 없음 - 모든 알림 삭제 후 서비스 종료
-          await notificationsPlugin.cancel(preVoidNotificationId);
+          await notificationsPlugin.cancel(countdownNotificationId);
           await notificationsPlugin.cancel(vocStartNotificationId);
-          await notificationsPlugin.cancel(vocActiveNotificationId);
           await notificationsPlugin.cancel(vocEndNotificationId);
           timer.cancel();
           service.stopSelf();

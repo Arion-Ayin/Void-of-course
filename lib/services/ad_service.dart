@@ -16,6 +16,7 @@ class AdService {
   AdService._internal();
 
   bool _isInitialized = false;
+  SharedPreferences? _prefs; // 캐시된 SharedPreferences
 
   InterstitialAd? _interstitialAd;
   int _calculateClickCount = 0;
@@ -29,6 +30,7 @@ class AdService {
     if (_isInitialized) {
       return;
     }
+    _prefs = await SharedPreferences.getInstance();
     await _loadCalculateClickCount();
     print('AdService initialized. Click count: $_calculateClickCount');
     if (Platform.isAndroid || Platform.isIOS) {
@@ -92,8 +94,7 @@ class AdService {
     required Function onAdDismissed,
     required Function onAdFailed,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    final lastAdShowTimeMillis = prefs.getInt(_lastSplashAdShowTimeKey) ?? 0;
+    final lastAdShowTimeMillis = _prefs?.getInt(_lastSplashAdShowTimeKey) ?? 0;
     final currentTimeMillis = DateTime.now().millisecondsSinceEpoch;
 
     // 30분 (밀리초 단위)
@@ -117,7 +118,7 @@ class AdService {
     if ((Platform.isAndroid || Platform.isIOS) && _interstitialAd != null) {
       print("미리 로드된 스플래시 광고를 표시합니다.");
       // 광고 표시 시간을 지금으로 기록합니다.
-      await prefs.setInt(_lastSplashAdShowTimeKey, currentTimeMillis);
+      await _prefs?.setInt(_lastSplashAdShowTimeKey, currentTimeMillis);
 
       // 새로고침 횟수로 인해 광고를 표시한 경우 카운트를 리셋합니다.
       if (shouldShowAdByClickCount) {
@@ -167,8 +168,7 @@ class AdService {
       return;
     }
 
-    final prefs = await SharedPreferences.getInstance();
-    final lastAdShowTimeMillis = prefs.getInt(_lastSplashAdShowTimeKey) ?? 0;
+    final lastAdShowTimeMillis = _prefs?.getInt(_lastSplashAdShowTimeKey) ?? 0;
     final currentTimeMillis = DateTime.now().millisecondsSinceEpoch;
     const thirtyMinutesInMillis = 30 * 60 * 1000;
 
@@ -212,7 +212,7 @@ class AdService {
           timer?.cancel();
           loadedAd = ad;
           try {
-            await prefs.setInt(_lastSplashAdShowTimeKey, currentTimeMillis);
+            await _prefs?.setInt(_lastSplashAdShowTimeKey, currentTimeMillis);
           } catch (_) {}
 
           if (shouldShowAdByClickCount) {
@@ -251,12 +251,10 @@ class AdService {
   }
 
   Future<void> _loadCalculateClickCount() async {
-    final prefs = await SharedPreferences.getInstance();
-    _calculateClickCount = prefs.getInt(_clickCountKey) ?? 0;
+    _calculateClickCount = _prefs?.getInt(_clickCountKey) ?? 0;
   }
 
   Future<void> _saveCalculateClickCount() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt(_clickCountKey, _calculateClickCount);
+    await _prefs?.setInt(_clickCountKey, _calculateClickCount);
   }
 }
