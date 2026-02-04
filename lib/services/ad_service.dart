@@ -148,13 +148,14 @@ class AdService {
     }
   }
 
-  /// 주어진 광고 단위 ID로 스플래시 전면광고를 로드하고 표시합니다.
+  /// 주어진 광고 단위 ID로 스플래시 전면광고를 표시합니다.
+  /// 미리 로드된 광고가 있으면 즉시 표시하고, 없으면 새로 로드합니다.
   /// `timeout` 내에 로드되지 않으면 `onAdFailed`가 호출됩니다.
   Future<void> loadAndShowSplashAd({
     required String adUnitId,
     required Function onAdDismissed,
     required Function onAdFailed,
-    Duration timeout = const Duration(seconds: 3),
+    Duration timeout = const Duration(seconds: 5),
   }) async {
     // 디버그 모드에서는 스플래시 광고를 즉시 건너뜁니다.
     if (kDebugMode) {
@@ -181,6 +182,44 @@ class AdService {
       return;
     }
 
+    // 미리 로드된 광고가 있으면 즉시 표시
+    if (_interstitialAd != null) {
+      print('미리 로드된 스플래시 광고를 즉시 표시합니다.');
+      try {
+        await _prefs?.setInt(_lastSplashAdShowTimeKey, currentTimeMillis);
+      } catch (_) {}
+
+      if (shouldShowAdByClickCount) {
+        _calculateClickCount = 0;
+        await _saveCalculateClickCount();
+        print('클릭 카운트를 리셋합니다.');
+      }
+
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          try {
+            ad.dispose();
+          } catch (_) {}
+          _interstitialAd = null;
+          _loadInterstitialAd();
+          onAdDismissed();
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          try {
+            ad.dispose();
+          } catch (_) {}
+          _interstitialAd = null;
+          _loadInterstitialAd();
+          onAdFailed();
+        },
+      );
+
+      await _interstitialAd!.show();
+      return;
+    }
+
+    // 미리 로드된 광고가 없으면 새로 로드 시도
+    print('미리 로드된 광고가 없어 새로 로드합니다.');
     final completer = Completer<void>();
     Timer? timer;
     InterstitialAd? loadedAd;
