@@ -118,7 +118,11 @@ captures/
 *.keystore
 
 # Google Services (e.g. APIs or Firebase)
-# google-services.json
+**/android/app/google-services.json
+**/ios/Runner/GoogleService-Info.plist
+
+# Ad IDs (sensitive)
+lib/services/ad_ids.dart
 
 # Android Patch
 gen-external-apklibs
