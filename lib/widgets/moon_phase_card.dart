@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../services/astro_state.dart';
 import '../services/astro_calculator.dart';
+import '../services/timezone_provider.dart';
 import '../themes.dart';
 
 class MoonPhaseCard extends StatelessWidget {
@@ -11,8 +13,13 @@ class MoonPhaseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final phaseStartTime = provider.moonPhaseStartTime?.toLocal();
-    final phaseEndTime = provider.moonPhaseEndTime?.toLocal();
+    final tzProvider = Provider.of<TimezoneProvider>(context);
+    final phaseStartTime = provider.moonPhaseStartTime != null
+        ? tzProvider.convert(provider.moonPhaseStartTime!)
+        : null;
+    final phaseEndTime = provider.moonPhaseEndTime != null
+        ? tzProvider.convert(provider.moonPhaseEndTime!)
+        : null;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(

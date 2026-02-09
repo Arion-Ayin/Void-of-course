@@ -7,6 +7,7 @@ import 'screens/home_screen.dart';
 import 'screens/Developer Notes_screen.dart';
 import 'screens/setting_screen.dart';
 import 'services/astro_state.dart';
+import 'services/timezone_provider.dart';
 import 'themes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:void_of_course/screens/splash_screen.dart';
@@ -50,6 +51,7 @@ void main() async {
         //astro_state.dart의 AstroState를 초기화(initialize)하고 Provider로 등록
         ChangeNotifierProvider(create: (context) => AstroState()..initialize()),
         ChangeNotifierProvider(create: (context) => LocaleProvider()),
+        ChangeNotifierProvider(create: (context) => TimezoneProvider()),
       ],
       child: const MyApp(),
     ),

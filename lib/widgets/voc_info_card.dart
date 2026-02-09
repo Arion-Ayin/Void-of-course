@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../services/astro_state.dart';
+import '../services/timezone_provider.dart';
 import '../themes.dart';
 
 class VocInfoCard extends StatefulWidget {
@@ -14,13 +16,14 @@ class VocInfoCard extends StatefulWidget {
 
 class _VocInfoCardState extends State<VocInfoCard> {
 
-  String _formatDateTime(DateTime? dateTime) {
+  String _formatDateTime(DateTime? dateTime, TimezoneProvider tzProvider) {
     if (dateTime == null) return 'N/A';
-    return DateFormat('MM/dd HH:mm').format(dateTime.toLocal());
+    return DateFormat('MM/dd HH:mm').format(tzProvider.convert(dateTime));
   }
 
   @override
   Widget build(BuildContext context) {
+    final tzProvider = Provider.of<TimezoneProvider>(context);
     final vocStart = widget.provider.vocStart;
     final vocEnd = widget.provider.vocEnd;
     final now = DateTime.now().toUtc();
@@ -230,14 +233,14 @@ class _VocInfoCardState extends State<VocInfoCard> {
                         _buildTimeRow(
                           context,
                           'Start',
-                          _formatDateTime(widget.provider.vocStart),
+                          _formatDateTime(widget.provider.vocStart, tzProvider),
                           isDark,
                         ),
                         const SizedBox(height: 1),
                         _buildTimeRow(
                           context,
                           'End',
-                          _formatDateTime(widget.provider.vocEnd),
+                          _formatDateTime(widget.provider.vocEnd, tzProvider),
                           isDark,
                         ),
                       ],

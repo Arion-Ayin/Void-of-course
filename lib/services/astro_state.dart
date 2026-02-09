@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:timezone/timezone.dart' as tz;
 import 'astro_calculator.dart';
 import 'notification_service.dart';
 import 'alarm_service.dart';
@@ -157,6 +158,13 @@ class AstroState with ChangeNotifier {
     }
   }
 
+  /// 타임존 변경 시 호출 (VOC 알람을 선택된 타임존 기준으로 재계산)
+  Future<void> updateVocAlarmForTimezone() async {
+    if (_voidAlarmEnabled) {
+      await _schedulePreVoidAlarm();
+    }
+  }
+
   Future<AlarmPermissionStatus> toggleVoidAlarm(bool enable) async {
     if (enable) {
       final bool hasNotificationPermission =
@@ -227,84 +235,103 @@ class AstroState with ChangeNotifier {
       return;
     }
 
-    final now = DateTime.now();
-    DateTime searchDate = now;
+    // 선택된 타임존 ID 읽기 (기본값: Asia/Tokyo)
+    final selectedTimezoneId = _prefs?.getString('selected_timezone') ?? 'Asia/Tokyo';
+    
+    // 현재 시간을 UTC로 변환후 선택된 타임존으로 변환
+    try {
+      final location = tz.getLocation(selectedTimezoneId);
+      final utcNow = DateTime.now().toUtc();
+      final tzDateTime = tz.TZDateTime.from(utcNow, location);
+      
+      // 선택된 타임존의 현지 시간으로 검색 시작
+      DateTime searchDate = DateTime(
+        tzDateTime.year,
+        tzDateTime.month,
+        tzDateTime.day,
+      );
 
-    // 백그라운드 서비스용 pre-void 시간 동기화
-    await _prefs?.setInt('cached_pre_void_hours', _preVoidAlarmHours);
+      // 백그라운드 서비스용 타임존 및 pre-void 시간 동기화
+      await _prefs?.setString('cached_selected_timezone', selectedTimezoneId);
+      await _prefs?.setInt('cached_pre_void_hours', _preVoidAlarmHours);
 
-    DateTime? foundVocStart;
-    DateTime? foundVocEnd;
+      DateTime? foundVocStart;
+      DateTime? foundVocEnd;
 
-    for (int i = 0; i < 10; i++) {
-      final vocTimes = _calculator.findVoidOfCoursePeriod(searchDate);
-      final vocStart = vocTimes['start'];
-      final vocEnd = vocTimes['end'];
+      for (int i = 0; i < 10; i++) {
+        final vocTimes = _calculator.findVoidOfCoursePeriod(searchDate);
+        final vocStart = vocTimes['start'];
+        final vocEnd = vocTimes['end'];
 
-      if (vocStart == null || vocEnd == null) {
-        searchDate = searchDate.add(const Duration(days: 1));
-        continue;
-      }
-
-      // 이미 지난 VOC는 스킵
-      if (vocEnd.isBefore(now)) {
-        searchDate = vocEnd.add(const Duration(minutes: 1));
-        continue;
-      }
-
-      // 첫 번째 유효한 VOC를 백그라운드 서비스용으로 캐시
-      await _prefs?.setString('cached_voc_start', vocStart.toIso8601String());
-      await _prefs?.setString('cached_voc_end', vocEnd.toIso8601String());
-
-      foundVocStart = vocStart;
-      foundVocEnd = vocEnd;
-
-      if (kDebugMode) {
-        print("Cached VOC: start=$vocStart, end=$vocEnd");
-      }
-
-      break; // 첫 번째 유효한 VOC만 캐시하면 됨
-    }
-
-    // 백그라운드 서비스는 pre-void 시작 이후에만 필요
-    // pre-void 시작 전이면 서비스를 시작하지 않음 (빈 알림 방지)
-    final service = FlutterBackgroundService();
-    final isRunning = await service.isRunning();
-
-    if (foundVocStart != null && foundVocEnd != null) {
-      final preVoidStart = foundVocStart.subtract(Duration(hours: _preVoidAlarmHours));
-      final shouldServiceRun = now.isAfter(preVoidStart) || now.isAtSameMomentAs(preVoidStart);
-
-      if (shouldServiceRun && !isRunning && _voidAlarmEnabled) {
-        // pre-void 이상이면 서비스 시작
-        await service.startService();
-        if (kDebugMode) {
-          print("Background service started for VOC monitoring (pre-void active)");
+        if (vocStart == null || vocEnd == null) {
+          searchDate = searchDate.add(const Duration(days: 1));
+          continue;
         }
-      } else if (!shouldServiceRun && isRunning) {
-        // pre-void 전인데 서비스가 실행 중이면 종료
+
+        // 현재 타임존 시간 기준으로 이미 지난 VOC는 스킵
+        if (vocEnd.isBefore(utcNow)) {
+          searchDate = vocEnd.add(const Duration(minutes: 1));
+          continue;
+        }
+
+        // 첫 번째 유효한 VOC를 백그라운드 서비스용으로 캐시
+        await _prefs?.setString('cached_voc_start', vocStart.toIso8601String());
+        await _prefs?.setString('cached_voc_end', vocEnd.toIso8601String());
+
+        foundVocStart = vocStart;
+        foundVocEnd = vocEnd;
+
+        if (kDebugMode) {
+          print("Cached VOC (Timezone: $selectedTimezoneId): start=$vocStart, end=$vocEnd");
+        }
+
+        break; // 첫 번째 유효한 VOC만 캐시하면 됨
+      }
+
+      // 백그라운드 서비스는 pre-void 시작 이후에만 필요
+      // pre-void 시작 전이면 서비스를 시작하지 않음 (빈 알림 방지)
+      final service = FlutterBackgroundService();
+      final isRunning = await service.isRunning();
+
+      if (foundVocStart != null && foundVocEnd != null) {
+        final preVoidStart = foundVocStart.subtract(Duration(hours: _preVoidAlarmHours));
+        final shouldServiceRun = utcNow.isAfter(preVoidStart) || utcNow.isAtSameMomentAs(preVoidStart);
+
+        if (shouldServiceRun && !isRunning && _voidAlarmEnabled) {
+          // pre-void 이상이면 서비스 시작
+          await service.startService();
+          if (kDebugMode) {
+            print("Background service started for VOC monitoring (pre-void active)");
+          }
+        } else if (!shouldServiceRun && isRunning) {
+          // pre-void 전인데 서비스가 실행 중이면 종료
+          service.invoke("stopService");
+          if (kDebugMode) {
+            print("Background service stopped (pre-void not yet started)");
+          }
+        }
+
+        // 앱이 꺼져있어도 백그라운드 서비스가 시작되도록 AlarmManager로 예약
+        // pre-void 시작 시점에 알람 예약 (아직 시작 전일 때만)
+        if (preVoidStart.isAfter(utcNow)) {
+          // AlarmManager로 백그라운드 서비스 자동 시작 예약
+          await _alarmService.schedulePreVoidAlarm(preVoidStart);
+
+          if (kDebugMode) {
+            print("Scheduled AlarmManager for pre-void at: $preVoidStart");
+          }
+        } else {
+          // 이미 pre-void가 시작되었으면 알람 취소
+          await _alarmService.cancelAlarm();
+        }
+      } else if (isRunning) {
+        // VOC 데이터가 없으면 서비스 종료
         service.invoke("stopService");
-        if (kDebugMode) {
-          print("Background service stopped (pre-void not yet started)");
-        }
       }
-
-      // 앱이 꺼져있어도 백그라운드 서비스가 시작되도록 AlarmManager로 예약
-      // pre-void 시작 시점에 알람 예약 (아직 시작 전일 때만)
-      if (preVoidStart.isAfter(now)) {
-        // AlarmManager로 백그라운드 서비스 자동 시작 예약
-        await _alarmService.schedulePreVoidAlarm(preVoidStart);
-
-        if (kDebugMode) {
-          print("Scheduled AlarmManager for pre-void at: $preVoidStart");
-        }
-      } else {
-        // 이미 pre-void가 시작되었으면 알람 취소
-        await _alarmService.cancelAlarm();
+    } catch (e) {
+      if (kDebugMode) {
+        print("Error in _schedulePreVoidAlarm: $e");
       }
-    } else if (isRunning) {
-      // VOC 데이터가 없으면 서비스 종료
-      service.invoke("stopService");
     }
 
     notifyListeners();

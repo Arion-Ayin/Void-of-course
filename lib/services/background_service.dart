@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timezone/timezone.dart' as tz;
 
 // 알림 상태 상수
 const int stateNone = 0;
@@ -158,11 +159,15 @@ void onStart(ServiceInstance service) async {
   int cachedPreHours = prefs.getInt('cached_pre_void_hours') ?? 6;
   bool cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
   String cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
+  String cachedTimezoneId = prefs.getString('cached_selected_timezone') ?? 'Asia/Tokyo';
 
   // 서비스 시작 직후 즉시 알림 업데이트 (빈 알림 방지)
   // Timer.periodic 전에 먼저 실행하여 빈 포그라운드 알림을 덮어씀
   if (cachedIsEnabled && cachedStartStr != null && cachedEndStr != null) {
-    final DateTime now = DateTime.now();
+    // 선택된 타임존의 현재 시간 계산
+    final DateTime utcNow = DateTime.now().toUtc();
+    final DateTime now = _convertToTimezone(utcNow, cachedTimezoneId);
+    
     final DateTime vocStart = DateTime.parse(cachedStartStr);
     final DateTime vocEnd = DateTime.parse(cachedEndStr);
     final DateTime preVoidStart = vocStart.subtract(Duration(hours: cachedPreHours));
@@ -226,6 +231,7 @@ void onStart(ServiceInstance service) async {
           cachedPreHours = prefs.getInt('cached_pre_void_hours') ?? 6;
           cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
           cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
+          cachedTimezoneId = prefs.getString('cached_selected_timezone') ?? 'Asia/Tokyo';
         }
 
         // 캐시된 값 사용 (30초마다 갱신됨)
@@ -247,7 +253,10 @@ void onStart(ServiceInstance service) async {
         }
 
         if (startStr != null && endStr != null) {
-          final DateTime now = DateTime.now();
+          // 선택된 타임존의 현재 시간 계산
+          final DateTime utcNow = DateTime.now().toUtc();
+          final DateTime now = _convertToTimezone(utcNow, cachedTimezoneId);
+          
           final DateTime vocStart = DateTime.parse(startStr);
           final DateTime vocEnd = DateTime.parse(endStr);
           final DateTime preVoidStart = vocStart.subtract(Duration(hours: preHours));
@@ -400,3 +409,25 @@ String _formatDuration(Duration duration) {
   final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
   return '$hours:$minutes:$seconds';
 }
+
+/// UTC 시간을 선택된 타임존의 로컬 시간으로 변환
+DateTime _convertToTimezone(DateTime utcTime, String timezoneId) {
+  try {
+    final location = tz.getLocation(timezoneId);
+    final tzDateTime = tz.TZDateTime.from(utcTime, location);
+    // TZDateTime을 일반 DateTime으로 변환 (timezone 정보 제외)
+    return DateTime(
+      tzDateTime.year,
+      tzDateTime.month,
+      tzDateTime.day,
+      tzDateTime.hour,
+      tzDateTime.minute,
+      tzDateTime.second,
+      tzDateTime.millisecond,
+    );
+  } catch (e) {
+    // timezone 로드 실패 시 UTC 시간 반환
+    return utcTime;
+  }
+}
+

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../services/astro_state.dart';
+import '../services/timezone_provider.dart';
 import '../themes.dart';
 
 class MoonSignCard extends StatelessWidget {
@@ -68,7 +70,10 @@ class MoonSignCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final nextSignTime = provider.nextSignTime?.toLocal();
+    final tzProvider = Provider.of<TimezoneProvider>(context);
+    final nextSignTime = provider.nextSignTime != null
+        ? tzProvider.convert(provider.nextSignTime!)
+        : null;
     final formattedNextSignTime =
         nextSignTime != null
             ? DateFormat('MM/dd HH:mm').format(nextSignTime)
@@ -162,7 +167,7 @@ class MoonSignCard extends StatelessWidget {
                           context,
                           'Start',
                           provider.currentSignStartTime != null
-                              ? DateFormat('MM/dd HH:mm').format(provider.currentSignStartTime!.toLocal())
+                              ? DateFormat('MM/dd HH:mm').format(tzProvider.convert(provider.currentSignStartTime!))
                               : 'N/A',
                           isDark,
                         ),

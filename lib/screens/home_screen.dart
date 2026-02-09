@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import '../services/astro_state.dart';
+import '../services/timezone_provider.dart';
 import '../widgets/calendar_dialog.dart';
 import '../widgets/date_selector.dart';
 import '../widgets/moon_phase_card.dart';
 import '../widgets/moon_sign_card.dart';
 import '../widgets/reset_date_button.dart';
 import '../widgets/voc_info_card.dart';
+import '../widgets/timezone_selector_dialog.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -82,23 +84,92 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.auto_awesome,
-              color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
-              size: 22,
+            Row(
+              children: [
+                Icon(
+                  Icons.auto_awesome,
+                  color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
+                  size: 22,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'Void of Course',
+                  style: Theme.of(context).appBarTheme.titleTextStyle,
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            Text(
-              'Void of Course',
-              style: Theme.of(context).appBarTheme.titleTextStyle,
+            // 타임존 정보 표시
+            Consumer<TimezoneProvider>(
+              builder: (context, tzProvider, child) {
+                final tzInfo = tzProvider.currentTimezoneInfo;
+                if (tzInfo != null) {
+                  final localeCode = Localizations.localeOf(context).languageCode;
+                  final countryName = localeCode == 'ko'
+                      ? tzInfo.countryNameKo
+                      : tzInfo.countryNameEn;
+                  final cityName = localeCode == 'ko'
+                      ? tzInfo.cityNameKo
+                      : tzInfo.cityNameEn;
+                  final displayOffset = tzProvider.getDisplayOffset();
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      '${tzInfo.flag} $countryName, $cityName, $displayOffset',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark ? Colors.white60 : Colors.black54,
+                      ),
+                    ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
             ),
           ],
         ),
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
         elevation: 0,
+        actions: [
+          // 서머타임 토글 버튼 (DST 시행 국가인 경우에만 표시)
+          Consumer<TimezoneProvider>(
+            builder: (context, tzProvider, child) {
+              final tzInfo = tzProvider.currentTimezoneInfo;
+              if (tzInfo != null && tzInfo.isDstCountry) {
+                return IconButton(
+                  icon: Icon(
+                    tzProvider.isDstApplied
+                        ? Icons.light_mode
+                        : Icons.dark_mode,
+                    color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
+                  ),
+                  onPressed: () {
+                    // DST 토글 후 천문 데이터 재계산
+                    tzProvider.toggleDst();
+                    if (mounted) {
+                      final astroState = Provider.of<AstroState>(context, listen: false);
+                      astroState.refreshData();
+                    }
+                  },
+                  tooltip: tzProvider.isDstApplied ? 'DST On' : 'DST Off',
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              Icons.public,
+              color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
+            ),
+            onPressed: () => showTimezoneSelectorDialog(context),
+            tooltip: 'Timezone',
+          ),
+        ],
       ),
       body: Container(
         width: double.infinity,
@@ -122,26 +193,28 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              children: [
-                MoonPhaseCard(provider: provider),
-                const SizedBox(height: 4),
-                MoonSignCard(provider: provider),
-                const SizedBox(height: 4),
-                VocInfoCard(provider: provider),
-                const SizedBox(height: 4),
-                DateSelector(
-                  dateController: _dateController,
-                  onPreviousDay: () => _changeDate(-1),
-                  onNextDay: () => _changeDate(1),
-                  showCalendar: () => showCalendarDialog(context),
-                  selectedDate: provider.selectedDate,
-                ),
-                const SizedBox(height: 7),
-                ResetDateButton(onPressed: _resetDateToToday),
-              ],
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Column(
+                children: [
+                  MoonPhaseCard(provider: provider),
+                  const SizedBox(height: 4),
+                  MoonSignCard(provider: provider),
+                  const SizedBox(height: 4),
+                  VocInfoCard(provider: provider),
+                  const SizedBox(height: 4),
+                  DateSelector(
+                    dateController: _dateController,
+                    onPreviousDay: () => _changeDate(-1),
+                    onNextDay: () => _changeDate(1),
+                    showCalendar: () => showCalendarDialog(context),
+                    selectedDate: provider.selectedDate,
+                  ),
+                  const SizedBox(height: 7),
+                  ResetDateButton(onPressed: _resetDateToToday),
+                ],
+              ),
             ),
           ),
         ),
