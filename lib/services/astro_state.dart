@@ -406,6 +406,10 @@ class AstroState with ChangeNotifier {
     await _updateData();
   }
 
+
+// ----------------------------------------------------------------------------------------------------
+
+
   //실제 계산 시작
   Future<void> _updateData() async {
     _isLoading = true;
