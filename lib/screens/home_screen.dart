@@ -141,12 +141,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       : Icons.dark_mode,
                   color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
                 ),
-                onPressed: () {
+                onPressed: () async {
                   // DST 토글 후 VOC 알람만 재계산 (전체 재계산 X)
                   tzProvider.toggleDst();
                   if (mounted) {
                     final astroState = Provider.of<AstroState>(context, listen: false);
-                    astroState.updateVocAlarmForTimezone(); // ← 빠른 업데이트
+                    // UI(문페이즈/문싸인/VOC)와 알람을 모두 갱신
+                    await astroState.refreshData();
+                    await astroState.updateVocAlarmForTimezone();
                   }
                 },
                 tooltip: tzProvider.isDstApplied ? 'DST On' : 'DST Off',
@@ -168,14 +170,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildBody(BuildContext context) {
-    final provider = Provider.of<AstroState>(context, listen: false);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    _dateController.text = DateFormat('yyyy/MM/dd').format(provider.selectedDate.toLocal());
 
     // Consumer를 사용하여 AstroState 변경 시에만 body 리빌드
     return Consumer<AstroState>(
       builder: (context, astroState, child) {
+        // 날짜 컨트롤러는 AstroState에서 전달되는 selectedDate로 업데이트합니다.
+        _dateController.text = DateFormat('yyyy/MM/dd').format(astroState.selectedDate.toLocal());
+
+        
+        
+        
         if (!astroState.isInitialized) {
           return Center(
             child: CircularProgressIndicator(

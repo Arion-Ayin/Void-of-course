@@ -141,8 +141,10 @@ class _TimezoneSelectorDialogState extends State<TimezoneSelectorDialog> {
                       onTap: () async {
                         await timezoneProvider.setTimezone(tz.id);
                         // 선택된 타임존으로 VOC 알람 재계산
-                        await Provider.of<AstroState>(context, listen: false)
-                            .updateVocAlarmForTimezone();
+                        final astro = Provider.of<AstroState>(context, listen: false);
+                        await astro.updateVocAlarmForTimezone();
+                        // UI(문페이즈/싸인 등)도 즉시 갱신
+                        await astro.refreshData();
                         if (context.mounted) {
                           Navigator.of(context).pop();
                         }
