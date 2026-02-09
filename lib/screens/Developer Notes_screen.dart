@@ -44,7 +44,52 @@ class InfoScreen extends StatelessWidget {
 
     // 여기에 게시글 데이터를 추가해요. (최신 글이 위로 오도록 리스트의 앞쪽에 넣어주세요)
     final List<DeveloperNote> notes = [
+
       // ▼▼▼ [최신 글] ▼▼▼
+    DeveloperNote(
+        date: '2026-02-15',
+        titleKo: '<26-02-15 업데이트>',
+        titleEn: '<26-02-15 Update>',
+        contentKo: '''
+안녕하세요 아리온 아인입니다.
+이번 1.2.0+42 업데이트 사항입니다.
+
+1. 각 나라 표준시 지원 추가
+2. 서머 타임 추가(토글 버튼으로 적용/해제 가능)
+
+앱을 편하게 사용하시고 계시다면 or 불편한 점이 있다면, 언제든지 리뷰를 남겨주세요. 
+따뜻한 리뷰는 개발자에게 큰 힘이 됩니다.
+
+감사합니다
+아리온 아인 드림
+''',
+        contentEn: '''
+Hello, this is Arion Ayin.
+Here are the updates for this release:
+
+1. Added start and end times for Moon Phase and Moon in Sign
+2. Restored app images to their original state
+3. Optimized Android application performance
+
+If you have any feedback or questions, please contact us.
+''',
+        actions: [
+          NoteAction(
+            label: appLocalizations.btnReview, // '리뷰 남기러 가기' / 'Leave a Review'
+            url:
+                'https://play.google.com/store/apps/details?id=dev.lioluna.voidofcourse',
+          ),
+          NoteAction(
+            label:
+                appLocalizations
+                    .btnContact, // '개발자에게 한마디' / 'Contact Developer'
+            url: 'mailto:arion.ayin@gmail.com',
+          ),
+        ],
+      ),
+
+
+
       DeveloperNote(
         date: '2026-02-01',
         titleKo: '<26-02-01 업데이트>',

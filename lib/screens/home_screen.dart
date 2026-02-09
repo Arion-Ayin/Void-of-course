@@ -66,159 +66,176 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<AstroState>(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    _dateController.text = DateFormat('yyyy/MM/dd').format(provider.selectedDate.toLocal());
-
-    if (!provider.isInitialized) {
-      return Center(
-        child: CircularProgressIndicator(
-          color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
-        ),
-      );
-    }
-    if (provider.lastError != null) {
-      return Center(child: Text('Error: ${provider.lastError}'));
-    }
-
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Icon(
-                  Icons.auto_awesome,
-                  color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
-                  size: 22,
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'Void of Course',
-                  style: Theme.of(context).appBarTheme.titleTextStyle,
-                ),
-              ],
-            ),
-            // 타임존 정보 표시
-            Consumer<TimezoneProvider>(
-              builder: (context, tzProvider, child) {
-                final tzInfo = tzProvider.currentTimezoneInfo;
-                if (tzInfo != null) {
-                  final localeCode = Localizations.localeOf(context).languageCode;
-                  final countryName = localeCode == 'ko'
-                      ? tzInfo.countryNameKo
-                      : tzInfo.countryNameEn;
-                  final cityName = localeCode == 'ko'
-                      ? tzInfo.cityNameKo
-                      : tzInfo.cityNameEn;
-                  final displayOffset = tzProvider.getDisplayOffset();
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: Text(
-                      '${tzInfo.flag} $countryName, $cityName, $displayOffset',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isDark ? Colors.white60 : Colors.black54,
-                      ),
-                    ),
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-          ],
-        ),
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
-        elevation: 0,
-        actions: [
-          // 서머타임 토글 버튼 (DST 시행 국가인 경우에만 표시)
+      appBar: _buildAppBar(context),
+      body: _buildBody(context),
+    );
+  }
+
+  AppBar _buildAppBar(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return AppBar(
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.auto_awesome,
+                color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
+                size: 22,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                'Void of Course',
+                style: Theme.of(context).appBarTheme.titleTextStyle,
+              ),
+            ],
+          ),
+          // 타임존 정보 표시
           Consumer<TimezoneProvider>(
             builder: (context, tzProvider, child) {
               final tzInfo = tzProvider.currentTimezoneInfo;
-              if (tzInfo != null && tzInfo.isDstCountry) {
-                return IconButton(
-                  icon: Icon(
-                    tzProvider.isDstApplied
-                        ? Icons.light_mode
-                        : Icons.dark_mode,
-                    color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
+              if (tzInfo != null) {
+                final localeCode = Localizations.localeOf(context).languageCode;
+                final countryName = localeCode == 'ko'
+                    ? tzInfo.countryNameKo
+                    : tzInfo.countryNameEn;
+                final cityName = localeCode == 'ko'
+                    ? tzInfo.cityNameKo
+                    : tzInfo.cityNameEn;
+                final displayOffset = tzProvider.getDisplayOffset();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    '${tzInfo.flag} $countryName, $cityName, $displayOffset',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? Colors.white60 : Colors.black54,
+                    ),
                   ),
-                  onPressed: () {
-                    // DST 토글 후 천문 데이터 재계산
-                    tzProvider.toggleDst();
-                    if (mounted) {
-                      final astroState = Provider.of<AstroState>(context, listen: false);
-                      astroState.refreshData();
-                    }
-                  },
-                  tooltip: tzProvider.isDstApplied ? 'DST On' : 'DST Off',
                 );
               }
               return const SizedBox.shrink();
             },
           ),
-          IconButton(
-            icon: Icon(
-              Icons.public,
-              color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
-            ),
-            onPressed: () => showTimezoneSelectorDialog(context),
-            tooltip: 'Timezone',
-          ),
         ],
       ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: isDark
-                ? [
-                    const Color(0xFF0F0F1A),
-                    const Color(0xFF1A1A2E),
-                    const Color(0xFF16213E),
-                  ]
-                : [
-                    const Color(0xFFF8F6F0),
-                    const Color(0xFFFFFDF8),
-                    const Color(0xFFF0EDE5),
-                  ],
-            stops: const [0.0, 0.5, 1.0],
-          ),
+      backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+      foregroundColor: Theme.of(context).appBarTheme.foregroundColor,
+      elevation: 0,
+      actions: [
+        // 서머타임 토글 버튼 (DST 시행 국가인 경우에만 표시)
+        Consumer<TimezoneProvider>(
+          builder: (context, tzProvider, child) {
+            final tzInfo = tzProvider.currentTimezoneInfo;
+            if (tzInfo != null && tzInfo.isDstCountry) {
+              return IconButton(
+                icon: Icon(
+                  tzProvider.isDstApplied
+                      ? Icons.light_mode
+                      : Icons.dark_mode,
+                  color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
+                ),
+                onPressed: () {
+                  // DST 토글 후 VOC 알람만 재계산 (전체 재계산 X)
+                  tzProvider.toggleDst();
+                  if (mounted) {
+                    final astroState = Provider.of<AstroState>(context, listen: false);
+                    astroState.updateVocAlarmForTimezone(); // ← 빠른 업데이트
+                  }
+                },
+                tooltip: tzProvider.isDstApplied ? 'DST On' : 'DST Off',
+              );
+            }
+            return const SizedBox.shrink();
+          },
         ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                children: [
-                  MoonPhaseCard(provider: provider),
-                  const SizedBox(height: 4),
-                  MoonSignCard(provider: provider),
-                  const SizedBox(height: 4),
-                  VocInfoCard(provider: provider),
-                  const SizedBox(height: 4),
-                  DateSelector(
-                    dateController: _dateController,
-                    onPreviousDay: () => _changeDate(-1),
-                    onNextDay: () => _changeDate(1),
-                    showCalendar: () => showCalendarDialog(context),
-                    selectedDate: provider.selectedDate,
-                  ),
-                  const SizedBox(height: 7),
-                  ResetDateButton(onPressed: _resetDateToToday),
-                ],
+        IconButton(
+          icon: Icon(
+            Icons.public,
+            color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
+          ),
+          onPressed: () => showTimezoneSelectorDialog(context),
+          tooltip: 'Timezone',
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBody(BuildContext context) {
+    final provider = Provider.of<AstroState>(context, listen: false);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    _dateController.text = DateFormat('yyyy/MM/dd').format(provider.selectedDate.toLocal());
+
+    // Consumer를 사용하여 AstroState 변경 시에만 body 리빌드
+    return Consumer<AstroState>(
+      builder: (context, astroState, child) {
+        if (!astroState.isInitialized) {
+          return Center(
+            child: CircularProgressIndicator(
+              color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
+            ),
+          );
+        }
+        if (astroState.lastError != null) {
+          return Center(child: Text('Error: ${astroState.lastError}'));
+        }
+
+        return Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDark
+                  ? [
+                      const Color(0xFF0F0F1A),
+                      const Color(0xFF1A1A2E),
+                      const Color(0xFF16213E),
+                    ]
+                  : [
+                      const Color(0xFFF8F6F0),
+                      const Color(0xFFFFFDF8),
+                      const Color(0xFFF0EDE5),
+                    ],
+              stops: const [0.0, 0.5, 1.0],
+            ),
+          ),
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Column(
+                  children: [
+                    MoonPhaseCard(provider: astroState),
+                    const SizedBox(height: 4),
+                    MoonSignCard(provider: astroState),
+                    const SizedBox(height: 4),
+                    VocInfoCard(provider: astroState),
+                    const SizedBox(height: 4),
+                    DateSelector(
+                      dateController: _dateController,
+                      onPreviousDay: () => _changeDate(-1),
+                      onNextDay: () => _changeDate(1),
+                      showCalendar: () => showCalendarDialog(context),
+                      selectedDate: astroState.selectedDate,
+                    ),
+                    const SizedBox(height: 7),
+                    ResetDateButton(onPressed: _resetDateToToday),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
