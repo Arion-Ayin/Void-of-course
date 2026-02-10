@@ -11,6 +11,9 @@ class MoonPhaseCard extends StatelessWidget {
 
   const MoonPhaseCard({super.key, required this.provider});
 
+  static final _dateFormat = DateFormat('MM/dd HH:mm');
+  static final _calculator = AstroCalculator();
+
   @override
   Widget build(BuildContext context) {
     final tzProvider = Provider.of<TimezoneProvider>(context);
@@ -20,7 +23,9 @@ class MoonPhaseCard extends StatelessWidget {
     final phaseEndTime = provider.moonPhaseEndTime != null
         ? tzProvider.convert(provider.moonPhaseEndTime!)
         : null;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bodyColor = theme.textTheme.bodyLarge?.color;
 
     return Container(
       decoration: BoxDecoration(
@@ -79,7 +84,7 @@ class MoonPhaseCard extends StatelessWidget {
                     ),
                     child: Center(
                       child: Text(
-                        AstroCalculator().getMoonPhaseEmoji(provider.moonPhase),
+                        _calculator.getMoonPhaseEmoji(provider.moonPhase),
                         style: const TextStyle(fontSize: 50),
                       ),
                     ),
@@ -101,30 +106,30 @@ class MoonPhaseCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 1),
                         Text(
-                          AstroCalculator().getMoonPhaseNameOnly(provider.moonPhase),
+                          _calculator.getMoonPhaseNameOnly(provider.moonPhase),
                           style: TextStyle(
-                            color: Theme.of(context).textTheme.titleLarge?.color,
+                            color: theme.textTheme.titleLarge?.color,
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                         const SizedBox(height: 1),
                         _buildTimeRow(
-                          context,
                           'Start',
                           phaseStartTime != null
-                              ? DateFormat('MM/dd HH:mm').format(phaseStartTime)
+                              ? _dateFormat.format(phaseStartTime)
                               : 'N/A',
                           isDark,
+                          bodyColor,
                         ),
                         const SizedBox(height: 1),
                         _buildTimeRow(
-                          context,
                           'End',
                           phaseEndTime != null
-                              ? DateFormat('MM/dd HH:mm').format(phaseEndTime)
+                              ? _dateFormat.format(phaseEndTime)
                               : 'N/A',
                           isDark,
+                          bodyColor,
                         ),
                       ],
                     ),
@@ -138,9 +143,9 @@ class MoonPhaseCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeRow(BuildContext context, String label, String time, bool isDark) {
+  Widget _buildTimeRow(String label, String time, bool isDark, Color? bodyColor) {
     final textStyle = TextStyle(
-      color: Theme.of(context).textTheme.bodyLarge?.color,
+      color: bodyColor,
       fontSize: 16,
       fontWeight: FontWeight.w700,
     );

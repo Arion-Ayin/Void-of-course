@@ -15,16 +15,6 @@ class _ResetDateButtonState extends State<ResetDateButton> {
   final AdService _adService = AdService();
   bool _isPressed = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _adService.initialize();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {

@@ -15,10 +15,11 @@ class VocInfoCard extends StatefulWidget {
 }
 
 class _VocInfoCardState extends State<VocInfoCard> {
+  static final _dateFormat = DateFormat('MM/dd HH:mm');
 
   String _formatDateTime(DateTime? dateTime, TimezoneProvider tzProvider) {
     if (dateTime == null) return 'N/A';
-    return DateFormat('MM/dd HH:mm').format(tzProvider.convert(dateTime));
+    return _dateFormat.format(tzProvider.convert(dateTime));
   }
 
   @override
@@ -28,7 +29,9 @@ class _VocInfoCardState extends State<VocInfoCard> {
     final vocEnd = widget.provider.vocEnd;
     final now = DateTime.now().toUtc();
     final selectedDate = widget.provider.selectedDate;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bodyColor = theme.textTheme.bodyLarge?.color;
 
     bool isVocNow = false;
     if (vocStart != null && vocEnd != null) {
@@ -231,17 +234,17 @@ class _VocInfoCardState extends State<VocInfoCard> {
                         ),
                         const SizedBox(height: 1),
                         _buildTimeRow(
-                          context,
                           'Start',
                           _formatDateTime(widget.provider.vocStart, tzProvider),
                           isDark,
+                          bodyColor,
                         ),
                         const SizedBox(height: 1),
                         _buildTimeRow(
-                          context,
                           'End',
                           _formatDateTime(widget.provider.vocEnd, tzProvider),
                           isDark,
+                          bodyColor,
                         ),
                       ],
                     ),
@@ -256,9 +259,9 @@ class _VocInfoCardState extends State<VocInfoCard> {
   }
 
   Widget _buildTimeRow(
-      BuildContext context, String label, String time, bool isDark) {
+      String label, String time, bool isDark, Color? bodyColor) {
     final textStyle = TextStyle(
-      color: Theme.of(context).textTheme.bodyLarge?.color,
+      color: bodyColor,
       fontSize: 16,
       fontWeight: FontWeight.w700,
     );

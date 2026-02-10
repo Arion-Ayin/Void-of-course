@@ -128,7 +128,9 @@ class AstroState with ChangeNotifier {
       _isInitialized = true;
       _lastError = null;
     } catch (e, stack) {
-      print('Initialization error: $e\n$stack');
+      if (kDebugMode) {
+        print('Initialization error: $e\n$stack');
+      }
       _lastError = 'initializationError';
     } finally {
       _isLoading = false;
@@ -469,9 +471,9 @@ class AstroState with ChangeNotifier {
       final moonSignName = _calculator.getMoonSignName(dateForCalc);
       
       final moonPhaseTimes = _calculator.getMoonPhaseTimes(dateForCalc);
-      
-      // Extract next phase info from moonPhaseTimes to avoid duplicate calculation
-      final nextMoonPhaseName = _calculator.findNextPhase(dateForCalc)['name'] ?? 'N/A';
+
+      // getMoonPhaseTimes가 nextPhaseName도 함께 반환 (findNextPhase 중복 호출 제거)
+      final nextMoonPhaseName = moonPhaseTimes['nextPhaseName'] as String? ?? 'N/A';
 
       if (kDebugMode) {
         print('[DEBUG] moonPhaseInfo: $moonPhaseInfo');

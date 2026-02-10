@@ -10,7 +10,6 @@ import 'package:void_of_course/l10n/app_localizations.dart';
 class NoteAction {
   final String label; // 버튼에 들어갈 글자
   final String url; // 연결할 링크 주소
-
   NoteAction({required this.label, required this.url});
 }
 
@@ -47,15 +46,16 @@ class InfoScreen extends StatelessWidget {
 
       // ▼▼▼ [최신 글] ▼▼▼
     DeveloperNote(
-        date: '2026-02-15',
-        titleKo: '<26-02-15 업데이트>',
-        titleEn: '<26-02-15 Update>',
+        date: '2026-02-10',
+        titleKo: '<26-02-10 업데이트>',
+        titleEn: '<26-02-10 Update>',
         contentKo: '''
 안녕하세요 아리온 아인입니다.
 이번 1.2.0+42 업데이트 사항입니다.
 
 1. 25개국 표준시 지원 추가
 2. 서머 타임 추가(토글 버튼으로 적용/해제 가능)
+3. 디스코드 커뮤니티 링크 추가
 
 앱을 편하게 사용하시고 계시다면 or 불편한 점이 있다면, 언제든지 리뷰를 남겨주세요. 
 따뜻한 리뷰는 개발자에게 큰 힘이 됩니다.
@@ -65,11 +65,11 @@ class InfoScreen extends StatelessWidget {
 ''',
         contentEn: '''
 Hello, this is Arion Ayin.
-Here are the updates for this release:
+This is a 1.2.0+42 update.
 
-1. Added start and end times for Moon Phase and Moon in Sign
-2. Restored app images to their original state
-3. Optimized Android application performance
+1. 25 National Standard Time Support Added
+2. Add daylight saving time(DST) (applies/disables with toggle button)
+3. Added Discord community link
 
 If you have any feedback or questions, please contact us.
 ''',
@@ -268,6 +268,7 @@ Warm reviews are a great strength to the developer.
                           isKorean ? note.contentKo : note.contentEn;
 
                       return Card(
+                        key: ValueKey(note.date),
                         margin: const EdgeInsets.only(bottom: 16.0),
                         elevation: 2,
                         shape: RoundedRectangleBorder(

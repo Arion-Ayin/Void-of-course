@@ -142,12 +142,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
                 ),
                 onPressed: () async {
-                  // DST 토글 후 VOC 알람만 재계산 (전체 재계산 X)
+                  // DST 토글: 천문 계산은 UTC 기반이므로 재계산 불필요
+                  // 카드 위젯들이 TimezoneProvider를 리스닝하므로 convert()로 자동 갱신
                   tzProvider.toggleDst();
                   if (mounted) {
                     final astroState = Provider.of<AstroState>(context, listen: false);
-                    // UI(문페이즈/문싸인/VOC)와 알람을 모두 갱신
-                    await astroState.refreshData();
                     await astroState.updateVocAlarmForTimezone();
                   }
                 },

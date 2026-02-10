@@ -728,13 +728,13 @@ class TimezoneProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// UTC DateTime을 선택된 타임존으로 변환
+  /// UTC DateTime을 선택된 타임존으로 변환 (서머타임 수동 토글 반영)
   DateTime convert(DateTime dateTime) {
     try {
       final location = tz.getLocation(_selectedTimezoneId);
       final utcTime = dateTime.toUtc();
       final tzDateTime = tz.TZDateTime.from(utcTime, location);
-      return DateTime(
+      DateTime result = DateTime(
         tzDateTime.year,
         tzDateTime.month,
         tzDateTime.day,
@@ -742,6 +742,17 @@ class TimezoneProvider extends ChangeNotifier {
         tzDateTime.minute,
         tzDateTime.second,
       );
+
+      // 서머타임 수동 토글이 켜져 있고, tz 패키지가 자동 DST를 적용하지 않은 경우 1시간 추가
+      final tzInfo = currentTimezoneInfo;
+      if (tzInfo != null &&
+          tzInfo.isDstCountry &&
+          _isDstApplied &&
+          !tzDateTime.timeZone.isDst) {
+        result = result.add(const Duration(hours: 1));
+      }
+
+      return result;
     } catch (e) {
       // 타임존을 찾을 수 없으면 로컬 시간 반환
       return dateTime.toLocal();
@@ -779,34 +790,62 @@ class TimezoneProvider extends ChangeNotifier {
       return tzInfo.offsetDisplay;
     }
 
-    // 서머타임 적용 시, 1시간 앞당기기
-    // offsetDisplay에서 숫자를 파싱해서 1시간 뺀다
     String offset = tzInfo.offsetDisplay;
     try {
-      // "CST -8:00" 형식에서 숫자만 추출
-      final parts = offset.split(RegExp(r'[+-]'));
-      final prefix = offset.contains('+') ? '+' : '-';
-      
-      // 예: "CST -8:00"에서 "8:00" 추출
-      final timeStr = parts.last;
-      final timeParts = timeStr.split(':');
-      int hours = int.parse(timeParts[0]);
-      final minutes = timeParts[1];
+      // 형식 1: "ABBR[+-]N" 또는 "ABBR[+-]N:MM" (예: "CET-1", "PST+8", "IST-5:30")
+      final match = RegExp(r'^([A-Z]+)([+-])(\d+)(?::(\d+))?$').firstMatch(offset);
 
-      // 서머타임이므로 1시간 더함 (GMT 기준으로는 뺀다)
-      if (prefix == '-') {
-        hours -= 1; // -8:00 -> -7:00
-      } else {
-        hours += 1; // +3:00 -> +4:00
+      if (match != null) {
+        final abbr = match.group(1)!;
+        final sign = match.group(2)!;
+        int hours = int.parse(match.group(3)!);
+        final minutes = match.group(4);
+
+        // POSIX 규약에서 서머타임 적용:
+        // '-' (UTC 동쪽): POSIX 숫자 증가 (CET-1 → CEST-2)
+        // '+' (UTC 서쪽): POSIX 숫자 감소 (EST+5 → EDT+4)
+        if (sign == '-') {
+          hours += 1;
+        } else {
+          hours -= 1;
+        }
+
+        final dstAbbr = _getDstAbbreviation(abbr);
+        final minutesPart = (minutes != null) ? ':$minutes' : '';
+
+        if (hours == 0 && (minutes == null || minutes == '00')) {
+          return '$dstAbbr 0:00';
+        }
+        return '$dstAbbr$sign$hours$minutesPart';
       }
 
-      final sign = prefix == '-' ? '-' : '+';
-      final abbrPrefix = offset.split(' ')[0]; // "CST" 추출
-      final dstAbbr = abbrPrefix.replaceRange(2, 3, 'D'); // "CST" -> "CDT"
+      // 형식 2: "ABBR 0:00" (예: "GMT 0:00", "WET 0:00")
+      final zeroMatch = RegExp(r'^([A-Z]+)\s+0:00$').firstMatch(offset);
+      if (zeroMatch != null) {
+        final abbr = zeroMatch.group(1)!;
+        final dstAbbr = _getDstAbbreviation(abbr);
+        // UTC+0 → 서머타임 UTC+1 → POSIX: -1
+        return '$dstAbbr-1';
+      }
 
-      return '$dstAbbr $sign${hours.abs()}:$minutes';
+      return offset;
     } catch (e) {
       return offset;
     }
+  }
+
+  /// 약어를 서머타임 약어로 변환
+  static String _getDstAbbreviation(String abbr) {
+    // 'S' (Standard) 포함 → 'D' (Daylight)로 교체
+    // CST→CDT, EST→EDT, PST→PDT, AEST→AEDT, NZST→NZDT, AKST→AKDT
+    if (abbr.contains('S')) {
+      return abbr.replaceFirst('S', 'D');
+    }
+    // 'T'로 끝나지만 'S' 없음 → 'T' 앞에 'S' 삽입 (Summer)
+    // CET→CEST, EET→EEST, WET→WEST, GMT→GMST, TRT→TRST, BRT→BRST
+    if (abbr.endsWith('T')) {
+      return '${abbr.substring(0, abbr.length - 1)}ST';
+    }
+    return abbr;
   }
 }

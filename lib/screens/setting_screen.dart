@@ -304,28 +304,47 @@ class SettingScreen extends StatelessWidget {
                 ),
               ),
 
-              // ▼▼▼ 여기가 수정된 네 번째 설정 카드입니다 ▼▼▼
+              // 네 번째 설정 카드: 디스코드
               SettingCard(
-                icon: Icons.coffee_outlined, // 네이버 카페를 상징하는 커피 아이콘
-                title: appLocalizations.community, // '커뮤니티' 제목
-                iconColor: const Color(0xFF03C75A), // 네이버 녹색
-                trailing: IconButton(
-                  // 오른쪽 끝에 버튼을 추가
-                  icon: const Icon(
-                    Icons.arrow_forward_ios, // 오른쪽 화살표 아이콘
-                    size: 30,
-                    color: Colors.grey,
-                  ),
-                  onPressed: () {
-                    // 버튼을 누르면 기존에 만드신 확인 대화상자를 띄웁니다.
-                    _showUrlConfirmationDialog(
-                      context,
-                      url: 'https://arion-ayin.github.io/',
-                      serviceNameKo: '블로그',
-                      serviceNameEn: 'Blog',
-                    );
-                  },
+                icon: Icons.headset, // 디스코드를 상징하는 헤드셋 아이콘
+                title: appLocalizations.community, // '디스코드' 제목
+                iconColor: const Color(0xFF5865F2), // 디스코드 블러플
+                trailing: const Icon(
+                  Icons.arrow_forward_ios, // 오른쪽 화살표 아이콘
+                  size: 30,
+                  color: Colors.grey,
                 ),
+                onTap: () {
+                  // 카드 아무 곳이나 누르면 확인 대화상자를 띄웁니다.
+                  _showUrlConfirmationDialog(
+                    context,
+                    url: 'https://discord.gg/wMD29tUa',
+                    serviceNameKo: '디스코드',
+                    serviceNameEn: 'Discord',
+                  );
+                },
+              ),
+
+
+              // ▼▼▼ 블로그 설정 카드 ▼▼▼
+              SettingCard(
+                icon: Icons.article_outlined, // 블로그를 상징하는 아이콘
+                title: appLocalizations.blog, // '블로그' 제목
+                iconColor: const Color(0xFF03C75A), // 녹색
+                trailing: const Icon(
+                  Icons.arrow_forward_ios, // 오른쪽 화살표 아이콘
+                  size: 30,
+                  color: Colors.grey,
+                ),
+                onTap: () {
+                  // 카드 아무 곳이나 누르면 확인 대화상자를 띄웁니다.
+                  _showUrlConfirmationDialog(
+                    context,
+                    url: 'https://arion-ayin.github.io/',
+                    serviceNameKo: '블로그',
+                    serviceNameEn: 'Blog',
+                  );
+                },
               ),
               ],
             ),

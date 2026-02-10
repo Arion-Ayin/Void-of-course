@@ -13,6 +13,8 @@ class MoonSignCard extends StatelessWidget {
     required this.provider,
   });
 
+  static final _dateFormat = DateFormat('MM/dd HH:mm');
+
   String getZodiacEmoji(String sign) {
     switch (sign) {
       case 'Aries':
@@ -76,9 +78,11 @@ class MoonSignCard extends StatelessWidget {
         : null;
     final formattedNextSignTime =
         nextSignTime != null
-            ? DateFormat('MM/dd HH:mm').format(nextSignTime)
+            ? _dateFormat.format(nextSignTime)
             : 'N/A';
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final bodyColor = theme.textTheme.bodyLarge?.color;
     final signColor = _getSignColor(provider.moonInSign, isDark);
 
     return Container(
@@ -164,19 +168,19 @@ class MoonSignCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 1),
                         _buildTimeRow(
-                          context,
                           'Start',
                           provider.currentSignStartTime != null
-                              ? DateFormat('MM/dd HH:mm').format(tzProvider.convert(provider.currentSignStartTime!))
+                              ? _dateFormat.format(tzProvider.convert(provider.currentSignStartTime!))
                               : 'N/A',
                           isDark,
+                          bodyColor,
                         ),
                         const SizedBox(height: 1),
                         _buildTimeRow(
-                          context,
                           'End',
                           formattedNextSignTime,
                           isDark,
+                          bodyColor,
                         ),
                       ],
                     ),
@@ -190,9 +194,9 @@ class MoonSignCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeRow(BuildContext context, String label, String time, bool isDark) {
+  Widget _buildTimeRow(String label, String time, bool isDark, Color? bodyColor) {
     final textStyle = TextStyle(
-      color: Theme.of(context).textTheme.bodyLarge?.color,
+      color: bodyColor,
       fontSize: 16,
       fontWeight: FontWeight.w700,
     );

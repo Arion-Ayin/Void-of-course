@@ -27,7 +27,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get english => 'English';
 
   @override
-  String get community => 'Blog';
+  String get community => 'Discord';
+
+  @override
+  String get blog => 'Blog';
 
   @override
   String get darkMode => 'Dark Mode';

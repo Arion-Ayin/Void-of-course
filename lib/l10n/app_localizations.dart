@@ -137,8 +137,14 @@ abstract class AppLocalizations {
   /// No description provided for @community.
   ///
   /// In en, this message translates to:
-  /// **'Blog'**
+  /// **'Discord'**
   String get community;
+
+  /// No description provided for @blog.
+  ///
+  /// In en, this message translates to:
+  /// **'Blog'**
+  String get blog;
 
   /// No description provided for @darkMode.
   ///

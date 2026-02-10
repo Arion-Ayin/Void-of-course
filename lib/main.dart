@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
@@ -138,7 +139,9 @@ class _MainAppScreenState extends State<MainAppScreen> {
         await InAppUpdate.performImmediateUpdate();
       }
     } catch (e) {
-      print('Error checking for update: $e');
+      if (kDebugMode) {
+        print('Error checking for update: $e');
+      }
     }
   }
 
@@ -269,7 +272,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
   }
 
   List<Widget> _buildScreens() {
-    return [HomeScreen(), const SettingScreen(), const InfoScreen()];
+    return [const HomeScreen(), const SettingScreen(), const InfoScreen()];
   }
 }
 
@@ -304,7 +307,9 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
           });
         },
         onAdFailedToLoad: (ad, err) {
-          print('BannerAd failed to load: $err');
+          if (kDebugMode) {
+            print('BannerAd failed to load: $err');
+          }
           ad.dispose();
         },
       ),

@@ -330,33 +330,49 @@ class AstroCalculator {
     return {'start': signStartTime, 'end': signEndTime}; // 들어오고 나가는 시간을 알려줘요.
   }
 
-  Map<String, DateTime?> getMoonPhaseTimes(DateTime date) {
+  Map<String, dynamic> getMoonPhaseTimes(DateTime date) {
     // Strategy: Reuse existing findNextPhase() for endTime (which does binary search)
     // For startTime: search backwards to find phase change, then get time when it started
-    
+
     final currentPhaseInfo = getMoonPhaseInfo(date);
     final currentPhaseName = currentPhaseInfo['phaseName'];
-    
-    // End time: use existing findNextPhase() which already optimizes
+
+    // End time + next phase name: findNextPhase() 한 번으로 둘 다 가져오기
     final nextPhaseInfo = findNextPhase(date);
     final endTime = nextPhaseInfo['time'] as DateTime?;
-    
-    // Start time: search backwards in 6-hour intervals to find phase change
+    final nextPhaseName = nextPhaseInfo['name'] as String?;
+
+    // Start time: 1일 단위로 먼저 경계를 찾고, 6시간 단위로 좁히기
     DateTime? startTime;
     var backSearchDate = date.subtract(const Duration(days: 1));
-    
-    for (int i = 0; i < 32; i++) {
+
+    // 1일 단위로 phase 변경 지점을 빠르게 탐색 (달 위상은 최대 ~4.5일)
+    DateTime? boundaryDate;
+    for (int i = 0; i < 6; i++) {
       final phaseAtDate = getMoonPhaseInfo(backSearchDate)['phaseName'];
       if (phaseAtDate != currentPhaseName) {
-        // Phase changed - current phase started when this old phase ended
-        final prevPhaseInfo = findNextPhase(backSearchDate);
-        startTime = prevPhaseInfo['time'] as DateTime?;
+        boundaryDate = backSearchDate;
         break;
       }
-      backSearchDate = backSearchDate.subtract(const Duration(hours: 6));
+      backSearchDate = backSearchDate.subtract(const Duration(days: 1));
     }
-    
-    return {'start': startTime, 'end': endTime};
+
+    // 경계를 찾았으면 6시간 단위로 좁혀서 정확한 전환점 찾기
+    if (boundaryDate != null) {
+      var refinedDate = boundaryDate;
+      var narrowDate = refinedDate.add(const Duration(days: 1));
+      for (int i = 0; i < 4; i++) {
+        narrowDate = narrowDate.subtract(const Duration(hours: 6));
+        if (getMoonPhaseInfo(narrowDate)['phaseName'] != currentPhaseName) {
+          refinedDate = narrowDate;
+          break;
+        }
+      }
+      final prevPhaseInfo = findNextPhase(refinedDate);
+      startTime = prevPhaseInfo['time'] as DateTime?;
+    }
+
+    return {'start': startTime, 'end': endTime, 'nextPhaseName': nextPhaseName};
   }
 
   DateTime? _findSpecificPhaseTime(
