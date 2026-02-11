@@ -159,7 +159,7 @@ void onStart(ServiceInstance service) async {
   int cachedPreHours = prefs.getInt('cached_pre_void_hours') ?? 6;
   bool cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
   String cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
-  String cachedTimezoneId = prefs.getString('cached_selected_timezone') ?? 'Asia/Tokyo';
+  String cachedTimezoneId = prefs.getString('cached_selected_timezone') ?? 'Asia/Seoul';
 
   // 서비스 시작 직후 즉시 알림 업데이트 (빈 알림 방지)
   // Timer.periodic 전에 먼저 실행하여 빈 포그라운드 알림을 덮어씀
@@ -231,7 +231,7 @@ void onStart(ServiceInstance service) async {
           cachedPreHours = prefs.getInt('cached_pre_void_hours') ?? 6;
           cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
           cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
-          cachedTimezoneId = prefs.getString('cached_selected_timezone') ?? 'Asia/Tokyo';
+          cachedTimezoneId = prefs.getString('cached_selected_timezone') ?? 'Asia/Seoul';
         }
 
         // 캐시된 값 사용 (30초마다 갱신됨)

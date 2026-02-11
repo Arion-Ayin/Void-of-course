@@ -90,7 +90,8 @@ class AppLocalizationsKo extends AppLocalizations {
       '• 달의 에너지가 닿지 않는 시간을 피하고,\n유저들이 지혜로운 결정을 할 수 있도록\n돕기 위해';
 
   @override
-  String get copyrightText => '© 2025 Arion Ayin. All rights reserved.';
+  String get copyrightText =>
+      '© Arion Ayin. All rights reserved.\nWith respect to Alexander Kolesnikov\'s iLuna';
 
   @override
   String get newMoon => '신월';

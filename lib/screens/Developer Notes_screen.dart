@@ -245,22 +245,25 @@ Warm reviews are a great strength to the developer.
           ),
         ),
         child: SafeArea(
-          child:
-              notes.isEmpty
-                  ? Center(
-                    child: Text(
-                      appLocalizations.noPostsFound, // '등록된 게시글이 없습니다.'
-                      style: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).textTheme.bodyMedium?.color?.withOpacity(0.6),
-                      ),
-                    ),
-                  )
-                  : ListView.builder(
-                    padding: const EdgeInsets.all(16.0),
-                    itemCount: notes.length,
-                    itemBuilder: (context, index) {
+          child: Column(
+            children: [
+              Expanded(
+                child:
+                    notes.isEmpty
+                        ? Center(
+                          child: Text(
+                            appLocalizations.noPostsFound, // '등록된 게시글이 없습니다.'
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                            ),
+                          ),
+                        )
+                        : ListView.builder(
+                          padding: const EdgeInsets.all(16.0),
+                          itemCount: notes.length,
+                          itemBuilder: (context, index) {
                       final note = notes[index];
                       // 현재 언어에 맞는 제목과 내용을 선택해요
                       final title = isKorean ? note.titleKo : note.titleEn;
@@ -455,6 +458,20 @@ Warm reviews are a great strength to the developer.
                       );
                     },
                   ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                child: Text(
+                  appLocalizations.copyrightText,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

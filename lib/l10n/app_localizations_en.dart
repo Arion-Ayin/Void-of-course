@@ -93,7 +93,8 @@ class AppLocalizationsEn extends AppLocalizations {
       '• With the hope that anyone can easily access this information.';
 
   @override
-  String get copyrightText => '© 2025 Arion Ayin. All rights reserved.';
+  String get copyrightText =>
+      '© Arion Ayin. All rights reserved.\nWith respect to Alexander Kolesnikov\'s iLuna';
 
   @override
   String get newMoon => 'New Moon';

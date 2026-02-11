@@ -237,8 +237,8 @@ class AstroState with ChangeNotifier {
       return;
     }
 
-    // 선택된 타임존 ID 읽기 (기본값: Asia/Tokyo)
-    final selectedTimezoneId = _prefs?.getString('selected_timezone') ?? 'Asia/Tokyo';
+    // 선택된 타임존 ID 읽기 (기본값: Asia/Seoul)
+    final selectedTimezoneId = _prefs?.getString('selected_timezone') ?? 'Asia/Seoul';
     
     // 현재 시간을 UTC로 변환후 선택된 타임존으로 변환
     try {

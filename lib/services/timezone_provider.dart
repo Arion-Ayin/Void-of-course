@@ -33,7 +33,7 @@ class TimezoneInfo {
 }
 
 class TimezoneProvider extends ChangeNotifier {
-  String _selectedTimezoneId = 'Asia/Tokyo';
+  String _selectedTimezoneId = 'Asia/Seoul';
   bool _isDstApplied = false; // 서머타임 적용 여부
 
   String get selectedTimezoneId => _selectedTimezoneId;
@@ -716,7 +716,7 @@ class TimezoneProvider extends ChangeNotifier {
 
   Future<void> loadTimezone() async {
     final prefs = await SharedPreferences.getInstance();
-    _selectedTimezoneId = prefs.getString('selected_timezone') ?? 'Asia/Tokyo';
+    _selectedTimezoneId = prefs.getString('selected_timezone') ?? 'Asia/Seoul';
     notifyListeners();
   }
 

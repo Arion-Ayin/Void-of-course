@@ -251,7 +251,7 @@ abstract class AppLocalizations {
   /// No description provided for @copyrightText.
   ///
   /// In en, this message translates to:
-  /// **'© 2025 Arion Ayin. All rights reserved.'**
+  /// **'© Arion Ayin. All rights reserved.\nWith respect to Alexander Kolesnikov\'s iLuna'**
   String get copyrightText;
 
   /// No description provided for @newMoon.
