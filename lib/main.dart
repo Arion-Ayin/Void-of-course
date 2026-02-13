@@ -6,7 +6,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
 import 'screens/home_screen.dart';
-import 'screens/Developer Notes_screen.dart';
+import 'screens/developer_notes_screen.dart';
 import 'screens/setting_screen.dart';
 import 'services/astro_state.dart';
 import 'services/timezone_provider.dart';
@@ -111,7 +111,7 @@ class MainAppScreen extends StatefulWidget {
   const MainAppScreen({super.key});
 
   @override
-  _MainAppScreenState createState() => _MainAppScreenState();
+  State<MainAppScreen> createState() => _MainAppScreenState();
 }
 
 class _MainAppScreenState extends State<MainAppScreen> {
@@ -187,7 +187,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
       },
       child: PopScope(
         canPop: false,
-        onPopInvoked: (didPop) async {
+        onPopInvokedWithResult: (didPop, result) async {
           if (didPop) {
             return;
           }
@@ -233,8 +233,8 @@ class _MainAppScreenState extends State<MainAppScreen> {
                 boxShadow: [
                   BoxShadow(
                     color: isDarkMode
-                        ? Colors.black.withOpacity(0.4)
-                        : Colors.black.withOpacity(0.08),
+                        ? Colors.black.withValues(alpha: 0.4)
+                        : Colors.black.withValues(alpha: 0.08),
                     blurRadius: 15,
                     offset: const Offset(0, -3),
                   ),

@@ -41,8 +41,13 @@ val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build"
 rootProject.layout.buildDirectory.value(newBuildDir)
 
 subprojects {
-    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
-    project.layout.buildDirectory.value(newSubprojectBuildDir)
+    // 플러그인 소스가 다른 드라이브(C:)에 있을 때 경로 충돌 방지
+    val projectRoot = project.projectDir.toPath().root?.toString() ?: ""
+    val buildRoot = newBuildDir.asFile.toPath().root?.toString() ?: ""
+    if (projectRoot.equals(buildRoot, ignoreCase = true)) {
+        val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
+        project.layout.buildDirectory.value(newSubprojectBuildDir)
+    }
 }
 
 subprojects {

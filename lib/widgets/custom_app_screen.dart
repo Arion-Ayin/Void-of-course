@@ -62,7 +62,7 @@ class CustomAppScreen extends StatelessWidget {
             begin: Alignment.topCenter, // 위쪽 가운데에서 시작해서
             end: Alignment.bottomCenter, // 아래쪽 가운데로 색이 변해요.
             colors: [
-              Theme.of(context).colorScheme.background, // 앱 테마의 배경색 (예: 하얀색 또는 어두운 회색)
+              Theme.of(context).colorScheme.surface, // 앱 테마의 배경색 (예: 하얀색 또는 어두운 회색)
               Theme.of(context).colorScheme.surface, // 앱 테마의 표면색 (예: 하얀색 또는 더 어두운 회색)
             ],
           ),

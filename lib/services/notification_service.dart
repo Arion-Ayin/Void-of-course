@@ -118,7 +118,7 @@ class NotificationService {
       if (!hasExactAlarmPermission) {
         await requestExactAlarmPermission();
         if (!await checkExactAlarmPermission()) {
-          print('Exact alarm permission denied');
+          developer.log('Exact alarm permission denied', name: 'NotificationService');
           return;
         }
       }

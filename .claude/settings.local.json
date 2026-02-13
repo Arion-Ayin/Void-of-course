@@ -15,7 +15,17 @@
       "Bash(findstr:*)",
       "Bash(Select-Object -First 1)",
       "Bash(copy \"d:\\\\Basic\\\\Github\\\\Void-of-course\\\\android\\\\app\\\\src\\\\main\\\\res\\\\mipmap-xxhdpi\\\\ic_launcher_foreground.png\" \"d:\\\\Basic\\\\Github\\\\Void-of-course\\\\android\\\\app\\\\src\\\\main\\\\res\\\\drawable\\\\ic_launcher_foreground.png\")",
-      "Bash(D:\\\\Basic\\\\Github\\\\flutter\\\\bin\\\\flutter --version:*)"
+      "Bash(D:\\\\Basic\\\\Github\\\\flutter\\\\bin\\\\flutter --version:*)",
+      "Bash(D:)",
+      "Bash(cmd /c \"cd /d D:\\\\Basic\\\\Github\\\\Void-of-course && flutter clean\")",
+      "Bash(cmd /c \"cd /d D:\\\\Basic\\\\Github\\\\Void-of-course && flutter clean && flutter pub get\")",
+      "Bash(cmd /c \"cd /d D:\\\\Basic\\\\Github\\\\Void-of-course && flutter clean 2>&1\")",
+      "Bash(cmd /c \"flutter clean 2>&1 && flutter pub get 2>&1\")",
+      "Bash(cmd /c \"cd /d D:\\\\Basic\\\\Github\\\\Void-of-course\\\\android && gradlew.bat --stop 2>&1\")",
+      "Bash(cmd /c \"rmdir /s /q D:\\\\Basic\\\\Github\\\\Void-of-course\\\\build 2>&1 & rmdir /s /q D:\\\\Basic\\\\Github\\\\Void-of-course\\\\android\\\\.gradle 2>&1 & echo DONE\")",
+      "Bash(cmd /c \"cd /d D:\\\\Basic\\\\Github\\\\Void-of-course && git mv \"libscreensDeveloper Notes_screen.dart\" \"libscreensdeveloper_notes_screen.dart\"\")",
+      "Bash(cmd /c \"cd /d D:\\\\Basic\\\\Github\\\\Void-of-course && ren \"libscreensDeveloper Notes_screen.dart\" developer_notes_screen.dart\")",
+      "Bash(powershell:*)"
     ]
   }
 }

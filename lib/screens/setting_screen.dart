@@ -11,7 +11,7 @@ import 'package:void_of_course/l10n/app_localizations.dart'; // 앱의 언어(�
 import 'package:void_of_course/services/locale_provider.dart'; // 앱의 현재 언어 설정을 관리하는 파일을 가져와요.
 import 'package:url_launcher/url_launcher.dart'; // 웹사이트나 이메일 앱을 열어주는 라이브러리예요.
 import '../widgets/reusable_native_ad_widget.dart';
-import '../services/ad_service.dart';
+
 
 // 설정 화면을 보여주는 위젯이에요.
 class SettingScreen extends StatelessWidget {
@@ -168,9 +168,6 @@ class SettingScreen extends StatelessWidget {
                         if (!context.mounted) return;
 
                         String message = ''; // 화면 아래에 잠깐 나타날 메시지를 담을 변수예요.
-                        Duration duration = const Duration(
-                          seconds: 2,
-                        ); // 메시지가 2초 동안 보이게 할 거예요.
 
                         // 알람 허용 상태에 따라 다른 메시지를 보여줘요.
                         switch (status) {
@@ -193,7 +190,6 @@ class SettingScreen extends StatelessWidget {
                             message =
                                 appLocalizations
                                     .voidAlarmExactAlarmDeniedMessage; // 권한이 필요하다는 메시지를 보여줘요.
-                            duration = const Duration(seconds: 2);
                             break;
                         }
 

@@ -239,7 +239,7 @@ Warm reviews are a great strength to the developer.
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Theme.of(context).colorScheme.background,
+              Theme.of(context).colorScheme.surface,
               Theme.of(context).colorScheme.surface,
             ],
           ),
@@ -256,7 +256,7 @@ Warm reviews are a great strength to the developer.
                             style: TextStyle(
                               color: Theme.of(
                                 context,
-                              ).textTheme.bodyMedium?.color?.withOpacity(0.6),
+                              ).textTheme.bodyMedium?.color?.withValues(alpha:0.6),
                             ),
                           ),
                         )
@@ -295,7 +295,7 @@ Warm reviews are a great strength to the developer.
                             ),
                             initiallyExpanded: false,
                             collapsedBackgroundColor: Theme.of(context).cardColor,
-                            backgroundColor: Theme.of(context).cardColor.withOpacity(0.8),
+                            backgroundColor: Theme.of(context).cardColor.withValues(alpha:0.8),
                             title: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
@@ -327,7 +327,7 @@ Warm reviews are a great strength to the developer.
                                     top: BorderSide(
                                       color: Theme.of(
                                         context,
-                                      ).dividerColor.withOpacity(0.1),
+                                      ).dividerColor.withValues(alpha:0.1),
                                     ),
                                   ),
                                 ),
@@ -344,7 +344,7 @@ Warm reviews are a great strength to the developer.
                                             .textTheme
                                             .bodyLarge
                                             ?.color
-                                            ?.withOpacity(0.8),
+                                            ?.withValues(alpha:0.8),
                                       ),
                                     ),
                                     // ▼▼▼ [링크 버튼 목록 표시] ▼▼▼
@@ -395,6 +395,7 @@ Warm reviews are a great strength to the developer.
                                                             text: email,
                                                           ),
                                                         );
+                                                        if (!context.mounted) return;
                                                         ScaffoldMessenger.of(
                                                           context,
                                                         ).showSnackBar(
@@ -445,8 +446,7 @@ Warm reviews are a great strength to the developer.
                                                 ),
                                               ),
                                             ),
-                                          )
-                                          .toList(),
+                                          ),
                                     ],
                                     // ▲▲▲ 여기까지 ▲▲▲
                                   ],
@@ -466,7 +466,7 @@ Warm reviews are a great strength to the developer.
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
-                    color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5),
+                    color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.5),
                   ),
                 ),
               ),
