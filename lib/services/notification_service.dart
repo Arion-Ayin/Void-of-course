@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:developer' as developer;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -124,8 +125,9 @@ class NotificationService {
     }
 
     final tzScheduledTime = tz.TZDateTime.from(scheduledTime, tz.local);
-    print(
+    developer.log(
       'Scheduling notification for: $tzScheduledTime (Local time: $scheduledTime)',
+      name: 'NotificationService',
     );
 
     await _notificationsPlugin.zonedSchedule(

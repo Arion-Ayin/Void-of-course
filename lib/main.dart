@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -140,7 +141,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('Error checking for update: $e');
+        developer.log('Error checking for update: $e', name: 'Main');
       }
     }
   }
@@ -306,9 +307,9 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
             _isAdLoaded = true;
           });
         },
-        onAdFailedToLoad: (ad, err) {
+          onAdFailedToLoad: (ad, err) {
           if (kDebugMode) {
-            print('BannerAd failed to load: $err');
+            developer.log('BannerAd failed to load: $err', name: 'Main');
           }
           ad.dispose();
         },

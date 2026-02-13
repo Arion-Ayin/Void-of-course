@@ -20,6 +20,11 @@ class _ResetDateButtonState extends State<ResetDateButton> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 380;
+    final buttonSize = isCompact ? 70.0 : 70.0;
+    final iconSize = isCompact ? 45.0 : 45.0;
+
     return Center(
       child: GestureDetector(
         onTapDown: (_) => setState(() => _isPressed = true),
@@ -29,8 +34,8 @@ class _ResetDateButtonState extends State<ResetDateButton> {
           scale: _isPressed ? 0.9 : 1.0,
           duration: const Duration(milliseconds: 100),
           child: Container(
-            width: 65,
-            height: 65,
+            width: buttonSize,
+            height: buttonSize,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
@@ -56,13 +61,13 @@ class _ResetDateButtonState extends State<ResetDateButton> {
                   widget.onPressed();
                   _adService.showAdIfNeeded(() {});
                 },
-                borderRadius: BorderRadius.circular(30),
+                borderRadius: BorderRadius.circular(buttonSize / 2),
                 splashColor: Colors.white.withValues(alpha: 0.3),
                 highlightColor: Colors.white.withValues(alpha: 0.1),
-                child: const Center(
+                child: Center(
                   child: Icon(
                     Icons.refresh_rounded,
-                    size: 45,
+                    size: iconSize,
                     color: Colors.white,
                   ),
                 ),

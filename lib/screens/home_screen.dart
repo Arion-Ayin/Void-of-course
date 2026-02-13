@@ -144,9 +144,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () async {
                   // DST 토글: 천문 계산은 UTC 기반이므로 재계산 불필요
                   // 카드 위젯들이 TimezoneProvider를 리스닝하므로 convert()로 자동 갱신
-                  tzProvider.toggleDst();
+                  final astroState = Provider.of<AstroState>(context, listen: false);
+                  await tzProvider.toggleDst();
                   if (mounted) {
-                    final astroState = Provider.of<AstroState>(context, listen: false);
                     await astroState.updateVocAlarmForTimezone();
                   }
                 },
@@ -215,7 +215,10 @@ class _HomeScreenState extends State<HomeScreen> {
           child: SafeArea(
             child: SingleChildScrollView(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: EdgeInsets.symmetric(
+                  horizontal: MediaQuery.of(context).size.width < 380 ? 12.0 : 16.0,
+                  vertical: 8,
+                ),
                 child: Column(
                   children: [
                     MoonPhaseCard(provider: astroState),

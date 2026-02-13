@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:timezone/timezone.dart' as tz;
 import '../services/astro_state.dart';
 import '../services/timezone_provider.dart';
 import '../themes.dart';
@@ -33,6 +34,16 @@ class _VocInfoCardState extends State<VocInfoCard> {
     final isDark = theme.brightness == Brightness.dark;
     final bodyColor = theme.textTheme.bodyLarge?.color;
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 380;
+    final iconSize = isCompact ? 66.0 : 82.0;
+    final emojiSize = isCompact ? 42.0 : 52.0;
+    final cardPadding = isCompact ? 10.0 : 12.0;
+    final iconGap = isCompact ? 12.0 : 16.0;
+    final titleSize = isCompact ? 15.0 : 17.0;
+    final statusSize = isCompact ? 14.0 : 16.0;
+    final badgeSize = isCompact ? 13.0 : 15.0;
+
     bool isVocNow = false;
     if (vocStart != null && vocEnd != null) {
       isVocNow = now.isAfter(vocStart) && now.isBefore(vocEnd);
@@ -40,18 +51,17 @@ class _VocInfoCardState extends State<VocInfoCard> {
 
     bool doesSelectedDateHaveVoc = false;
     if (vocStart != null && vocEnd != null) {
-      final selectedDayStart =
-          selectedDate.isUtc
-              ? DateTime.utc(
-                selectedDate.year,
-                selectedDate.month,
-                selectedDate.day,
-              )
-              : DateTime(
-                selectedDate.year,
-                selectedDate.month,
-                selectedDate.day,
-              );
+      // 선택된 타임존 기준으로 날짜 경계를 결정 (기기 타임존이 아닌)
+      final location = tz.getLocation(tzProvider.selectedTimezoneId);
+      late final tz.TZDateTime selectedDayStart;
+      if (widget.provider.isFollowingTime) {
+        // 실시간 모드: UTC를 선택된 타임존으로 변환하여 정확한 날짜 결정
+        final tzNow = tz.TZDateTime.from(now, location);
+        selectedDayStart = tz.TZDateTime(location, tzNow.year, tzNow.month, tzNow.day);
+      } else {
+        // 날짜 선택 모드: 사용자가 선택한 날짜를 그대로 사용
+        selectedDayStart = tz.TZDateTime(location, selectedDate.year, selectedDate.month, selectedDate.day);
+      }
       final selectedDayEnd = selectedDayStart.add(const Duration(days: 1));
 
       if (vocStart.isBefore(selectedDayEnd) &&
@@ -125,17 +135,18 @@ class _VocInfoCardState extends State<VocInfoCard> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(cardPadding),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // 상태 아이콘 영역
                   Container(
-                    width: 72,
-                    height: 72,
+                    width: iconSize,
+                    height: iconSize,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
+                        center: Alignment(0.0, -0.3),
                         colors: [
                           vocColor.withValues(alpha: isDark ? 0.3 : 0.2),
                           vocColor.withValues(alpha: isDark ? 0.1 : 0.05),
@@ -154,30 +165,32 @@ class _VocInfoCardState extends State<VocInfoCard> {
                     child: Center(
                       child: Text(
                         vocIcon,
-                        style: const TextStyle(fontSize: 42),
+                        style: TextStyle(fontSize: emojiSize),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: iconGap),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Row(
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 4,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             Text(
                               'Void of Course',
                               style: TextStyle(
                                 color: isDark ? Themes.gold : Themes.midnightBlue,
-                                fontSize: 17,
+                                fontSize: titleSize,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.2,
                               ),
                             ),
                             if (widget.provider.vocAspect != null &&
-                                widget.provider.vocPlanet != null) ...[
-                              const SizedBox(width: 8),
+                                widget.provider.vocPlanet != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 6, vertical: 2),
@@ -195,7 +208,7 @@ class _VocInfoCardState extends State<VocInfoCard> {
                                       style: TextStyle(
                                         color: _getAspectColor(
                                             widget.provider.vocAspect!),
-                                        fontSize: 15,
+                                        fontSize: badgeSize,
                                         fontWeight: FontWeight.w700,
                                       ),
                                     ),
@@ -204,14 +217,13 @@ class _VocInfoCardState extends State<VocInfoCard> {
                                       style: TextStyle(
                                         color: _getPlanetColor(
                                             widget.provider.vocPlanet!),
-                                        fontSize: 15,
+                                        fontSize: badgeSize,
                                         fontWeight: FontWeight.w600,
                                       ),
                                     ),
                                   ],
                                 ),
                               ),
-                            ],
                           ],
                         ),
                         const SizedBox(height: 1),
@@ -226,7 +238,7 @@ class _VocInfoCardState extends State<VocInfoCard> {
                             vocStatusText,
                             style: TextStyle(
                               color: vocColor,
-                              fontSize: 16,
+                              fontSize: statusSize,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5,
                             ),
@@ -238,6 +250,7 @@ class _VocInfoCardState extends State<VocInfoCard> {
                           _formatDateTime(widget.provider.vocStart, tzProvider),
                           isDark,
                           bodyColor,
+                          isCompact,
                         ),
                         const SizedBox(height: 1),
                         _buildTimeRow(
@@ -245,6 +258,7 @@ class _VocInfoCardState extends State<VocInfoCard> {
                           _formatDateTime(widget.provider.vocEnd, tzProvider),
                           isDark,
                           bodyColor,
+                          isCompact,
                         ),
                       ],
                     ),
@@ -259,23 +273,27 @@ class _VocInfoCardState extends State<VocInfoCard> {
   }
 
   Widget _buildTimeRow(
-      String label, String time, bool isDark, Color? bodyColor) {
+      String label, String time, bool isDark, Color? bodyColor, bool isCompact) {
     final textStyle = TextStyle(
       color: bodyColor,
-      fontSize: 16,
+      fontSize: isCompact ? 14.0 : 16.0,
       fontWeight: FontWeight.w700,
     );
     return Row(
       children: [
         SizedBox(
-          width: 38,
+          width: isCompact ? 40.0 : 55.0,
           child: Text(label, style: textStyle),
         ),
         Text(' : ', style: textStyle),
-        Text(
-          time,
-          style: textStyle.copyWith(
-            fontFeatures: const [FontFeature.tabularFigures()],
+        Expanded(
+          child: Text(
+            time,
+            style: textStyle.copyWith(
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
       ],
@@ -284,10 +302,10 @@ class _VocInfoCardState extends State<VocInfoCard> {
 
   Color _getAspectColor(String aspect) {
     if (['☌', '□', '☍'].contains(aspect)) {
-      return const Color(0xFFE53935); // Hard aspects - Red
+      return const Color.fromARGB(255, 255, 4, 0); // Hard aspects - Red
     }
     if (['✶', '△'].contains(aspect)) {
-      return const Color(0xFF2196F3); // Soft aspects - Blue
+      return const Color.fromARGB(255, 4, 0, 250); // Soft aspects - Blue
     }
     return const Color(0xFF9E9E9E);
   }
@@ -295,25 +313,25 @@ class _VocInfoCardState extends State<VocInfoCard> {
   Color _getPlanetColor(String planet) {
     switch (planet) {
       case '☉':
-        return const Color(0xFFFF9800); // Sun - Orange
+        return const Color.fromARGB(255, 209, 98, 46);
       case '☾':
-        return const Color(0xFF9E9E9E); // Moon - Silver
+        return const Color.fromARGB(232, 158, 158, 158);
       case '☿':
-        return const Color(0xFF9C27B0); // Mercury - Purple
+        return const Color(0xFF9C27B0);
       case '♀':
-        return const Color(0xFF4CAF50); // Venus - Green
+        return const Color.fromARGB(255, 2, 245, 245);
       case '♂':
-        return const Color(0xFFE53935); // Mars - Red
+        return const Color.fromARGB(255, 255, 4, 0);
       case '♃':
-        return const Color(0xFF3F51B5); // Jupiter - Indigo
+        return const Color.fromARGB(255, 73, 73, 73);
       case '♄':
-        return const Color(0xFF795548); // Saturn - Brown
+        return const Color.fromARGB(255, 99, 0, 0);
       case '♅':
-        return const Color(0xFF00BCD4); // Uranus - Cyan
+        return const Color.fromARGB(255, 35, 67, 250);
       case '♆':
-        return const Color(0xFF2196F3); // Neptune - Blue
+        return const Color.fromARGB(255, 0, 141, 177);
       case '⯓':
-        return const Color(0xFF673AB7); // Pluto - Deep Purple
+        return const Color.fromARGB(255, 63, 0, 0);
       default:
         return const Color(0xFF9E9E9E);
     }

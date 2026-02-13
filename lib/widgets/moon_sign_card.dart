@@ -85,6 +85,14 @@ class MoonSignCard extends StatelessWidget {
     final bodyColor = theme.textTheme.bodyLarge?.color;
     final signColor = _getSignColor(provider.moonInSign, isDark);
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 380;
+    final iconSize = isCompact ? 66.0 : 82.0;
+    final emojiSize = isCompact ? 48.0 : 60.0;
+    final cardPadding = isCompact ? 10.0 : 12.0;
+    final iconGap = isCompact ? 12.0 : 16.0;
+    final titleSize = isCompact ? 15.0 : 17.0;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -118,17 +126,18 @@ class MoonSignCard extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(cardPadding),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // 별자리 심볼 영역
                   Container(
-                    width: 72,
-                    height: 72,
+                    width: iconSize,
+                    height: iconSize,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
+                        center: Alignment(0.0, -0.0),
                         colors: isDark
                             ? [
                                 signColor.withValues(alpha: 0.3),
@@ -144,14 +153,14 @@ class MoonSignCard extends StatelessWidget {
                       child: Text(
                         getZodiacEmoji(provider.moonInSign),
                         style: TextStyle(
-                          fontSize: 50,
+                          fontSize: emojiSize,
                           color: signColor,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: iconGap),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -161,10 +170,12 @@ class MoonSignCard extends StatelessWidget {
                           'Moon in ${provider.moonInSign}',
                           style: TextStyle(
                             color: isDark ? Themes.gold : Themes.midnightBlue,
-                            fontSize: 17,
+                            fontSize: titleSize,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.2,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                         const SizedBox(height: 1),
                         _buildTimeRow(
@@ -174,6 +185,7 @@ class MoonSignCard extends StatelessWidget {
                               : 'N/A',
                           isDark,
                           bodyColor,
+                          isCompact,
                         ),
                         const SizedBox(height: 1),
                         _buildTimeRow(
@@ -181,6 +193,7 @@ class MoonSignCard extends StatelessWidget {
                           formattedNextSignTime,
                           isDark,
                           bodyColor,
+                          isCompact,
                         ),
                       ],
                     ),
@@ -194,23 +207,28 @@ class MoonSignCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeRow(String label, String time, bool isDark, Color? bodyColor) {
+  Widget _buildTimeRow(
+      String label, String time, bool isDark, Color? bodyColor, bool isCompact) {
     final textStyle = TextStyle(
       color: bodyColor,
-      fontSize: 16,
+      fontSize: isCompact ? 14.0 : 16.0,
       fontWeight: FontWeight.w700,
     );
     return Row(
       children: [
         SizedBox(
-          width: 38,
+          width: isCompact ? 40.0 : 55.0,
           child: Text(label, style: textStyle),
         ),
         Text(' : ', style: textStyle),
-        Text(
-          time,
-          style: textStyle.copyWith(
-            fontFeatures: const [FontFeature.tabularFigures()],
+        Expanded(
+          child: Text(
+            time,
+            style: textStyle.copyWith(
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
       ],

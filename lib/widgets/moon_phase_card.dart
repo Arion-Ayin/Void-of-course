@@ -27,6 +27,15 @@ class MoonPhaseCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
     final bodyColor = theme.textTheme.bodyLarge?.color;
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 380;
+    final iconSize = isCompact ? 66.0 : 82.0;
+    final emojiSize = isCompact ? 48.0 : 60.0;
+    final cardPadding = isCompact ? 10.0 : 12.0;
+    final iconGap = isCompact ? 12.0 : 16.0;
+    final titleSize = isCompact ? 15.0 : 17.0;
+    final phaseNameSize = isCompact ? 16.0 : 18.0;
+
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -61,16 +70,17 @@ class MoonPhaseCard extends StatelessWidget {
                 ),
               ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(cardPadding),
               child: Row(
                 children: [
                   // 달 이모지 영역
                   Container(
-                    width: 72,
-                    height: 72,
+                    width: iconSize,
+                    height: iconSize,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: RadialGradient(
+                        center: Alignment(0.0, -0.3),
                         colors: isDark
                             ? [
                                 const Color(0xFF2A4A6E),
@@ -85,11 +95,11 @@ class MoonPhaseCard extends StatelessWidget {
                     child: Center(
                       child: Text(
                         _calculator.getMoonPhaseEmoji(provider.moonPhase),
-                        style: const TextStyle(fontSize: 50),
+                        style: TextStyle(fontSize: emojiSize),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 16),
+                  SizedBox(width: iconGap),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,7 +109,7 @@ class MoonPhaseCard extends StatelessWidget {
                           'Moon Phase',
                           style: TextStyle(
                             color: isDark ? Themes.gold : Themes.midnightBlue,
-                            fontSize: 17,
+                            fontSize: titleSize,
                             fontWeight: FontWeight.bold,
                             letterSpacing: 1.2,
                           ),
@@ -109,9 +119,11 @@ class MoonPhaseCard extends StatelessWidget {
                           _calculator.getMoonPhaseNameOnly(provider.moonPhase),
                           style: TextStyle(
                             color: theme.textTheme.titleLarge?.color,
-                            fontSize: 18,
+                            fontSize: phaseNameSize,
                             fontWeight: FontWeight.w800,
                           ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                         ),
                         const SizedBox(height: 1),
                         _buildTimeRow(
@@ -121,6 +133,7 @@ class MoonPhaseCard extends StatelessWidget {
                               : 'N/A',
                           isDark,
                           bodyColor,
+                          isCompact,
                         ),
                         const SizedBox(height: 1),
                         _buildTimeRow(
@@ -130,6 +143,7 @@ class MoonPhaseCard extends StatelessWidget {
                               : 'N/A',
                           isDark,
                           bodyColor,
+                          isCompact,
                         ),
                       ],
                     ),
@@ -143,23 +157,28 @@ class MoonPhaseCard extends StatelessWidget {
     );
   }
 
-  Widget _buildTimeRow(String label, String time, bool isDark, Color? bodyColor) {
+  Widget _buildTimeRow(
+      String label, String time, bool isDark, Color? bodyColor, bool isCompact) {
     final textStyle = TextStyle(
       color: bodyColor,
-      fontSize: 16,
+      fontSize: isCompact ? 14.0 : 16.0,
       fontWeight: FontWeight.w700,
     );
     return Row(
       children: [
         SizedBox(
-          width: 38,
+          width: isCompact ? 40.0 : 55.0,
           child: Text(label, style: textStyle),
         ),
         Text(' : ', style: textStyle),
-        Text(
-          time,
-          style: textStyle.copyWith(
-            fontFeatures: const [FontFeature.tabularFigures()],
+        Expanded(
+          child: Text(
+            time,
+            style: textStyle.copyWith(
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
           ),
         ),
       ],

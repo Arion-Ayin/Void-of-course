@@ -14,7 +14,8 @@
       "Bash(unzip:*)",
       "Bash(findstr:*)",
       "Bash(Select-Object -First 1)",
-      "Bash(copy \"d:\\\\Basic\\\\Github\\\\Void-of-course\\\\android\\\\app\\\\src\\\\main\\\\res\\\\mipmap-xxhdpi\\\\ic_launcher_foreground.png\" \"d:\\\\Basic\\\\Github\\\\Void-of-course\\\\android\\\\app\\\\src\\\\main\\\\res\\\\drawable\\\\ic_launcher_foreground.png\")"
+      "Bash(copy \"d:\\\\Basic\\\\Github\\\\Void-of-course\\\\android\\\\app\\\\src\\\\main\\\\res\\\\mipmap-xxhdpi\\\\ic_launcher_foreground.png\" \"d:\\\\Basic\\\\Github\\\\Void-of-course\\\\android\\\\app\\\\src\\\\main\\\\res\\\\drawable\\\\ic_launcher_foreground.png\")",
+      "Bash(D:\\\\Basic\\\\Github\\\\flutter\\\\bin\\\\flutter --version:*)"
     ]
   }
 }

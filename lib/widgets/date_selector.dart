@@ -36,8 +36,16 @@ class _DateSelectorState extends State<DateSelector> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isCompact = screenWidth < 380;
+    final navSize = isCompact ? 60.0 : 60.0;
+    final navIconSize = isCompact ? 38.0 : 50.0;
+    final dateSize = isCompact ? 15.0 : 17.0;
+    final calIconSize = isCompact ? 16.0 : 18.0;
+    final containerPadding = isCompact ? 12.0 : 10.0;
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+      padding: EdgeInsets.symmetric(vertical: containerPadding, horizontal: containerPadding),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -56,13 +64,15 @@ class _DateSelectorState extends State<DateSelector> {
             widget.onPreviousDay,
             isDark,
             isPrev: true,
+            buttonSize: navSize,
+            iconSize: navIconSize,
           ),
           // 날짜 표시 영역
           Expanded(
             child: GestureDetector(
               onTap: widget.showCalendar,
               child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 1),
+                padding: EdgeInsets.symmetric(vertical: isCompact ? 20.0 : 20.0, horizontal: 1),
                 decoration: BoxDecoration(
                   color: isDark
                       ? Colors.white.withValues(alpha: 0.05)
@@ -74,7 +84,7 @@ class _DateSelectorState extends State<DateSelector> {
                   children: [
                     Icon(
                       Icons.calendar_today_rounded,
-                      size: 18,
+                      size: calIconSize,
                       color: _isToday
                           ? Themes.gold
                           : (isDark ? Themes.gold : Themes.midnightBlue),
@@ -86,7 +96,7 @@ class _DateSelectorState extends State<DateSelector> {
                         color: _isToday
                             ? Themes.gold
                             : Theme.of(context).textTheme.bodyLarge?.color,
-                        fontSize: 17,
+                        fontSize: dateSize,
                         fontWeight: _isToday ? FontWeight.w700 : FontWeight.w600,
                         letterSpacing: 1,
                         fontFeatures: const [FontFeature.tabularFigures()],
@@ -104,6 +114,8 @@ class _DateSelectorState extends State<DateSelector> {
             widget.onNextDay,
             isDark,
             isPrev: false,
+            buttonSize: navSize,
+            iconSize: navIconSize,
           ),
         ],
       ),
@@ -116,6 +128,8 @@ class _DateSelectorState extends State<DateSelector> {
     VoidCallback onPressed,
     bool isDark, {
     required bool isPrev,
+    required double buttonSize,
+    required double iconSize,
   }) {
     final isPressed = isPrev ? _isPrevPressed : _isNextPressed;
 
@@ -151,8 +165,8 @@ class _DateSelectorState extends State<DateSelector> {
             borderRadius: BorderRadius.circular(12),
             splashColor: (isDark ? Themes.gold : Themes.midnightBlue).withValues(alpha: 0.3),
             child: Container(
-              width: 60,
-              height: 60,
+              width: buttonSize,
+              height: buttonSize,
               decoration: BoxDecoration(
                 color: isDark
                     ? Colors.white.withValues(alpha: 0.08)
@@ -161,7 +175,7 @@ class _DateSelectorState extends State<DateSelector> {
               ),
               child: Icon(
                 icon,
-                size: 50,
+                size: iconSize,
                 color: isDark ? Themes.gold : Themes.midnightBlue,
               ),
             ),

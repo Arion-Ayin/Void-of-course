@@ -1,5 +1,6 @@
 import 'package:sweph/sweph.dart';
 import 'lib/services/astro_calculator.dart';
+import 'dart:developer' as developer;
 
 void main() async {
   await Sweph.init();
@@ -10,9 +11,9 @@ void main() async {
   final phaseTimes = calculator.getMoonPhaseTimes(testDate);
   final phaseInfo = calculator.getMoonPhaseInfo(testDate);
   
-  print('Test Date: $testDate');
-  print('Current Moon Phase: ${phaseInfo['phaseName']}');
-  print('Phase Start: ${phaseTimes['start']}');
-  print('Phase End: ${phaseTimes['end']}');
-  print('Next Phase: ${calculator.findNextPhase(testDate)}');
+  developer.log('Test Date: $testDate', name: 'repro_issue');
+  developer.log('Current Moon Phase: ${phaseInfo['phaseName']}', name: 'repro_issue');
+  developer.log('Phase Start: ${phaseTimes['start']}', name: 'repro_issue');
+  developer.log('Phase End: ${phaseTimes['end']}', name: 'repro_issue');
+  developer.log('Next Phase: ${calculator.findNextPhase(testDate)}', name: 'repro_issue');
 }

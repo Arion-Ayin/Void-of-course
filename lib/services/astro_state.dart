@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
@@ -129,7 +130,7 @@ class AstroState with ChangeNotifier {
       _lastError = null;
     } catch (e, stack) {
       if (kDebugMode) {
-        print('Initialization error: $e\n$stack');
+        developer.log('Initialization error: $e\n$stack', name: 'AstroState');
       }
       _lastError = 'initializationError';
     } finally {
@@ -246,12 +247,14 @@ class AstroState with ChangeNotifier {
       final utcNow = DateTime.now().toUtc();
       final tzDateTime = tz.TZDateTime.from(utcNow, location);
       
-      // 선택된 타임존의 현지 시간으로 검색 시작
-      DateTime searchDate = DateTime(
+      // 선택된 타임존의 현지 자정을 UTC로 변환하여 검색 시작
+      // (기기 타임존이 아닌 선택된 타임존 기준으로 날짜 경계를 결정)
+      DateTime searchDate = tz.TZDateTime(
+        location,
         tzDateTime.year,
         tzDateTime.month,
         tzDateTime.day,
-      );
+      ).toUtc();
 
       // 백그라운드 서비스용 타임존 및 pre-void 시간 동기화
       await _prefs?.setString('cached_selected_timezone', selectedTimezoneId);
@@ -284,7 +287,7 @@ class AstroState with ChangeNotifier {
         foundVocEnd = vocEnd;
 
         if (kDebugMode) {
-          print("Cached VOC (Timezone: $selectedTimezoneId): start=$vocStart, end=$vocEnd");
+          developer.log('Cached VOC (Timezone: $selectedTimezoneId): start=$vocStart, end=$vocEnd', name: 'AstroState');
         }
 
         break; // 첫 번째 유효한 VOC만 캐시하면 됨
@@ -303,13 +306,13 @@ class AstroState with ChangeNotifier {
           // pre-void 이상이면 서비스 시작
           await service.startService();
           if (kDebugMode) {
-            print("Background service started for VOC monitoring (pre-void active)");
+            developer.log('Background service started for VOC monitoring (pre-void active)', name: 'AstroState');
           }
         } else if (!shouldServiceRun && isRunning) {
           // pre-void 전인데 서비스가 실행 중이면 종료
           service.invoke("stopService");
           if (kDebugMode) {
-            print("Background service stopped (pre-void not yet started)");
+            developer.log('Background service stopped (pre-void not yet started)', name: 'AstroState');
           }
         }
 
@@ -320,7 +323,7 @@ class AstroState with ChangeNotifier {
           await _alarmService.schedulePreVoidAlarm(preVoidStart);
 
           if (kDebugMode) {
-            print("Scheduled AlarmManager for pre-void at: $preVoidStart");
+            developer.log('Scheduled AlarmManager for pre-void at: $preVoidStart', name: 'AstroState');
           }
         } else {
           // 이미 pre-void가 시작되었으면 알람 취소
@@ -332,7 +335,7 @@ class AstroState with ChangeNotifier {
       }
     } catch (e) {
       if (kDebugMode) {
-        print("Error in _schedulePreVoidAlarm: $e");
+        developer.log('Error in _schedulePreVoidAlarm: $e', name: 'AstroState');
       }
     }
 
@@ -380,12 +383,12 @@ class AstroState with ChangeNotifier {
       final duration = nextEvent.difference(now) + const Duration(seconds: 1);
 
       if (kDebugMode) {
-        print('Scheduling next UI update in $duration for event at $nextEvent');
+        developer.log('Scheduling next UI update in $duration for event at $nextEvent', name: 'AstroState');
       }
 
       _timer = Timer(duration, () {
         if (kDebugMode) {
-          print('Timer fired for UI update. Refreshing data...');
+          developer.log('Timer fired for UI update. Refreshing data...', name: 'AstroState');
         }
 
         // If we are still following time, refresh the data.
@@ -401,7 +404,7 @@ class AstroState with ChangeNotifier {
       });
     } else {
       if (kDebugMode) {
-        print('No future events found to schedule an update for.');
+        developer.log('No future events found to schedule an update for.', name: 'AstroState');
       }
     }
   }
@@ -444,7 +447,27 @@ class AstroState with ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    final dateForCalc = _selectedDate;
+    // 선택된 타임존 기준으로 계산 시점을 결정
+    final selectedTimezoneId = _prefs?.getString('selected_timezone') ?? 'Asia/Seoul';
+    DateTime dateForCalc;
+    try {
+      final location = tz.getLocation(selectedTimezoneId);
+      if (_isFollowingTime) {
+        // 실시간 모드: 현재 UTC 시간을 그대로 사용
+        // (기기 로컬 시간을 선택된 타임존으로 잘못 해석하는 문제 방지)
+        dateForCalc = DateTime.now().toUtc();
+      } else {
+        // 날짜 선택 모드: 선택된 날짜를 선택된 타임존의 자정으로 변환
+        dateForCalc = tz.TZDateTime(
+          location,
+          _selectedDate.year,
+          _selectedDate.month,
+          _selectedDate.day,
+        ).toUtc();
+      }
+    } catch (e) {
+      dateForCalc = _selectedDate.toUtc();
+    }
 
     //카큘레이터에서 가져와서 계산 시작
     try {

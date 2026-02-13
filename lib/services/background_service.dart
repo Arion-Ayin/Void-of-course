@@ -3,7 +3,6 @@ import 'dart:ui';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:timezone/timezone.dart' as tz;
 
 // 알림 상태 상수
 const int stateNone = 0;
@@ -97,10 +96,10 @@ void onStart(ServiceInstance service) async {
       FlutterLocalNotificationsPlugin();
 
   // stopService 이벤트 핸들러 등록
+  // vocEndNotificationId는 취소하지 않음 (사용자가 직접 지울 때까지 유지)
   service.on("stopService").listen((event) async {
     await notificationsPlugin.cancel(countdownNotificationId);
     await notificationsPlugin.cancel(vocStartNotificationId);
-    await notificationsPlugin.cancel(vocEndNotificationId);
     await service.stopSelf();
   });
 
@@ -159,15 +158,13 @@ void onStart(ServiceInstance service) async {
   int cachedPreHours = prefs.getInt('cached_pre_void_hours') ?? 6;
   bool cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
   String cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
-  String cachedTimezoneId = prefs.getString('cached_selected_timezone') ?? 'Asia/Seoul';
 
   // 서비스 시작 직후 즉시 알림 업데이트 (빈 알림 방지)
   // Timer.periodic 전에 먼저 실행하여 빈 포그라운드 알림을 덮어씀
   if (cachedIsEnabled && cachedStartStr != null && cachedEndStr != null) {
-    // 선택된 타임존의 현재 시간 계산
+    // UTC 기준으로 비교 (기기 타임존과 무관하게 정확한 epoch 비교)
     final DateTime utcNow = DateTime.now().toUtc();
-    final DateTime now = _convertToTimezone(utcNow, cachedTimezoneId);
-    
+
     final DateTime vocStart = DateTime.parse(cachedStartStr);
     final DateTime vocEnd = DateTime.parse(cachedEndStr);
     final DateTime preVoidStart = vocStart.subtract(Duration(hours: cachedPreHours));
@@ -176,15 +173,15 @@ void onStart(ServiceInstance service) async {
     String? title;
     String? content;
 
-    if (now.isAfter(preVoidStart) && now.isBefore(vocStart)) {
+    if (utcNow.isAfter(preVoidStart) && utcNow.isBefore(vocStart)) {
       // Pre-Void 상태
-      final Duration timeLeft = vocStart.difference(now);
+      final Duration timeLeft = vocStart.difference(utcNow);
       title = isKorean ? '⏰ 보이드 시작 알림' : '⏰ Void Starting Soon';
       content = isKorean ? '보이드 시작까지: ${_formatDuration(timeLeft)}' : 'Starts in: ${_formatDuration(timeLeft)}';
       previousState = statePreVoid;
-    } else if (now.isAfter(vocStart) && now.isBefore(vocEnd)) {
+    } else if (utcNow.isAfter(vocStart) && utcNow.isBefore(vocEnd)) {
       // Void Active 상태
-      final Duration timeLeft = vocEnd.difference(now);
+      final Duration timeLeft = vocEnd.difference(utcNow);
       title = isKorean ? '🌑 지금은 보이드입니다!' : '🌑 Void of Course Active!';
       content = isKorean ? '보이드 종료까지: ${_formatDuration(timeLeft)}' : 'Ends in: ${_formatDuration(timeLeft)}';
       previousState = stateVocActive;
@@ -231,7 +228,6 @@ void onStart(ServiceInstance service) async {
           cachedPreHours = prefs.getInt('cached_pre_void_hours') ?? 6;
           cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
           cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
-          cachedTimezoneId = prefs.getString('cached_selected_timezone') ?? 'Asia/Seoul';
         }
 
         // 캐시된 값 사용 (30초마다 갱신됨)
@@ -245,7 +241,7 @@ void onStart(ServiceInstance service) async {
           // 알림 비활성화 - 모든 알림 삭제 후 서비스 종료
           await notificationsPlugin.cancel(countdownNotificationId);
           await notificationsPlugin.cancel(vocStartNotificationId);
-          await notificationsPlugin.cancel(vocEndNotificationId);
+          await notificationsPlugin.cancel(vocEndNotificationId); // 사용자가 알람 끄면 종료 알림도 삭제
           previousState = stateNone;
           timer.cancel();
           service.stopSelf();
@@ -253,10 +249,9 @@ void onStart(ServiceInstance service) async {
         }
 
         if (startStr != null && endStr != null) {
-          // 선택된 타임존의 현재 시간 계산
+          // UTC 기준으로 비교 (기기 타임존과 무관하게 정확한 epoch 비교)
           final DateTime utcNow = DateTime.now().toUtc();
-          final DateTime now = _convertToTimezone(utcNow, cachedTimezoneId);
-          
+
           final DateTime vocStart = DateTime.parse(startStr);
           final DateTime vocEnd = DateTime.parse(endStr);
           final DateTime preVoidStart = vocStart.subtract(Duration(hours: preHours));
@@ -265,25 +260,25 @@ void onStart(ServiceInstance service) async {
           String title = '';
           String content = '';
 
-          if (now.isBefore(preVoidStart)) {
+          if (utcNow.isBefore(preVoidStart)) {
             // 대기 중 (pre-void 시작 전) - 서비스 필요 없음, 종료
+            // vocEndNotificationId는 취소하지 않음 (이전 보이드 종료 알림 유지)
             await notificationsPlugin.cancel(countdownNotificationId);
             await notificationsPlugin.cancel(vocStartNotificationId);
-            await notificationsPlugin.cancel(vocEndNotificationId);
             timer.cancel();
             service.stopSelf();
             return;
-          } else if (now.isBefore(vocStart)) {
+          } else if (utcNow.isBefore(vocStart)) {
             // Pre-Void
             currentState = statePreVoid;
-            final Duration timeLeft = vocStart.difference(now);
+            final Duration timeLeft = vocStart.difference(utcNow);
             final String timeLeftStr = _formatDuration(timeLeft);
             title = isKorean ? '⏰ 보이드 시작 알림' : '⏰ Void Starting Soon';
             content = isKorean ? '보이드 시작까지: $timeLeftStr' : 'Starts in: $timeLeftStr';
-          } else if (now.isBefore(vocEnd)) {
+          } else if (utcNow.isBefore(vocEnd)) {
             // Void Active
             currentState = stateVocActive;
-            final Duration timeLeft = vocEnd.difference(now);
+            final Duration timeLeft = vocEnd.difference(utcNow);
             final String timeLeftStr = _formatDuration(timeLeft);
             title = isKorean ? '🌑 지금은 보이드입니다!' : '🌑 Void of Course Active!';
             content = isKorean ? '보이드 종료까지: $timeLeftStr' : 'Ends in: $timeLeftStr';
@@ -322,14 +317,17 @@ void onStart(ServiceInstance service) async {
                     importance: Importance.high,
                     priority: Priority.high,
                     ongoing: false,
-                    autoCancel: true,
+                    autoCancel: false, // 탭해도 삭제 안 됨 - 사용자가 스와이프로 직접 삭제
                     icon: '@drawable/ic_notification',
                   ),
                 ),
               );
 
+              // 알림이 시스템에 완전히 등록될 때까지 대기 후 서비스 종료
+              // (즉시 종료하면 삼성 등 일부 기기에서 프로세스와 함께 알림도 정리됨)
               previousState = currentState;
               timer.cancel();
+              await Future.delayed(const Duration(seconds: 5));
               service.stopSelf();
               return;
             }
@@ -362,10 +360,10 @@ void onStart(ServiceInstance service) async {
             );
           }
         } else {
-          // 데이터 없음 - 모든 알림 삭제 후 서비스 종료
+          // 데이터 없음 - 카운트다운/시작 알림만 삭제 후 서비스 종료
+          // vocEndNotificationId는 유지 (사용자가 직접 삭제)
           await notificationsPlugin.cancel(countdownNotificationId);
           await notificationsPlugin.cancel(vocStartNotificationId);
-          await notificationsPlugin.cancel(vocEndNotificationId);
           timer.cancel();
           service.stopSelf();
           return;
@@ -410,24 +408,4 @@ String _formatDuration(Duration duration) {
   return '$hours:$minutes:$seconds';
 }
 
-/// UTC 시간을 선택된 타임존의 로컬 시간으로 변환
-DateTime _convertToTimezone(DateTime utcTime, String timezoneId) {
-  try {
-    final location = tz.getLocation(timezoneId);
-    final tzDateTime = tz.TZDateTime.from(utcTime, location);
-    // TZDateTime을 일반 DateTime으로 변환 (timezone 정보 제외)
-    return DateTime(
-      tzDateTime.year,
-      tzDateTime.month,
-      tzDateTime.day,
-      tzDateTime.hour,
-      tzDateTime.minute,
-      tzDateTime.second,
-      tzDateTime.millisecond,
-    );
-  } catch (e) {
-    // timezone 로드 실패 시 UTC 시간 반환
-    return utcTime;
-  }
-}
 

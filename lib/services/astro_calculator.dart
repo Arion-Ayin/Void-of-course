@@ -104,7 +104,7 @@ class AstroCalculator {
       body,
       SwephFlag.SEFLG_SWIEPH,
     ); // 'sweph' 도구로 위치를 계산해요.
-    return pos.longitude!; // 계산된 경도(위치)를 알려줘요。
+    return pos.longitude; // 계산된 경도(위치)를 알려줘요。
   }
 
   // 해와 달의 위치(경도)를 동시에 찾아주는 함수예요.
@@ -120,10 +120,7 @@ class AstroCalculator {
       HeavenlyBody.SE_MOON,
       SwephFlag.SEFLG_SWIEPH,
     );
-    if (sun.longitude == null || moon.longitude == null) {
-      throw Exception('Sun or Moon position not available.');
-    }
-    return {'sun': sun.longitude!, 'moon': moon.longitude!};
+    return {'sun': sun.longitude, 'moon': moon.longitude};
   }
 
   // 달의 현재 모양(위상)이 무엇인지 찾아주는 함수예요.
@@ -181,20 +178,20 @@ class AstroCalculator {
       );
 
       // 목표 각도까지 얼마나 남았는지 계산해요.
-      var deg_to_go = (targetAngle - currentAngle + 360) % 360;
-      if (deg_to_go < 0.5) {
-        deg_to_go += 360;
+      var degToGo = (targetAngle - currentAngle + 360) % 360;
+      if (degToGo < 0.5) {
+        degToGo += 360;
       }
 
       // 달은 하루에 약 12.19도씩 움직여요. 이걸로 대략적인 시간을 계산해요.
-      var days_to_go = deg_to_go / 12.19;
-      DateTime estimated_time = now.add(
-        Duration(microseconds: (days_to_go * 24 * 3600 * 1000000).round()),
+      var daysToGo = degToGo / 12.19;
+      DateTime estimatedTime = now.add(
+        Duration(microseconds: (daysToGo * 24 * 3600 * 1000000).round()),
       );
 
       // 정확한 시간을 다시 찾아봐요.
       var time = _findSpecificPhaseTime(
-        estimated_time,
+        estimatedTime,
         targetAngle,
         daysRange: 2,
       );
@@ -202,7 +199,7 @@ class AstroCalculator {
       // 만약 찾은 시간이 지금보다 전이라면, 다음 달 주기로 넘어가서 다시 찾아봐요.
       if (time != null && time.isBefore(now)) {
         time = _findSpecificPhaseTime(
-          estimated_time.add(const Duration(days: 28)),
+          estimatedTime.add(const Duration(days: 28)),
           targetAngle,
           daysRange: 3,
         );
@@ -262,23 +259,23 @@ class AstroCalculator {
     }
 
     // 3. 다음 달 모양이 나타나는 정확한 시간을 찾아봐요.
-    var deg_to_go = (nextAngle - currentAngle + 360) % 360;
-    if (deg_to_go == 0) deg_to_go = 360; // 안전을 위한 코드예요.
+    var degToGo = (nextAngle - currentAngle + 360) % 360;
+    if (degToGo == 0) degToGo = 360; // 안전을 위한 코드예요.
 
-    var days_to_go =
-        deg_to_go / (360 / 29.530588861); // 달 주기를 이용해 대략적인 시간을 계산해요.
-    DateTime estimated_time = now.add(
-      Duration(microseconds: (days_to_go * 24 * 3600 * 1000000).round()),
+    var daysToGo =
+        degToGo / (360 / 29.530588861); // 달 주기를 이용해 대략적인 시간을 계산해요.
+    DateTime estimatedTime = now.add(
+      Duration(microseconds: (daysToGo * 24 * 3600 * 1000000).round()),
     );
 
     // 대략적인 시간을 기준으로 정확한 시간을 다시 찾아봐요.
-    DateTime? final_time = _findSpecificPhaseTime(
-      estimated_time,
+    DateTime? finalTime = _findSpecificPhaseTime(
+      estimatedTime,
       nextAngle,
       daysRange: 2,
     );
 
-    return {'name': nextName, 'time': final_time}; // 다음 달 모양과 시간을 알려줘요.
+    return {'name': nextName, 'time': finalTime}; // 다음 달 모양과 시간을 알려줘요.
   }
 
   // 달이 현재 어떤 별자리에 있는지 기호로 알려주는 함수예요.
