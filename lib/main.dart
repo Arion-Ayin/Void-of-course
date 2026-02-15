@@ -114,12 +114,13 @@ class MainAppScreen extends StatefulWidget {
   State<MainAppScreen> createState() => _MainAppScreenState();
 }
 
-class _MainAppScreenState extends State<MainAppScreen> {
+class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserver {
   int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final initialLocale =
           Provider.of<LocaleProvider>(context, listen: false).locale;
@@ -131,6 +132,21 @@ class _MainAppScreenState extends State<MainAppScreen> {
       }
     });
     _checkForUpdate();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      // 앱이 포그라운드로 복귀하면 서비스 상태를 확인하고 필요시 재시작
+      Provider.of<AstroState>(context, listen: false).ensureServiceRunning();
+    }
   }
 
   Future<void> _checkForUpdate() async {

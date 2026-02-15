@@ -19,6 +19,7 @@ class AstroState with ChangeNotifier {
   final NotificationService _notificationService = NotificationService();
   final AlarmService _alarmService = AlarmService();
   SharedPreferences? _prefs; // 캐시된 SharedPreferences 인스턴스
+  bool _isScheduling = false; // _schedulePreVoidAlarm 동시 실행 방지
   bool _voidAlarmEnabled = false;
   int _preVoidAlarmHours = 6;
 
@@ -117,13 +118,9 @@ class AstroState with ChangeNotifier {
       await _updateData();
 
       // 알람이 활성화되어 있으면 예약 알림 설정 (앱 재시작 시에도 동작)
-      // 단, 서비스가 이미 실행 중이면 다시 스케줄링하지 않음 (중복 알림 방지)
+      // 항상 스케줄링하여 서비스가 죽었더라도 재시작되도록 함
       if (_voidAlarmEnabled) {
-        final service = FlutterBackgroundService();
-        final isRunning = await service.isRunning();
-        if (!isRunning) {
-          await _schedulePreVoidAlarm();
-        }
+        await _schedulePreVoidAlarm();
       }
 
       _isInitialized = true;
@@ -218,6 +215,12 @@ class AstroState with ChangeNotifier {
     }
   }
 
+  /// 앱이 포그라운드로 복귀할 때 호출하여 서비스가 실행 중인지 확인하고 필요시 재시작
+  Future<void> ensureServiceRunning() async {
+    if (!_isInitialized || !_voidAlarmEnabled) return;
+    await _schedulePreVoidAlarm();
+  }
+
   Future<void> setPreVoidAlarmHours(int hours) async {
     _preVoidAlarmHours = hours;
     await _prefs?.setInt('preVoidAlarmHours', hours);
@@ -226,6 +229,11 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> _schedulePreVoidAlarm({bool isToggleOn = false}) async {
+    // 동시 실행 방지 (platform channel 병목으로 UI 프리징 방지)
+    if (_isScheduling) return;
+    _isScheduling = true;
+
+    try {
     // 기존 예약된 알림들 병렬로 취소 (1000~1100번)
     await Future.wait([
       for (int i = 0; i < 100; i++)
@@ -302,11 +310,20 @@ class AstroState with ChangeNotifier {
         final preVoidStart = foundVocStart.subtract(Duration(hours: _preVoidAlarmHours));
         final shouldServiceRun = utcNow.isAfter(preVoidStart) || utcNow.isAtSameMomentAs(preVoidStart);
 
-        if (shouldServiceRun && !isRunning && _voidAlarmEnabled) {
-          // pre-void 이상이면 서비스 시작
-          await service.startService();
-          if (kDebugMode) {
-            developer.log('Background service started for VOC monitoring (pre-void active)', name: 'AstroState');
+        if (shouldServiceRun && _voidAlarmEnabled) {
+          if (!isRunning) {
+            // 서비스가 실행 중이 아니면 시작
+            await service.startService();
+            if (kDebugMode) {
+              developer.log('Background service started for VOC monitoring', name: 'AstroState');
+            }
+          } else {
+            // 서비스가 실행 중이라고 보고하더라도,
+            // SharedPreferences를 즉시 반영하도록 refreshData 이벤트 전송
+            service.invoke("refreshData");
+            if (kDebugMode) {
+              developer.log('Background service refreshData invoked', name: 'AstroState');
+            }
           }
         } else if (!shouldServiceRun && isRunning) {
           // pre-void 전인데 서비스가 실행 중이면 종료
@@ -340,6 +357,9 @@ class AstroState with ChangeNotifier {
     }
 
     notifyListeners();
+    } finally {
+      _isScheduling = false;
+    }
   }
 
   void _scheduleNextUpdate() {

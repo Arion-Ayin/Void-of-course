@@ -159,14 +159,28 @@ void onStart(ServiceInstance service) async {
   bool cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
   String cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
 
+  // refreshData 이벤트 핸들러 등록
+  // 앱에서 SharedPreferences가 업데이트되면 즉시 반영하도록 요청
+  service.on("refreshData").listen((event) async {
+    await prefs.reload();
+    cachedStartStr = prefs.getString('cached_voc_start');
+    cachedEndStr = prefs.getString('cached_voc_end');
+    cachedPreHours = prefs.getInt('cached_pre_void_hours') ?? 6;
+    cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
+    cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
+    tickCount = 0; // 갱신 타이머 리셋
+  });
+
   // 서비스 시작 직후 즉시 알림 업데이트 (빈 알림 방지)
   // Timer.periodic 전에 먼저 실행하여 빈 포그라운드 알림을 덮어씀
   if (cachedIsEnabled && cachedStartStr != null && cachedEndStr != null) {
     // UTC 기준으로 비교 (기기 타임존과 무관하게 정확한 epoch 비교)
     final DateTime utcNow = DateTime.now().toUtc();
+    final String startStr = cachedStartStr!;
+    final String endStr = cachedEndStr!;
 
-    final DateTime vocStart = DateTime.parse(cachedStartStr);
-    final DateTime vocEnd = DateTime.parse(cachedEndStr);
+    final DateTime vocStart = DateTime.parse(startStr);
+    final DateTime vocEnd = DateTime.parse(endStr);
     final DateTime preVoidStart = vocStart.subtract(Duration(hours: cachedPreHours));
     final bool isKorean = cachedLanguageCode.startsWith('ko');
 
@@ -182,7 +196,7 @@ void onStart(ServiceInstance service) async {
     } else if (utcNow.isAfter(vocStart) && utcNow.isBefore(vocEnd)) {
       // Void Active 상태
       final Duration timeLeft = vocEnd.difference(utcNow);
-      title = isKorean ? '🌑 지금은 보이드입니다!' : '🌑 Void of Course Active!';
+      title = isKorean ? '지금은 보이드입니다!' : 'Void of Course Active!';
       content = isKorean ? '보이드 종료까지: ${_formatDuration(timeLeft)}' : 'Ends in: ${_formatDuration(timeLeft)}';
       previousState = stateVocActive;
     }
@@ -280,7 +294,7 @@ void onStart(ServiceInstance service) async {
             currentState = stateVocActive;
             final Duration timeLeft = vocEnd.difference(utcNow);
             final String timeLeftStr = _formatDuration(timeLeft);
-            title = isKorean ? '🌑 지금은 보이드입니다!' : '🌑 Void of Course Active!';
+            title = isKorean ? '지금은 보이드입니다!' : 'Void of Course Active!';
             content = isKorean ? '보이드 종료까지: $timeLeftStr' : 'Ends in: $timeLeftStr';
           } else {
             // Void 종료
@@ -297,7 +311,7 @@ void onStart(ServiceInstance service) async {
               // 2. Void 시작 - Void 시작 알림 표시 (카운트다운 알림은 같은 ID로 덮어씀)
               await _showVocStartNotification(
                 notificationsPlugin,
-                isKorean ? '🌑 보이드가 시작되었습니다!' : '🌑 Void of Course Started!',
+                isKorean ? '보이드가 시작되었습니다!' : 'Void of Course Started!',
                 isKorean ? '중요한 결정을 피하세요.' : 'Avoid important decisions.',
               );
             } else if (currentState == stateVocEnded) {
@@ -317,7 +331,7 @@ void onStart(ServiceInstance service) async {
                     importance: Importance.high,
                     priority: Priority.high,
                     ongoing: false,
-                    autoCancel: false, // 탭해도 삭제 안 됨 - 사용자가 스와이프로 직접 삭제
+                    autoCancel: true, // 사용자가 탭하거나 스와이프로 삭제 가능
                     icon: '@drawable/ic_notification',
                   ),
                 ),
@@ -369,6 +383,9 @@ void onStart(ServiceInstance service) async {
           return;
         }
       }
+    } catch (e) {
+      // 서비스 크래시 방지 - 예외가 발생해도 서비스가 계속 실행되도록 함
+      // (DateTime.parse 실패, 알림 표시 실패 등)
     } finally {
       isProcessing = false;
     }
