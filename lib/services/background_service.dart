@@ -331,7 +331,7 @@ void onStart(ServiceInstance service) async {
                     importance: Importance.high,
                     priority: Priority.high,
                     ongoing: false,
-                    autoCancel: true, // 사용자가 탭하거나 스와이프로 삭제 가능
+                    autoCancel: false, // 유저가 직접 지우기 전까지 유지
                     icon: '@drawable/ic_notification',
                   ),
                 ),

@@ -333,18 +333,35 @@ class AstroState with ChangeNotifier {
           }
         }
 
-        // 앱이 꺼져있어도 백그라운드 서비스가 시작되도록 AlarmManager로 예약
-        // pre-void 시작 시점에 알람 예약 (아직 시작 전일 때만)
+        // AlarmManager 예약 (4개 - 알림 4종 각각 보장):
+        // 1) pre-void 시작 → 서비스 시작 (pre-void 카운트다운)
+        // 2) void 시작    → "시작합니다!" 직접 전송 + 서비스 재시작 (void 카운트다운)
+        // 3) void 중간    → 서비스 재시작 (mid-void 죽었을 때 카운트다운 복구)
+        // 4) void 종료    → "종료됩니다." 직접 전송
         if (preVoidStart.isAfter(utcNow)) {
-          // AlarmManager로 백그라운드 서비스 자동 시작 예약
           await _alarmService.schedulePreVoidAlarm(preVoidStart);
-
           if (kDebugMode) {
-            developer.log('Scheduled AlarmManager for pre-void at: $preVoidStart', name: 'AstroState');
+            developer.log('Scheduled AlarmManager [1] pre-void at: $preVoidStart', name: 'AstroState');
           }
-        } else {
-          // 이미 pre-void가 시작되었으면 알람 취소
-          await _alarmService.cancelAlarm();
+        }
+        if (foundVocStart.isAfter(utcNow)) {
+          await _alarmService.scheduleVocStartAlarm(foundVocStart);
+          if (kDebugMode) {
+            developer.log('Scheduled AlarmManager [2] voc-start at: $foundVocStart', name: 'AstroState');
+          }
+        }
+        // void 중간 시점 (vocStart ~ vocEnd 의 중간) - void 진행 중 서비스 재시작용
+        final vocMid = foundVocStart.add(foundVocEnd.difference(foundVocStart) ~/ 2);
+        if (vocMid.isAfter(utcNow)) {
+          await _alarmService.scheduleVocMidAlarm(vocMid);
+          if (kDebugMode) {
+            developer.log('Scheduled AlarmManager [3] voc-mid at: $vocMid', name: 'AstroState');
+          }
+        }
+        // void 종료 알림은 항상 예약 (서비스가 죽어도 AlarmManager가 직접 전송)
+        await _alarmService.scheduleVocEndAlarm(foundVocEnd);
+        if (kDebugMode) {
+          developer.log('Scheduled AlarmManager [4] voc-end at: $foundVocEnd', name: 'AstroState');
         }
       } else if (isRunning) {
         // VOC 데이터가 없으면 서비스 종료
