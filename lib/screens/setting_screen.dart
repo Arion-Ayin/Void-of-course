@@ -300,11 +300,11 @@ class SettingScreen extends StatelessWidget {
                 ),
               ),
 
-              // 네 번째 설정 카드: 디스코드
+              // 네 번째 설정 카드: 오픈카톡
               SettingCard(
-                icon: Icons.headset, // 디스코드를 상징하는 헤드셋 아이콘
-                title: appLocalizations.community, // '디스코드' 제목
-                iconColor: const Color(0xFF5865F2), // 디스코드 블러플
+                icon: Icons.chat_bubble, // 카카오톡을 상징하는 말풍선 아이콘
+                title: appLocalizations.community, // '오픈카톡' 제목
+                iconColor: const Color(0xFFFFE900), // 카카오톡 노랑
                 trailing: const Icon(
                   Icons.arrow_forward_ios, // 오른쪽 화살표 아이콘
                   size: 30,
@@ -314,9 +314,9 @@ class SettingScreen extends StatelessWidget {
                   // 카드 아무 곳이나 누르면 확인 대화상자를 띄웁니다.
                   _showUrlConfirmationDialog(
                     context,
-                    url: 'https://discord.gg/wMD29tUa',
-                    serviceNameKo: '디스코드',
-                    serviceNameEn: 'Discord',
+                    url: 'https://open.kakao.com/o/gIzVMFji',
+                    serviceNameKo: '오픈카톡',
+                    serviceNameEn: 'Open Kakaotalk',
                   );
                 },
               ),

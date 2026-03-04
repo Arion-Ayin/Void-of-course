@@ -137,7 +137,7 @@ abstract class AppLocalizations {
   /// No description provided for @community.
   ///
   /// In en, this message translates to:
-  /// **'Discord'**
+  /// **'Open Kakaotalk'**
   String get community;
 
   /// No description provided for @blog.

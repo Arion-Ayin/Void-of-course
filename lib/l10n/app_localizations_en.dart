@@ -27,7 +27,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get english => 'English';
 
   @override
-  String get community => 'Discord';
+  String get community => 'Open Kakaotalk';
 
   @override
   String get blog => 'Blog';

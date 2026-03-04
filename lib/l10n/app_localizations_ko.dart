@@ -27,7 +27,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get english => '영어';
 
   @override
-  String get community => '디스코드';
+  String get community => '오픈카톡';
 
   @override
   String get blog => '블로그';

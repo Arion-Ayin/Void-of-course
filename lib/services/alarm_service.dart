@@ -1,7 +1,6 @@
 import 'dart:ui';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const int preVoidAlarmId = 100; // pre-void 시작 → 서비스 시작
@@ -118,7 +117,7 @@ Future<void> _preVoidAlarmCallback() async {
   }
 }
 
-/// 2) void 시작: "시작합니다!" 직접 전송 + 서비스 재시작 → void 카운트다운 시작
+/// 2) void 시작: 서비스 재시작 → void 카운트다운 시작
 @pragma('vm:entry-point')
 Future<void> _vocStartAlarmCallback() async {
   DartPluginRegistrant.ensureInitialized();
@@ -127,37 +126,6 @@ Future<void> _vocStartAlarmCallback() async {
 
   final bool isEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
   if (!isEnabled) return;
-
-  final String languageCode = prefs.getString('cached_language_code') ?? 'en';
-  final bool isKorean = languageCode.startsWith('ko');
-
-  // "시작합니다!" 알림 직접 전송 (서비스 생사와 무관하게 보장)
-  final FlutterLocalNotificationsPlugin notificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-  const AndroidInitializationSettings initSettings =
-      AndroidInitializationSettings('@drawable/ic_notification');
-  await notificationsPlugin.initialize(
-    const InitializationSettings(android: initSettings),
-  );
-
-  await notificationsPlugin.show(
-    777, // vocStartNotificationId
-    isKorean ? '보이드가 시작되었습니다!' : 'Void of Course Started!',
-    isKorean ? '중요한 결정을 피하세요.' : 'Avoid important decisions.',
-    const NotificationDetails(
-      android: AndroidNotificationDetails(
-        'void_alert_channel',
-        'Void Alerts',
-        channelDescription: 'Alert when Void of Course starts',
-        importance: Importance.high,
-        priority: Priority.high,
-        ongoing: false,
-        autoCancel: true,
-        timeoutAfter: 10000, // 10초 후 자동 삭제
-        icon: '@drawable/ic_notification',
-      ),
-    ),
-  );
 
   // 서비스가 죽어있으면 재시작 → void 카운트다운 복구
   final service = FlutterBackgroundService();
@@ -188,7 +156,7 @@ Future<void> _vocMidAlarmCallback() async {
   }
 }
 
-/// 4) void 종료: "종료됩니다." 직접 전송 (서비스 없이도 보장)
+/// 4) void 종료: 서비스 재시작 → 종료 알림 전송 및 서비스 종료
 @pragma('vm:entry-point')
 Future<void> _vocEndAlarmCallback() async {
   DartPluginRegistrant.ensureInitialized();
@@ -198,39 +166,13 @@ Future<void> _vocEndAlarmCallback() async {
   final bool isEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
   if (!isEnabled) return;
 
-  final String languageCode = prefs.getString('cached_language_code') ?? 'en';
-  final bool isKorean = languageCode.startsWith('ko');
-
-  final FlutterLocalNotificationsPlugin notificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-  const AndroidInitializationSettings initSettings =
-      AndroidInitializationSettings('@drawable/ic_notification');
-  await notificationsPlugin.initialize(
-    const InitializationSettings(android: initSettings),
-  );
-
-  await notificationsPlugin.show(
-    999, // vocEndNotificationId
-    isKorean ? '✅ 보이드 종료!' : '✅ Void of Course Ended!',
-    isKorean ? '보이드가 종료되었습니다.' : 'The Void period has ended.',
-    const NotificationDetails(
-      android: AndroidNotificationDetails(
-        'void_end_channel',
-        'Void End Notifications',
-        channelDescription: 'Notification when Void of Course ends',
-        importance: Importance.high,
-        priority: Priority.high,
-        ongoing: false,
-        autoCancel: false, // 유저가 직접 지우기 전까지 유지
-        icon: '@drawable/ic_notification',
-      ),
-    ),
-  );
-
-  // 혹시 살아있는 서비스가 있으면 정상 종료
+  // 서비스가 죽어있더라도 시작하여 종료 알림을 표시하고 스스로 멈추도록 함
   final service = FlutterBackgroundService();
   final isRunning = await service.isRunning();
-  if (isRunning) {
-    service.invoke("stopService");
+  if (!isRunning) {
+    await service.startService();
+  } else {
+    // 이미 실행중이면 refresh 이벤트를 보내 즉시 종료 로직을 타도록 함
+    service.invoke("refreshData");
   }
 }
