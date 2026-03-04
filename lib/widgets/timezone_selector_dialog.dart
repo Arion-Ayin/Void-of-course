@@ -4,6 +4,7 @@ import '../services/timezone_provider.dart';
 import '../services/locale_provider.dart';
 import '../services/astro_state.dart';
 import '../themes.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 void showTimezoneSelectorDialog(BuildContext context) {
   showDialog(
@@ -139,6 +140,10 @@ class _TimezoneSelectorDialogState extends State<TimezoneSelectorDialog> {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () async {
+                        await FirebaseAnalytics.instance.logEvent(
+                          name: 'select_timezone',
+                          parameters: {'timezone_id': tz.id},
+                        );
                         final astro = Provider.of<AstroState>(context, listen: false);
                         await timezoneProvider.setTimezone(tz.id);
                         // 선택된 타임존으로 VOC 알람 재계산

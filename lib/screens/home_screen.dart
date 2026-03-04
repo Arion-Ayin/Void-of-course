@@ -10,6 +10,7 @@ import '../widgets/moon_sign_card.dart';
 import '../widgets/reset_date_button.dart';
 import '../widgets/voc_info_card.dart';
 import '../widgets/timezone_selector_dialog.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,6 +29,15 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!provider.isInitialized) {
       Future.microtask(() => provider.initialize());
     }
+
+    // [Analytics] 앱 진입 시 현재 다크모드 사용 여부를 파악하여 비율을 집계합니다.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      FirebaseAnalytics.instance.setUserProperty(
+        name: 'dark_mode_enabled',
+        value: isDark.toString(),
+      );
+    });
   }
 
   @override
@@ -47,7 +57,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void _resetDateToToday() {
     if (mounted) {
       final provider = Provider.of<AstroState>(context, listen: false);
-      provider.updateDate(DateTime.now());
+      // updateDate 대신 followTime을 호출하여 'click_reset_today' 이벤트가 기록되도록 변경
+      provider.followTime();
 
       final locale = Localizations.localeOf(context).languageCode;
       final message =
@@ -142,6 +153,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 onPressed: () async {
                   // DST 토글: 천문 계산은 UTC 기반이므로 재계산 불필요
                   // 카드 위젯들이 TimezoneProvider를 리스닝하므로 convert()로 자동 갱신
+                  await FirebaseAnalytics.instance.logEvent(
+                    name: 'toggle_dst',
+                    parameters: {'enabled': (!tzProvider.isDstApplied).toString()},
+                  );
                   final astroState = Provider.of<AstroState>(context, listen: false);
                   await tzProvider.toggleDst();
                   if (mounted) {
@@ -159,7 +174,10 @@ class _HomeScreenState extends State<HomeScreen> {
             Icons.public,
             color: isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
           ),
-          onPressed: () => showTimezoneSelectorDialog(context),
+          onPressed: () {
+            FirebaseAnalytics.instance.logEvent(name: 'click_timezone_selector');
+            showTimezoneSelectorDialog(context);
+          },
           tooltip: 'Timezone',
         ),
       ],

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart'; // 링크를 열기 위해 필요해요.
 import 'package:flutter/services.dart'; // 클립보드 사용을 위해 추가
 import 'package:void_of_course/l10n/app_localizations.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 // 링크 버튼 정보를 담는 클래스예요.
 class NoteAction {
@@ -359,6 +360,13 @@ Warm reviews are a great strength to the developer.
                                               child: OutlinedButton.icon(
                                                 onPressed: () async {
                                                   try {
+                                                    await FirebaseAnalytics.instance.logEvent(
+                                                      name: 'click_note_action',
+                                                      parameters: {
+                                                        'label': action.label,
+                                                        'url': action.url,
+                                                      },
+                                                    );
                                                     final uri = Uri.parse(
                                                       action.url,
                                                     );

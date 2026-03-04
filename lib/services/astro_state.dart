@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'astro_calculator.dart';
 import 'notification_service.dart';
@@ -89,6 +90,7 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> followTime() async {
+    await FirebaseAnalytics.instance.logEvent(name: 'click_reset_today');
     if (_isFollowingTime) return;
     _isFollowingTime = true;
     _selectedDate = DateTime.now();
@@ -114,6 +116,17 @@ class AstroState with ChangeNotifier {
       //void alarm enabled 상태 저장
       _voidAlarmEnabled = _prefs!.getBool('voidAlarmEnabled') ?? false;
       _preVoidAlarmHours = _prefs!.getInt('preVoidAlarmHours') ?? 6;
+
+      // [Analytics] 앱 시작 시 유저 속성(User Property) 설정
+      // 이를 통해 "현재 알람을 켜둔 유저 비율", "한국어/영어 사용자 비율"을 파악할 수 있습니다.
+      await FirebaseAnalytics.instance.setUserProperty(
+        name: 'void_alarm_enabled',
+        value: _voidAlarmEnabled.toString(),
+      );
+      await FirebaseAnalytics.instance.setUserProperty(
+        name: 'language',
+        value: _currentLocale,
+      );
 
       await _updateData();
 
@@ -447,6 +460,7 @@ class AstroState with ChangeNotifier {
   }
 
   Future<void> updateDate(DateTime newDate) async {
+    await FirebaseAnalytics.instance.logEvent(name: 'click_calendar');
     final now = DateTime.now();
     final bool isSameDay =
         newDate.year == now.year &&
@@ -473,6 +487,12 @@ class AstroState with ChangeNotifier {
     }
 
     await _updateData();
+  }
+
+  /// 유저가 직접 새로고침 버튼을 눌렀을 때 호출 (Analytics 이벤트 전송)
+  Future<void> refreshDataByUser() async {
+    await FirebaseAnalytics.instance.logEvent(name: 'click_refresh');
+    await refreshData();
   }
 
 
