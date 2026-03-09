@@ -5,6 +5,7 @@ import '../services/locale_provider.dart';
 import '../services/astro_state.dart';
 import '../themes.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter_background_service/flutter_background_service.dart';
 
 void showTimezoneSelectorDialog(BuildContext context) {
   showDialog(
@@ -140,16 +141,28 @@ class _TimezoneSelectorDialogState extends State<TimezoneSelectorDialog> {
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: () async {
+                        // Analytics 로깅
                         await FirebaseAnalytics.instance.logEvent(
                           name: 'select_timezone',
                           parameters: {'timezone_id': tz.id},
                         );
-                        final astro = Provider.of<AstroState>(context, listen: false);
+
+                        final astro =
+                            Provider.of<AstroState>(context, listen: false);
+
+                        // 1. 타임존 설정
                         await timezoneProvider.setTimezone(tz.id);
-                        // 선택된 타임존으로 VOC 알람 재계산
-                        await astro.updateVocAlarmForTimezone();
-                        // UI(문페이즈/싸인 등)도 즉시 갱신
+
+                        // 2. 새 타임존 기준으로 데이터 재계산 (UI 및 SharedPreferences 캐시 갱신)
                         await astro.refreshData();
+
+                        // 3. 실행 중인 백그라운드 서비스에 즉시 데이터 갱신을 알림
+                        FlutterBackgroundService().invoke("refreshData");
+
+                        // 4. 알람 재설정 로직 실행 (알람 끄기 및 사용자에게 경고)
+                        await astro.updateVocAlarmForTimezone();
+
+                        // 5. 대화 상자 닫기
                         if (context.mounted) {
                           Navigator.of(context).pop();
                         }

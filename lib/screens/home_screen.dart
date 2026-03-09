@@ -10,6 +10,7 @@ import '../widgets/moon_sign_card.dart';
 import '../widgets/reset_date_button.dart';
 import '../widgets/voc_info_card.dart';
 import '../widgets/timezone_selector_dialog.dart';
+import 'package:void_of_course/l10n/app_localizations.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -190,8 +191,34 @@ class _HomeScreenState extends State<HomeScreen> {
     // Consumer를 사용하여 AstroState 변경 시에만 body 리빌드
     return Consumer<AstroState>(
       builder: (context, astroState, child) {
+        // 타임존 변경 시 알람 재설정 경고 표시
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (astroState.showTimezoneChangeWarning) {
+            final appLocalizations = AppLocalizations.of(context)!;
+            showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: Text(appLocalizations.voidAlarmTitle),
+                content:
+                    Text(appLocalizations.resetVoidAlarmForTimezoneChange),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      // 경고 플래그를 리셋하고 대화 상자를 닫습니다.
+                      astroState.showTimezoneChangeWarning = false;
+                      Navigator.of(context).pop();
+                    },
+                    child: Text(appLocalizations.ok),
+                  ),
+                ],
+              ),
+            );
+          }
+        });
+
         // 날짜 컨트롤러는 AstroState에서 전달되는 selectedDate로 업데이트합니다.
-        _dateController.text = DateFormat('yyyy/MM/dd').format(astroState.selectedDate.toLocal());
+        _dateController.text =
+            DateFormat('yyyy/MM/dd').format(astroState.selectedDate.toLocal());
 
         
         

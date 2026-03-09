@@ -72,6 +72,8 @@ class AstroState with ChangeNotifier {
   DateTime? get moonPhaseEndTime => _moonPhaseEndTime;
   bool get isFollowingTime => _isFollowingTime;
 
+  bool showTimezoneChangeWarning = false;
+
   void toggleTheme() {
     _isDarkMode = !_isDarkMode;
     notifyListeners();
@@ -174,6 +176,11 @@ class AstroState with ChangeNotifier {
   /// 타임존 변경 시 호출 (VOC 알람을 선택된 타임존 기준으로 재계산)
   Future<void> updateVocAlarmForTimezone() async {
     if (_voidAlarmEnabled) {
+      showTimezoneChangeWarning = true;
+      // 알람을 끄고, toggleVoidAlarm 내부에서 notifyListeners()가 호출됨
+      await toggleVoidAlarm(false);
+    } else {
+      // 알람이 꺼져 있으면, 경고 없이 알람만 재계산
       await _schedulePreVoidAlarm();
     }
   }

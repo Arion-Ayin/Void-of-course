@@ -285,4 +285,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get msgEmailCopied => '메일 앱을 찾을 수 없어 이메일 주소가 복사되었습니다.';
+
+  @override
+  String get ok => '확인';
+
+  @override
+  String get resetVoidAlarmForTimezoneChange =>
+      '타임존이 변경되었습니다. 보이드 알람을 다시 설정하여 주세요.';
 }

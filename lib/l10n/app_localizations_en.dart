@@ -289,4 +289,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get msgEmailCopied =>
       'Email app not found. Address copied to clipboard.';
+
+  @override
+  String get ok => 'OK';
+
+  @override
+  String get resetVoidAlarmForTimezoneChange =>
+      'The timezone has changed. Please set the Void of Course alarm again.';
 }

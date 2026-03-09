@@ -763,8 +763,13 @@ class TimezoneProvider extends ChangeNotifier {
     try {
       final location = tz.getLocation(_selectedTimezoneId);
       final utcTime = dateTime.toUtc();
+
+      // tz 라이브러리를 통해 UTC를 해당 타임존의 시간으로 변환
+      // 이 객체는 해당 날짜에 DST가 적용되는지에 대한 정보(isDst)를 포함
       final tzDateTime = tz.TZDateTime.from(utcTime, location);
-      DateTime result = DateTime(
+
+      // isDst 정보가 없는 순수한 DateTime 객체 생성
+      DateTime baseLocalTime = DateTime(
         tzDateTime.year,
         tzDateTime.month,
         tzDateTime.day,
@@ -773,18 +778,28 @@ class TimezoneProvider extends ChangeNotifier {
         tzDateTime.second,
       );
 
-      // 서머타임 수동 토글이 켜져 있고, tz 패키지가 자동 DST를 적용하지 않은 경우 1시간 추가
       final tzInfo = currentTimezoneInfo;
-      if (tzInfo != null &&
-          tzInfo.isDstCountry &&
-          _isDstApplied &&
-          !tzDateTime.timeZone.isDst) {
-        result = result.add(const Duration(hours: 1));
+      // 서머타임을 적용하지 않는 국가이면, 변환된 시간을 그대로 반환
+      if (tzInfo == null || !tzInfo.isDstCountry) {
+        return baseLocalTime;
       }
 
-      return result;
+      // 서머타임 적용 국가일 경우, 사용자의 수동 토글과 라이브러리의 자동 적용 상태를 비교하여 보정
+      final bool isLibraryApplyingDst = tzDateTime.timeZone.isDst;
+      final bool isUserApplyingDst = _isDstApplied;
+
+      if (isUserApplyingDst && !isLibraryApplyingDst) {
+        // 사용자는 DST 적용을 원하지만, 라이브러리는 적용하지 않은 경우 (예: 겨울철) -> 1시간 추가
+        return baseLocalTime.add(const Duration(hours: 1));
+      } else if (!isUserApplyingDst && isLibraryApplyingDst) {
+        // 사용자는 DST 적용을 원하지 않지만, 라이브러리는 적용한 경우 (예: 여름철) -> 1시간 빼기
+        return baseLocalTime.subtract(const Duration(hours: 1));
+      } else {
+        // 두 상태가 일치하는 경우 (둘 다 적용 or 둘 다 미적용), 보정 불필요
+        return baseLocalTime;
+      }
     } catch (e) {
-      // 타임존을 찾을 수 없으면 로컬 시간 반환
+      // 타임존 데이터를 찾지 못하는 등 예외 발생 시, 기기 로컬 시간으로 대체
       return dateTime.toLocal();
     }
   }

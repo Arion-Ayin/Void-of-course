@@ -178,5 +178,7 @@
     "btnContact": "Contact Developer",
     "btnSupport": "Buy me a coffee",
     "msgAppNotFound": "Cannot find an app to open this.",
-    "msgEmailCopied": "Email app not found. Address copied to clipboard."
+    "msgEmailCopied": "Email app not found. Address copied to clipboard.",
+    "ok": "OK",
+    "resetVoidAlarmForTimezoneChange": "The timezone has changed. Please set the Void of Course alarm again."
 }

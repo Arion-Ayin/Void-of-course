@@ -565,6 +565,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Email app not found. Address copied to clipboard.'**
   String get msgEmailCopied;
+
+  /// No description provided for @ok.
+  ///
+  /// In en, this message translates to:
+  /// **'OK'**
+  String get ok;
+
+  /// No description provided for @resetVoidAlarmForTimezoneChange.
+  ///
+  /// In en, this message translates to:
+  /// **'The timezone has changed. Please set the Void of Course alarm again.'**
+  String get resetVoidAlarmForTimezoneChange;
 }
 
 class _AppLocalizationsDelegate
