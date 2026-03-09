@@ -137,7 +137,7 @@ Future<void> _vocStartAlarmCallback() async {
   }
 }
 
-/// 3) void 중간: 서비스가 죽어있으면 재시작 → 카운트다운 복구
+/// 3) void 중간: 서비스가 죽어있으면 재시작 → 카운트다운 복구 + 다음 알람 예약
 @pragma('vm:entry-point')
 Future<void> _vocMidAlarmCallback() async {
   DartPluginRegistrant.ensureInitialized();
@@ -147,12 +147,35 @@ Future<void> _vocMidAlarmCallback() async {
   final bool isEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
   if (!isEnabled) return;
 
+  // 1. 서비스 생존 확인 및 재시작
   final service = FlutterBackgroundService();
   final isRunning = await service.isRunning();
   if (!isRunning) {
     await service.startService();
   } else {
     service.invoke("refreshData");
+  }
+
+  // 2. 다음 중간 알람 예약 (체인 생성)
+  final vocEndString = prefs.getString('cached_voc_end');
+  if (vocEndString == null) return;
+
+  final vocEnd = DateTime.parse(vocEndString);
+  final now = DateTime.now().toUtc();
+  const maxInterval = Duration(hours: 12);
+  final nextMidVoc = now.add(maxInterval);
+
+  if (nextMidVoc.isBefore(vocEnd)) {
+    // 다음 중간 알람을 예약합니다.
+    await AndroidAlarmManager.oneShotAt(
+      nextMidVoc,
+      vocMidAlarmId, // 동일한 ID를 사용하여 기존 알람을 덮어씁니다.
+      _vocMidAlarmCallback,
+      exact: true,
+      wakeup: true,
+      allowWhileIdle: true,
+      rescheduleOnReboot: true,
+    );
   }
 }
 

@@ -363,12 +363,17 @@ class AstroState with ChangeNotifier {
             developer.log('Scheduled AlarmManager [2] voc-start at: $foundVocStart', name: 'AstroState');
           }
         }
-        // void 중간 시점 (vocStart ~ vocEnd 의 중간) - void 진행 중 서비스 재시작용
-        final vocMid = foundVocStart.add(foundVocEnd.difference(foundVocStart) ~/ 2);
-        if (vocMid.isAfter(utcNow)) {
-          await _alarmService.scheduleVocMidAlarm(vocMid);
+        // 장기 보이드(24시간 이상)에도 서비스가 생존하도록 12시간 간격으로 알람 체인 예약
+        const maxInterval = Duration(hours: 12);
+        final nextMidVoc = foundVocStart.add(maxInterval);
+
+        // 다음 중간 알람이 보이드 종료 시점보다 이르고, 현재보다 나중일 경우에만 예약
+        if (nextMidVoc.isBefore(foundVocEnd) && nextMidVoc.isAfter(utcNow)) {
+          await _alarmService.scheduleVocMidAlarm(nextMidVoc);
           if (kDebugMode) {
-            developer.log('Scheduled AlarmManager [3] voc-mid at: $vocMid', name: 'AstroState');
+            developer.log(
+                'Scheduled chained voc-mid alarm at: $nextMidVoc',
+                name: 'AstroState');
           }
         }
         // void 종료 알림은 항상 예약 (서비스가 죽어도 AlarmManager가 직접 전송)
