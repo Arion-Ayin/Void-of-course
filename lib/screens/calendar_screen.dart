@@ -49,7 +49,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void _identifyVocSpans() {
     _vocSpans.clear();
     final List<DateTime> sortedDates = _vocEvents.keys.toList()..sort();
-    
+
     for (int i = 0; i < sortedDates.length; i++) {
       final currentDate = sortedDates[i];
       if (_vocSpans.containsKey(currentDate)) {
@@ -65,16 +65,21 @@ class _CalendarScreenState extends State<CalendarScreen> {
       if (startDate == null || endDate == null) continue;
 
       // VOC 기간의 시작과 끝을 날짜만으로 추출
-      final vocStartDay = DateTime.utc(startDate.year, startDate.month, startDate.day);
+      final vocStartDay = DateTime.utc(
+        startDate.year,
+        startDate.month,
+        startDate.day,
+      );
       final vocEndDay = DateTime.utc(endDate.year, endDate.month, endDate.day);
-      
+
       // 시작일과 종료일이 다른 경우 (2일 이상)
       final dayDifference = vocEndDay.difference(vocStartDay).inDays;
       final isMultiDay = dayDifference > 0;
 
       // 모든 날짜에 스팬 정보 저장
       var checkDate = vocStartDay;
-      while (checkDate.isBefore(vocEndDay) || checkDate.isAtSameMomentAs(vocEndDay)) {
+      while (checkDate.isBefore(vocEndDay) ||
+          checkDate.isAtSameMomentAs(vocEndDay)) {
         _vocSpans[checkDate] = {
           'isMultiDay': isMultiDay,
           'spanStart': vocStartDay,
@@ -111,11 +116,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     });
     try {
       // 백그라운드에서 계산을 수행하는 것처럼 처리 (실제로는 동기적)
-      final events =
-          await Future.microtask(() => _calculator.getVocEventsForMonth(
-                month.year,
-                month.month,
-              ));
+      final events = await Future.microtask(
+        () => _calculator.getVocEventsForMonth(month.year, month.month),
+      );
       if (mounted) {
         setState(() {
           _vocEvents = events;
@@ -136,7 +139,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
       }
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -180,19 +182,26 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 calendarStyle: CalendarStyle(
                   // 오늘 날짜 스타일
                   todayDecoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? Themes.gold.withOpacity(0.3)
-                        : Themes.midnightBlue.withOpacity(0.3),
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Themes.gold.withOpacity(0.3)
+                            : Themes.midnightBlue.withOpacity(0.3),
                     shape: BoxShape.circle,
                   ),
                   // 선택된 날짜 스타일
                   selectedDecoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark ? Themes.gold : Themes.midnightBlue,
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Themes.gold
+                            : Themes.midnightBlue,
                     shape: BoxShape.circle,
                   ),
                   // 마커 스타일 - 1일 VOC 용 점
                   markerDecoration: BoxDecoration(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.redAccent : Colors.red,
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.redAccent
+                            : Colors.red,
                     shape: BoxShape.circle,
                   ),
                   markerSize: 6.0,
@@ -201,16 +210,25 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   formatButtonVisible: false,
                   titleCentered: true,
                   titleTextStyle: TextStyle(
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
                     fontSize: 18,
                   ),
                   leftChevronIcon: Icon(
                     Icons.chevron_left,
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
                   ),
                   rightChevronIcon: Icon(
                     Icons.chevron_right,
-                    color: Theme.of(context).brightness == Brightness.dark ? Colors.white : Colors.black,
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white
+                            : Colors.black,
                   ),
                 ),
                 calendarBuilders: CalendarBuilders(
@@ -223,7 +241,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
                     final isFirstDay = vocSpan['isFirstDay'] as bool;
                     final isLastDay = vocSpan['isLastDay'] as bool;
-                    final markerColor = Theme.of(context).brightness == Brightness.dark ? Colors.redAccent : Colors.red;
+                    final markerColor =
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.redAccent
+                            : Colors.red;
 
                     return Stack(
                       children: [
@@ -232,12 +253,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           alignment: Alignment(0, 0.8), // 날짜 텍스트 아래쪽에 위치
                           child: Container(
                             height: 6,
-                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            margin: const EdgeInsets.symmetric(horizontal: 1),
                             decoration: BoxDecoration(
                               color: markerColor,
                               borderRadius: BorderRadius.horizontal(
-                                left: isFirstDay ? const Radius.circular(3) : Radius.zero,
-                                right: isLastDay ? const Radius.circular(3) : Radius.zero,
+                                left:
+                                    isFirstDay
+                                        ? const Radius.circular(10)
+                                        : Radius.zero,
+                                right:
+                                    isLastDay
+                                        ? const Radius.circular(10)
+                                        : Radius.zero,
                               ),
                             ),
                           ),
@@ -262,55 +289,58 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           const SizedBox(height: 8.0),
           Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : _error != null
+            child:
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
                     ? Center(child: Text(_error!))
                     : ValueListenableBuilder<List<Map<String, dynamic>>>(
-                        valueListenable: _selectedEvents,
-                        builder: (context, events, _) {
-                          if (events.isEmpty) {
-                            return Center(
-                              child: Text(appLocalizations.noVocFound),
-                            );
-                          }
-                          return ListView.builder(
-                            itemCount: events.length,
-                            itemBuilder: (context, index) {
-                              final event = events[index];
-                              final vocStart = event['start'] as DateTime?;
-                              final vocEnd = event['end'] as DateTime?;
-
-                              if (vocStart == null || vocEnd == null) {
-                                return ListTile(
-                                  title: Text(appLocalizations.invalidVocData),
-                                );
-                              }
-
-                              // 타임존 변환
-                              final tzStart = tzProvider.convert(vocStart);
-                              final tzEnd = tzProvider.convert(vocEnd);
-
-                              final timeFormat = DateFormat('HH:mm');
-
-                              return Card(
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 12.0,
-                                  vertical: 4.0,
-                                ),
-                                child: ListTile(
-                                  leading: const Icon(Icons.timer_off_outlined,
-                                      color: Colors.red),
-                                  title: const Text('Void of Course'),
-                                  subtitle: Text(
-                                    '${timeFormat.format(tzStart)} - ${timeFormat.format(tzEnd)}',
-                                  ),
-                                ),
-                              );
-                            },
+                      valueListenable: _selectedEvents,
+                      builder: (context, events, _) {
+                        if (events.isEmpty) {
+                          return Center(
+                            child: Text(appLocalizations.noVocFound),
                           );
-                        },
-                      ),
+                        }
+                        return ListView.builder(
+                          itemCount: events.length,
+                          itemBuilder: (context, index) {
+                            final event = events[index];
+                            final vocStart = event['start'] as DateTime?;
+                            final vocEnd = event['end'] as DateTime?;
+
+                            if (vocStart == null || vocEnd == null) {
+                              return ListTile(
+                                title: Text(appLocalizations.invalidVocData),
+                              );
+                            }
+
+                            // 타임존 변환
+                            final tzStart = tzProvider.convert(vocStart);
+                            final tzEnd = tzProvider.convert(vocEnd);
+
+                            final timeFormat = DateFormat('HH:mm');
+
+                            return Card(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                                vertical: 4.0,
+                              ),
+                              child: ListTile(
+                                leading: const Icon(
+                                  Icons.timer_off_outlined,
+                                  color: Colors.red,
+                                ),
+                                title: const Text('Void of Course'),
+                                subtitle: Text(
+                                  '${timeFormat.format(tzStart)} - ${timeFormat.format(tzEnd)}',
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
           ),
         ],
       ),

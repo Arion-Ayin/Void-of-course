@@ -68,11 +68,11 @@ class InfoScreen extends StatelessWidget {
 ''',
         contentEn: '''
 Hello, this is Arion Ayin.
-This is a 1.2.0+42 update.
+This is a 1.2.0+51 update.
 
-1. 25 National Standard Time Support Added
-2. Add daylight saving time(DST) (applies/disables with toggle button)
-3. Added Discord community link
+1. Correct void notification error
+2. Added Void Calendar feature
+3. Add Kakao Talk Community Open Link
 
 If you have any feedback or questions, please contact us.
 ''',

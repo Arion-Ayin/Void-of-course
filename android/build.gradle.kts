@@ -52,6 +52,15 @@ subprojects {
 
 subprojects {
     project.evaluationDependsOn(":app")
+    
+    // 강제로 모든 서드파티 플러그인에 16KB 페이지 크기 정렬 적용
+    plugins.withId("com.android.library") {
+        val androidExt = extensions.getByName("android") as com.android.build.gradle.LibraryExtension
+        androidExt.ndkVersion = "27.0.12077973"
+        androidExt.packaging {
+            jniLibs.useLegacyPackaging = false
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

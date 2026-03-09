@@ -218,13 +218,10 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
         },
         child: AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
             statusBarIconBrightness:
                 isDarkMode ? Brightness.light : Brightness.dark,
             statusBarBrightness:
                 isDarkMode ? Brightness.dark : Brightness.light,
-            systemNavigationBarColor: Colors.transparent,
-            systemNavigationBarDividerColor: Colors.transparent,
             systemNavigationBarIconBrightness:
                 isDarkMode ? Brightness.light : Brightness.dark,
           ),
