@@ -679,4 +679,51 @@ class AstroCalculator {
   String getMoonPhaseNameOnly(String moonPhaseName) {
     return moonPhaseName.replaceAll(RegExp(r'^\S+\s'), ''); // 이모티콘을 찾아 지워요.
   }
+
+  // 특정 월의 모든 VOC 이벤트를 가져오는 함수
+  Map<DateTime, List<Map<String, dynamic>>> getVocEventsForMonth(
+      int year, int month) {
+    final Map<DateTime, List<Map<String, dynamic>>> events = {};
+    // 검색 시작일을 해당 월의 1일 UTC 자정으로 설정
+    var searchDate = DateTime.utc(year, month, 1);
+    // 검색 종료일을 다음 달 1일 UTC 자정으로 설정
+    final monthEnd = DateTime.utc(year, month + 1, 1);
+
+    while (searchDate.isBefore(monthEnd)) {
+      // searchDate부터 다음 VOC 기간을 찾음
+      final voc = findVoidOfCoursePeriod(searchDate);
+      final vocStart = voc['start'] as DateTime?;
+      final vocEnd = voc['end'] as DateTime?;
+
+      // vocStart가 없거나, 이미 해당 월을 넘어섰다면 루프 종료
+      if (vocStart == null || vocStart.isAfter(monthEnd)) {
+        break;
+      }
+
+      // VOC 기간이 유효하면, 이벤트를 맵에 추가
+      if (vocEnd != null) {
+        // VOC가 여러 날에 걸쳐 있을 수 있으므로, 시작일부터 종료일까지 하루씩 순회
+        var day = DateTime.utc(vocStart.year, vocStart.month, vocStart.day);
+        final lastDay = DateTime.utc(vocEnd.year, vocEnd.month, vocEnd.day);
+
+        while (day.isBefore(lastDay) || day.isAtSameMomentAs(lastDay)) {
+          // 해당 날짜에 이벤트 목록이 없으면 새로 생성
+          if (events[day] == null) {
+            events[day] = [];
+          }
+          // 이벤트 목록에 현재 VOC 정보 추가
+          events[day]!.add(voc);
+          // 다음 날로 이동
+          day = day.add(const Duration(days: 1));
+        }
+        // 다음 검색 시작 위치를 현재 찾은 VOC의 종료 시간 1분 뒤로 설정
+        // (무한 루프 방지)
+        searchDate = vocEnd.add(const Duration(minutes: 1));
+      } else {
+        // vocEnd가 null이면, 더 이상 진행할 수 없으므로 루프 종료
+        break;
+      }
+    }
+    return events;
+  }
 }

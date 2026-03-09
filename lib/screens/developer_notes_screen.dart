@@ -46,6 +46,53 @@ class InfoScreen extends StatelessWidget {
     final List<DeveloperNote> notes = [
 
       // ▼▼▼ [최신 글] ▼▼▼
+
+ DeveloperNote(
+        date: '2026-03-10',
+        titleKo: '<26-03-10 업데이트>',
+        titleEn: '<26-03-10 Update>',
+        contentKo: '''
+안녕하세요 아리온 아인입니다.
+이번 1.2.0+51 업데이트 사항입니다.
+
+1. Void 알림 오류 수정
+2. Void 캘린더 기능 추가
+3. 오픈카톡 커뮤니티 링크 추가
+
+앱을 편하게 사용하시고 계시거나 or 불편한 점이 있다면, 커뮤니티에 오셔서 점성학에 관한 이야기와, 앱에 대한 피드백을 나눠주세요. 
+
+따뜻한 리뷰는 개발자에게 큰 힘이 됩니다.
+
+감사합니다
+아리온 아인 드림
+''',
+        contentEn: '''
+Hello, this is Arion Ayin.
+This is a 1.2.0+42 update.
+
+1. 25 National Standard Time Support Added
+2. Add daylight saving time(DST) (applies/disables with toggle button)
+3. Added Discord community link
+
+If you have any feedback or questions, please contact us.
+''',
+        actions: [
+          NoteAction(
+            label: appLocalizations.btnReview, // '리뷰 남기러 가기' / 'Leave a Review'
+            url:
+                'https://play.google.com/store/apps/details?id=dev.lioluna.voidofcourse',
+          ),
+          NoteAction(
+            label:
+                appLocalizations
+                    .btnContact, // '개발자에게 한마디' / 'Contact Developer'
+            url: 'mailto:arion.ayin@gmail.com',
+          ),
+        ],
+      ),
+
+
+
     DeveloperNote(
         date: '2026-02-10',
         titleKo: '<26-02-10 업데이트>',

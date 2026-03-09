@@ -296,4 +296,16 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get resetVoidAlarmForTimezoneChange =>
       'The timezone has changed. Please set the Void of Course alarm again.';
+
+  @override
+  String get calendar => 'Calendar';
+
+  @override
+  String get voidCalendar => 'Void Calendar';
+
+  @override
+  String get noVocFound => 'No Void of Course period for this day.';
+
+  @override
+  String get invalidVocData => 'Invalid VOC data';
 }

@@ -215,12 +215,11 @@ packages:
     source: hosted
     version: "5.1.0"
   flutter_background_service_android:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: flutter_background_service_android
-      sha256: ca0793d4cd19f1e194a130918401a3d0b1076c81236f7273458ae96987944a87
-      url: "https://pub.dev"
-    source: hosted
+      path: "packages/flutter_background_service_android"
+      relative: true
+    source: path
     version: "6.3.1"
   flutter_background_service_ios:
     dependency: transitive

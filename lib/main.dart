@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:animated_theme_switcher/animated_theme_switcher.dart';
+import 'screens/calendar_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/developer_notes_screen.dart';
 import 'screens/setting_screen.dart';
@@ -272,6 +273,10 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
                     label: AppLocalizations.of(context)!.home,
                   ),
                   BottomNavigationBarItem(
+                    icon: const Icon(Icons.calendar_month),
+                    label: AppLocalizations.of(context)!.calendar,
+                  ),
+                  BottomNavigationBarItem(
                     icon: const Icon(Icons.settings),
                     label: AppLocalizations.of(context)!.settings,
                   ),
@@ -289,7 +294,12 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
   }
 
   List<Widget> _buildScreens() {
-    return [const HomeScreen(), const SettingScreen(), const InfoScreen()];
+    return [
+      const HomeScreen(),
+      const CalendarScreen(),
+      const SettingScreen(),
+      const InfoScreen()
+    ];
   }
 }
 

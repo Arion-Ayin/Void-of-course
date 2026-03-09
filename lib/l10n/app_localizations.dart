@@ -577,6 +577,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The timezone has changed. Please set the Void of Course alarm again.'**
   String get resetVoidAlarmForTimezoneChange;
+
+  /// No description provided for @calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendar;
+
+  /// No description provided for @voidCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Void Calendar'**
+  String get voidCalendar;
+
+  /// No description provided for @noVocFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No Void of Course period for this day.'**
+  String get noVocFound;
+
+  /// No description provided for @invalidVocData.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid VOC data'**
+  String get invalidVocData;
 }
 
 class _AppLocalizationsDelegate

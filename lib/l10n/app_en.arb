@@ -180,5 +180,9 @@
     "msgAppNotFound": "Cannot find an app to open this.",
     "msgEmailCopied": "Email app not found. Address copied to clipboard.",
     "ok": "OK",
-    "resetVoidAlarmForTimezoneChange": "The timezone has changed. Please set the Void of Course alarm again."
+    "resetVoidAlarmForTimezoneChange": "The timezone has changed. Please set the Void of Course alarm again.",
+    "calendar": "Calendar",
+    "voidCalendar": "Void Calendar",
+    "noVocFound": "No Void of Course period for this day.",
+    "invalidVocData": "Invalid VOC data"
 }

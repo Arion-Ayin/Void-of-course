@@ -292,4 +292,16 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get resetVoidAlarmForTimezoneChange =>
       '타임존이 변경되었습니다. 보이드 알람을 다시 설정하여 주세요.';
+
+  @override
+  String get calendar => '캘린더';
+
+  @override
+  String get voidCalendar => '보이드 캘린더';
+
+  @override
+  String get noVocFound => '이 날에는 보이드 기간이 없습니다.';
+
+  @override
+  String get invalidVocData => '잘못된 VOC 데이터';
 }
