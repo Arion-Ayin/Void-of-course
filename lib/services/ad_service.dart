@@ -21,7 +21,7 @@ class AdService {
 
   InterstitialAd? _interstitialAd;
   int _calculateClickCount = 0;
-  final int _adFrequency = 10; // 광고 표시 빈도 (10번 클릭마다)
+  final int _adFrequency = 30; // 광고 표시 빈도 (10번 클릭마다)
 
   static const _clickCountKey = 'calculateClickCount';
   static const _lastSplashAdShowTimeKey = 'lastSplashAdShowTime';
@@ -113,22 +113,16 @@ class AdService {
     // 30분 (밀리초 단위)
     const thirtyMinutesInMillis = 30 * 60 * 1000;
 
-    // 새로고침 10번 이상 누른 경우 30분 규칙을 무시하고 광고 표시
+    // 새로고침 30번 이상 누른 경우 30분 규칙을 무시하고 광고 표시
     final shouldShowAdByClickCount = _calculateClickCount >= _adFrequency;
 
-    // 30분 이내에 광고를 본 경우, 새로고침 횟수를 확인합니다.
+    // 30분 이내에 광고를 본 경우, 광고를 표시하지 않습니다.
     if (currentTimeMillis - lastAdShowTimeMillis < thirtyMinutesInMillis) {
-      if (!shouldShowAdByClickCount) {
-        if (kDebugMode) {
-          developer.log('스플래시 광고: 마지막 광고 표시 후 30분이 지나지 않았습니다.', name: 'AdService');
-        }
-        onAdFailed();
-        return;
-      } else {
-        if (kDebugMode) {
-          developer.log('스플래시 광고: 새로고침 $_calculateClickCount회로 30분 규칙을 무시하고 광고를 표시합니다.', name: 'AdService');
-        }
+      if (kDebugMode) {
+        developer.log('스플래시 광고: 마지막 광고 표시 후 30분이 지나지 않았습니다.', name: 'AdService');
       }
+      onAdFailed();
+      return;
     }
 
     // 미리 로드된 광고가 있는지 확인합니다.
@@ -200,8 +194,7 @@ class AdService {
 
     final shouldShowAdByClickCount = _calculateClickCount >= _adFrequency;
 
-    if (currentTimeMillis - lastAdShowTimeMillis < thirtyMinutesInMillis &&
-        !shouldShowAdByClickCount) {
+    if (currentTimeMillis - lastAdShowTimeMillis < thirtyMinutesInMillis) {
       if (kDebugMode) {
         print('스플래시 광고 로드: 30분 규칙 때문에 표시하지 않습니다.');
       }

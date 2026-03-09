@@ -196,7 +196,7 @@ void onStart(ServiceInstance service) async {
     } else if (utcNow.isAfter(vocStart) && utcNow.isBefore(vocEnd)) {
       // Void Active 상태
       final Duration timeLeft = vocEnd.difference(utcNow);
-      title = isKorean ? '지금은 보이드입니다!' : 'Void of Course Active!';
+      title = isKorean ? '지금은 보이드입니다' : 'Void of Course Active';
       content = isKorean ? '보이드 종료까지: ${_formatDuration(timeLeft)}' : 'Ends in: ${_formatDuration(timeLeft)}';
       previousState = stateVocActive;
     }
