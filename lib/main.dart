@@ -23,6 +23,7 @@ import 'package:void_of_course/services/ad_ids.dart';
 import 'package:flutter/services.dart';
 import 'package:void_of_course/services/background_service.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
 void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요.
@@ -165,6 +166,26 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
 
   void _onTabTapped(int index) {
     if (_selectedIndex != index) {
+      String? eventName;
+      switch (index) {
+        case 0:
+          eventName = 'click_home_tab';
+          break;
+        case 1:
+          eventName = 'click_calendar_tab';
+          break;
+        case 2:
+          eventName = 'click_settings_tab';
+          break;
+        case 3:
+          eventName = 'click_info_tab';
+          break;
+      }
+
+      if (eventName != null) {
+        FirebaseAnalytics.instance.logEvent(name: eventName);
+      }
+
       setState(() => _selectedIndex = index);
     }
   }
