@@ -22,6 +22,7 @@ import 'package:void_of_course/services/ad_service.dart';
 import 'package:void_of_course/services/ad_ids.dart';
 import 'package:flutter/services.dart';
 import 'package:void_of_course/services/background_service.dart';
+import 'package:void_of_course/services/native_ad_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 
@@ -46,6 +47,7 @@ void main() async {
   if (Platform.isAndroid || Platform.isIOS) {
     await MobileAds.instance.initialize();
     await AdService().initialize();
+    NativeAdService().loadAd();
   }
 
   //앱의 실행
