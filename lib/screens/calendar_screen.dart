@@ -18,22 +18,25 @@ class CalendarScreen extends StatefulWidget {
 class _CalendarScreenState extends State<CalendarScreen> {
   final AstroCalculator _calculator = AstroCalculator();
   late final ValueNotifier<List<Map<String, dynamic>>> _selectedEvents;
-  Map<DateTime, List<Map<String, dynamic>>> _vocEvents = {};
-  Map<DateTime, Map<String, dynamic>> _vocSpans = {}; // 다중 날짜 VOC 스팬 추적
+  Map<DateTime, List<Map<String, dynamic>>> _rawVocEvents = {};
+
+  // 타임존이 반영된 이벤트와 스팬
+  Map<DateTime, List<Map<String, dynamic>>> _tzAdjustedEvents = {};
+  Map<DateTime, Map<String, dynamic>> _vocSpans = {};
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  // 추가: 로딩 상태와 오류 상태를 관리할 변수
   bool _isLoading = true;
   String? _error;
+  String _lastTzId = '';
+  bool _lastIsDst = false;
 
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
     _selectedEvents = ValueNotifier([]);
-    // 위젯이 빌드된 후 첫 데이터 로드
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchMonthVocEvents(_focusedDay);
     });
@@ -45,38 +48,66 @@ class _CalendarScreenState extends State<CalendarScreen> {
     super.dispose();
   }
 
-  // 다중 날짜 VOC 스팬을 식별하고 정보를 저장하는 함수
-  void _identifyVocSpans() {
+  // 타임존을 고려하여 이벤트를 재구성하고 스팬을 식별하는 함수
+  void _updateTzAdjustedData(TimezoneProvider tzProvider) {
+    _tzAdjustedEvents.clear();
     _vocSpans.clear();
-    final List<DateTime> sortedDates = _vocEvents.keys.toList()..sort();
 
-    for (int i = 0; i < sortedDates.length; i++) {
-      final currentDate = sortedDates[i];
-      if (_vocSpans.containsKey(currentDate)) {
-        continue; // 이미 처리된 날짜 건너뛰기
+    // 1. 고유한 VOC 이벤트 추출
+    Set<Map<String, dynamic>> uniqueEvents = {};
+    for (var eventsList in _rawVocEvents.values) {
+      uniqueEvents.addAll(eventsList);
+    }
+
+    // 2. 각 이벤트를 타임존에 맞게 날짜별로 매핑
+    for (var voc in uniqueEvents) {
+      final startUtc = voc['start'] as DateTime?;
+      final endUtc = voc['end'] as DateTime?;
+      if (startUtc == null || endUtc == null) continue;
+
+      final tzStart = tzProvider.convert(startUtc);
+      final tzEnd = tzProvider.convert(endUtc);
+
+      final vocStartDay = DateTime.utc(
+        tzStart.year,
+        tzStart.month,
+        tzStart.day,
+      );
+      final vocEndDay = DateTime.utc(tzEnd.year, tzEnd.month, tzEnd.day);
+
+      var currentDay = vocStartDay;
+      while (currentDay.isBefore(vocEndDay) ||
+          currentDay.isAtSameMomentAs(vocEndDay)) {
+        _tzAdjustedEvents.putIfAbsent(currentDay, () => []).add(voc);
+        currentDay = currentDay.add(const Duration(days: 1));
       }
+    }
 
-      final currentVoc = _vocEvents[currentDate]?.first;
+    // 3. 다중 날짜 스팬 식별
+    final List<DateTime> sortedDates = _tzAdjustedEvents.keys.toList()..sort();
+    for (var currentDate in sortedDates) {
+      if (_vocSpans.containsKey(currentDate)) continue;
+
+      final currentVoc = _tzAdjustedEvents[currentDate]?.first;
       if (currentVoc == null) continue;
 
-      final startDate = currentVoc['start'] as DateTime?;
-      final endDate = currentVoc['end'] as DateTime?;
+      final startUtc = currentVoc['start'] as DateTime?;
+      final endUtc = currentVoc['end'] as DateTime?;
+      if (startUtc == null || endUtc == null) continue;
 
-      if (startDate == null || endDate == null) continue;
+      final tzStart = tzProvider.convert(startUtc);
+      final tzEnd = tzProvider.convert(endUtc);
 
-      // VOC 기간의 시작과 끝을 날짜만으로 추출
       final vocStartDay = DateTime.utc(
-        startDate.year,
-        startDate.month,
-        startDate.day,
+        tzStart.year,
+        tzStart.month,
+        tzStart.day,
       );
-      final vocEndDay = DateTime.utc(endDate.year, endDate.month, endDate.day);
+      final vocEndDay = DateTime.utc(tzEnd.year, tzEnd.month, tzEnd.day);
 
-      // 시작일과 종료일이 다른 경우 (2일 이상)
       final dayDifference = vocEndDay.difference(vocStartDay).inDays;
       final isMultiDay = dayDifference > 0;
 
-      // 모든 날짜에 스팬 정보 저장
       var checkDate = vocStartDay;
       while (checkDate.isBefore(vocEndDay) ||
           checkDate.isAtSameMomentAs(vocEndDay)) {
@@ -94,9 +125,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
-    // 날짜의 시간 부분을 무시하고 비교하기 위해 UTC 자정으로 변환
     final dayUtc = DateTime.utc(day.year, day.month, day.day);
-    return _vocEvents[dayUtc] ?? [];
+    return _tzAdjustedEvents[dayUtc] ?? [];
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
@@ -115,20 +145,32 @@ class _CalendarScreenState extends State<CalendarScreen> {
       _error = null;
     });
     try {
-      // 백그라운드에서 계산을 수행하는 것처럼 처리 (실제로는 동기적)
-      final events = await Future.microtask(
+      // 캘린더에서 보여지는 날짜 범위를 조금 더 넓게 가져와서 타임존 경계 문제 방지
+      // 이전 달, 이번 달, 다음 달의 데이터를 가져옴 (선택적 최적화 가능)
+      // 여기서는 이번 달만 가져오던 것을 앞뒤 달까지 확장하여 가져오는 것이 안전합니다.
+      final prevMonth = DateTime.utc(month.year, month.month - 1, 1);
+      final nextMonth = DateTime.utc(month.year, month.month + 1, 1);
+
+      final prevEvents = await Future.microtask(
+        () => _calculator.getVocEventsForMonth(prevMonth.year, prevMonth.month),
+      );
+      final currentEvents = await Future.microtask(
         () => _calculator.getVocEventsForMonth(month.year, month.month),
       );
+      final nextEvents = await Future.microtask(
+        () => _calculator.getVocEventsForMonth(nextMonth.year, nextMonth.month),
+      );
+
+      final Map<DateTime, List<Map<String, dynamic>>> allEvents = {};
+      allEvents.addAll(prevEvents);
+      allEvents.addAll(currentEvents);
+      allEvents.addAll(nextEvents);
+
       if (mounted) {
         setState(() {
-          _vocEvents = events;
-          _identifyVocSpans(); // VOC 스팬 식별
+          _rawVocEvents = allEvents;
           _isLoading = false;
         });
-        // 현재 선택된 날의 이벤트도 갱신
-        if (_selectedDay != null) {
-          _selectedEvents.value = _getEventsForDay(_selectedDay!);
-        }
       }
     } catch (e) {
       if (mounted) {
@@ -144,6 +186,24 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget build(BuildContext context) {
     final tzProvider = Provider.of<TimezoneProvider>(context);
     final appLocalizations = AppLocalizations.of(context)!;
+
+    // 타임존 설정이 변경되었거나 초기 로드 시 타임존을 반영하여 데이터 갱신
+    if (_lastTzId != tzProvider.selectedTimezoneId ||
+        _lastIsDst != tzProvider.isDstApplied ||
+        _tzAdjustedEvents.isEmpty) {
+      _updateTzAdjustedData(tzProvider);
+      _lastTzId = tzProvider.selectedTimezoneId;
+      _lastIsDst = tzProvider.isDstApplied;
+
+      // 선택된 이벤트 목록 갱신
+      if (_selectedDay != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _selectedEvents.value = _getEventsForDay(_selectedDay!);
+          }
+        });
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(

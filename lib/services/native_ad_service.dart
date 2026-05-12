@@ -1,7 +1,8 @@
+import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:void_of_course/services/ad_ids.dart';
 
-class NativeAdService {
+class NativeAdService extends ChangeNotifier {
   static final NativeAdService _instance = NativeAdService._internal();
   factory NativeAdService() => _instance;
   NativeAdService._internal();
@@ -21,18 +22,22 @@ class NativeAdService {
         onAdLoaded: (ad) {
           _nativeAd = ad as NativeAd;
           _isAdLoaded = true;
+          notifyListeners();
         },
         onAdFailedToLoad: (ad, error) {
           ad.dispose();
           _isAdLoaded = false;
+          notifyListeners();
         },
       ),
     );
     _nativeAd?.load();
   }
 
+  @override
   void dispose() {
     _nativeAd?.dispose();
     _isAdLoaded = false;
+    super.dispose();
   }
 }

@@ -15,18 +15,23 @@ class _ReusableNativeAdWidgetState extends State<ReusableNativeAdWidget> {
 
   @override
   Widget build(BuildContext context) {
-    if (_nativeAdService.isAdLoaded && _nativeAdService.nativeAd != null) {
-      return ConstrainedBox(
-        constraints: const BoxConstraints(
-          minWidth: 320, // Ad-Loader says minimum width is 320.
-          minHeight: 100, // Minimum height for this template.
-          maxWidth: 400,
-          maxHeight: 150,
-        ),
-        child: AdWidget(ad: _nativeAdService.nativeAd!),
-      );
-    } else {
-      return const SizedBox.shrink(); // Return an empty box if the ad is not loaded.
-    }
+    return AnimatedBuilder(
+      animation: _nativeAdService,
+      builder: (context, child) {
+        if (_nativeAdService.isAdLoaded && _nativeAdService.nativeAd != null) {
+          return ConstrainedBox(
+            constraints: const BoxConstraints(
+              minWidth: 320, // Ad-Loader says minimum width is 320.
+              minHeight: 100, // Minimum height for this template.
+              maxWidth: 400,
+              maxHeight: 150,
+            ),
+            child: AdWidget(ad: _nativeAdService.nativeAd!),
+          );
+        } else {
+          return const SizedBox.shrink(); // Return an empty box if the ad is not loaded.
+        }
+      },
+    );
   }
 }
