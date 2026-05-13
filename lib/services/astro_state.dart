@@ -107,14 +107,18 @@ class AstroState with ChangeNotifier {
       //스위프 초기화
       //천문학 라이브러리 초기화
       await Sweph.init();
+      //shared preferences 초기화 (캐싱)
+      _prefs = await SharedPreferences.getInstance();
+      
       //현재 로케일 설정
-      _currentLocale = Intl.getCurrentLocale();
+      final savedLang = _prefs!.getString('language_code');
+      _currentLocale = savedLang ?? Intl.getCurrentLocale() ?? 'en';
+      await _prefs!.setString('cached_language_code', _currentLocale);
+
       //알림 서비스 초기화
       await _notificationService.init();
       //알람 매니저 초기화 (앱 종료 후에도 백그라운드 서비스 시작 가능)
       await _alarmService.init();
-      //shared preferences 초기화 (캐싱)
-      _prefs = await SharedPreferences.getInstance();
       //void alarm enabled 상태 저장
       _voidAlarmEnabled = _prefs!.getBool('voidAlarmEnabled') ?? false;
       _preVoidAlarmHours = _prefs!.getInt('preVoidAlarmHours') ?? 6;

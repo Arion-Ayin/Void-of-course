@@ -44,23 +44,20 @@ class InfoScreen extends StatelessWidget {
 
     // 여기에 게시글 데이터를 추가해요. (최신 글이 위로 오도록 리스트의 앞쪽에 넣어주세요)
     final List<DeveloperNote> notes = [
-
       // ▼▼▼ [최신 글] ▼▼▼
-
-
- DeveloperNote(
-        date: '2026-03-10',
-        titleKo: '<26-03-10 업데이트>',
-        titleEn: '<26-03-10 Update>',
+      DeveloperNote(
+        date: '2026-05-12',
+        titleKo: '<26-05-12 업데이트>',
+        titleEn: '<26-05-12 Update>',
         contentKo: '''
 안녕하세요 아리온 아인입니다.
 이번 1.2.0+53 업데이트 사항입니다.
 
 1. Void 알림 오류 수정
-2. 캘린더 기능 수정 및 개선 (연/월/일) 선택 방식으로 변경
-3. 
+2. 캘린더 기능 수정 및 개선
+3. 날짜 설정 (연/월/일) 선택 방식 추가
 
-앱을 편하게 사용하시고 계시거나 or 불편한 점이 있다면, 커뮤니티에 오셔서 점성학에 관한 이야기와, 앱에 대한 피드백을 나눠주세요. 
+앱을 편하게 사용하시고 계시거나 or 불편한 점이 있다면, 오픈카톡에 오셔서 점성학에 관한 이야기와, 앱에 대한 피드백을 나눠주세요. 
 
 따뜻한 리뷰는 개발자에게 큰 힘이 됩니다.
 
@@ -72,8 +69,8 @@ Hello, this is Arion Ayin.
 This is a 1.2.0+53 update.
 
 1. Correct void notification error
-2. 
-3.
+2. Calendar feature update and improvement
+3. Date setting (Year/Month/Day) selection method added
 
 If you have any feedback or questions, please contact us.
 ''',
@@ -92,7 +89,7 @@ If you have any feedback or questions, please contact us.
         ],
       ),
 
- DeveloperNote(
+      DeveloperNote(
         date: '2026-03-10',
         titleKo: '<26-03-10 업데이트>',
         titleEn: '<26-03-10 Update>',
@@ -104,7 +101,7 @@ If you have any feedback or questions, please contact us.
 2. Void 캘린더 기능 추가
 3. 오픈카톡 커뮤니티 링크 추가
 
-앱을 편하게 사용하시고 계시거나 or 불편한 점이 있다면, 커뮤니티에 오셔서 점성학에 관한 이야기와, 앱에 대한 피드백을 나눠주세요. 
+앱을 편하게 사용하시고 계시거나 or 불편한 점이 있다면, 오픈카톡에 오셔서 점성학에 관한 이야기와, 앱에 대한 피드백을 나눠주세요. 
 
 따뜻한 리뷰는 개발자에게 큰 힘이 됩니다.
 
@@ -136,9 +133,7 @@ If you have any feedback or questions, please contact us.
         ],
       ),
 
-
-
-    DeveloperNote(
+      DeveloperNote(
         date: '2026-02-10',
         titleKo: '<26-02-10 업데이트>',
         titleEn: '<26-02-10 Update>',
@@ -180,8 +175,6 @@ If you have any feedback or questions, please contact us.
           ),
         ],
       ),
-
-
 
       DeveloperNote(
         date: '2026-02-01',
@@ -225,7 +218,6 @@ If you have any feedback or questions, please contact us.
           ),
         ],
       ),
-
 
       DeveloperNote(
         date: '2025-12-19',
@@ -347,9 +339,11 @@ Warm reviews are a great strength to the developer.
                           child: Text(
                             appLocalizations.noPostsFound, // '등록된 게시글이 없습니다.'
                             style: TextStyle(
-                              color: Theme.of(
-                                context,
-                              ).textTheme.bodyMedium?.color?.withValues(alpha:0.6),
+                              color: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.color
+                                  ?.withValues(alpha: 0.6),
                             ),
                           ),
                         )
@@ -357,216 +351,250 @@ Warm reviews are a great strength to the developer.
                           padding: const EdgeInsets.all(16.0),
                           itemCount: notes.length,
                           itemBuilder: (context, index) {
-                      final note = notes[index];
-                      // 현재 언어에 맞는 제목과 내용을 선택해요
-                      final title = isKorean ? note.titleKo : note.titleEn;
-                      final content =
-                          isKorean ? note.contentKo : note.contentEn;
+                            final note = notes[index];
+                            // 현재 언어에 맞는 제목과 내용을 선택해요
+                            final title =
+                                isKorean ? note.titleKo : note.titleEn;
+                            final content =
+                                isKorean ? note.contentKo : note.contentEn;
 
-                      return Card(
-                        key: ValueKey(note.date),
-                        margin: const EdgeInsets.only(bottom: 16.0),
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        color: Theme.of(context).cardColor,
-                        child: Theme(
-                          data: Theme.of(
-                            context,
-                          ).copyWith(dividerColor: Colors.transparent),
-                          child: ExpansionTile(
-                            tilePadding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
-                              vertical: 8.0,
-                            ),
-                            childrenPadding: const EdgeInsets.fromLTRB(
-                              16,
-                              0,
-                              16,
-                              16,
-                            ),
-                            initiallyExpanded: false,
-                            collapsedBackgroundColor: Theme.of(context).cardColor,
-                            backgroundColor: Theme.of(context).cardColor.withValues(alpha:0.8),
-                            title: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  note.date,
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color:
-                                        Theme.of(context).colorScheme.secondary,
-                                    fontWeight: FontWeight.bold,
+                            return Card(
+                              key: ValueKey(note.date),
+                              margin: const EdgeInsets.only(bottom: 16.0),
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              color: Theme.of(context).cardColor,
+                              child: Theme(
+                                data: Theme.of(
+                                  context,
+                                ).copyWith(dividerColor: Colors.transparent),
+                                child: ExpansionTile(
+                                  tilePadding: const EdgeInsets.symmetric(
+                                    horizontal: 16.0,
+                                    vertical: 8.0,
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  title, // 언어에 맞는 제목 표시
-                                  style: const TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
+                                  childrenPadding: const EdgeInsets.fromLTRB(
+                                    16,
+                                    0,
+                                    16,
+                                    16,
                                   ),
-                                ),
-                              ],
-                            ),
-                            children: [
-                              Container(
-                                width: double.infinity,
-                                padding: const EdgeInsets.only(top: 8.0),
-                                decoration: BoxDecoration(
-                                  border: Border(
-                                    top: BorderSide(
-                                      color: Theme.of(
-                                        context,
-                                      ).dividerColor.withValues(alpha:0.1),
-                                    ),
-                                  ),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.stretch,
-                                  children: [
-                                    Text(
-                                      content, // 언어에 맞는 내용 표시
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        height: 1.5,
-                                        color: Theme.of(context)
-                                            .textTheme
-                                            .bodyLarge
-                                            ?.color
-                                            ?.withValues(alpha:0.8),
+                                  initiallyExpanded: false,
+                                  collapsedBackgroundColor:
+                                      Theme.of(context).cardColor,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).cardColor.withValues(alpha: 0.8),
+                                  title: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        note.date,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color:
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.secondary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ),
-                                    // ▼▼▼ [링크 버튼 목록 표시] ▼▼▼
-                                    if (note.actions.isNotEmpty) ...[
-                                      const SizedBox(height: 20),
-                                      ...note.actions
-                                          .map(
-                                            (action) => Padding(
-                                              padding: const EdgeInsets.only(
-                                                bottom: 8.0,
-                                              ),
-                                              child: OutlinedButton.icon(
-                                                onPressed: () async {
-                                                  try {
-                                                    await FirebaseAnalytics.instance.logEvent(
-                                                      name: 'click_note_action',
-                                                      parameters: {
-                                                        'label': action.label,
-                                                        'url': action.url,
-                                                      },
-                                                    );
-                                                    final uri = Uri.parse(
-                                                      action.url,
-                                                    );
-                                                    bool launched = false;
-                                                    if (await canLaunchUrl(
-                                                      uri,
-                                                    )) {
-                                                      launched = await launchUrl(
-                                                        uri,
-                                                        mode:
-                                                            LaunchMode
-                                                                .externalApplication,
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        title, // 언어에 맞는 제목 표시
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  children: [
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.only(top: 8.0),
+                                      decoration: BoxDecoration(
+                                        border: Border(
+                                          top: BorderSide(
+                                            color: Theme.of(context)
+                                                .dividerColor
+                                                .withValues(alpha: 0.1),
+                                          ),
+                                        ),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: [
+                                          Text(
+                                            content, // 언어에 맞는 내용 표시
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              height: 1.5,
+                                              color: Theme.of(context)
+                                                  .textTheme
+                                                  .bodyLarge
+                                                  ?.color
+                                                  ?.withValues(alpha: 0.8),
+                                            ),
+                                          ),
+                                          // ▼▼▼ [링크 버튼 목록 표시] ▼▼▼
+                                          if (note.actions.isNotEmpty) ...[
+                                            const SizedBox(height: 20),
+                                            ...note.actions.map(
+                                              (action) => Padding(
+                                                padding: const EdgeInsets.only(
+                                                  bottom: 8.0,
+                                                ),
+                                                child: OutlinedButton.icon(
+                                                  onPressed: () async {
+                                                    try {
+                                                      await FirebaseAnalytics
+                                                          .instance
+                                                          .logEvent(
+                                                            name:
+                                                                'click_note_action',
+                                                            parameters: {
+                                                              'label':
+                                                                  action.label,
+                                                              'url': action.url,
+                                                            },
+                                                          );
+                                                      final uri = Uri.parse(
+                                                        action.url,
                                                       );
-                                                    } else {
-                                                      launched =
-                                                          await launchUrl(uri);
-                                                    }
-
-                                                    if (!launched) {
-                                                      throw 'Could not launch';
-                                                    }
-                                                  } catch (e) {
-                                                    if (context.mounted) {
-                                                      if (action.url.startsWith(
-                                                        'mailto:',
+                                                      bool launched = false;
+                                                      if (await canLaunchUrl(
+                                                        uri,
                                                       )) {
-                                                        final email = action.url
-                                                            .replaceFirst(
-                                                              'mailto:',
-                                                              '',
-                                                            );
-                                                        await Clipboard.setData(
-                                                          ClipboardData(
-                                                            text: email,
-                                                          ),
-                                                        );
-                                                        if (!context.mounted) return;
-                                                        ScaffoldMessenger.of(
-                                                          context,
-                                                        ).showSnackBar(
-                                                          SnackBar(
-                                                            content: Text(
-                                                              appLocalizations
-                                                                  .msgEmailCopied,
-                                                            ),
-                                                            duration:
-                                                                const Duration(
-                                                                  seconds: 2,
-                                                                ),
-                                                            behavior: SnackBarBehavior.floating,
-                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                                          ),
+                                                        launched = await launchUrl(
+                                                          uri,
+                                                          mode:
+                                                              LaunchMode
+                                                                  .externalApplication,
                                                         );
                                                       } else {
-                                                        ScaffoldMessenger.of(
-                                                          context,
-                                                        ).showSnackBar(
-                                                          SnackBar(
-                                                            content: Text(
-                                                              appLocalizations
-                                                                  .msgAppNotFound,
+                                                        launched =
+                                                            await launchUrl(
+                                                              uri,
+                                                            );
+                                                      }
+
+                                                      if (!launched) {
+                                                        throw 'Could not launch';
+                                                      }
+                                                    } catch (e) {
+                                                      if (context.mounted) {
+                                                        if (action.url
+                                                            .startsWith(
+                                                              'mailto:',
+                                                            )) {
+                                                          final email = action
+                                                              .url
+                                                              .replaceFirst(
+                                                                'mailto:',
+                                                                '',
+                                                              );
+                                                          await Clipboard.setData(
+                                                            ClipboardData(
+                                                              text: email,
                                                             ),
-                                                            duration:
-                                                                const Duration(
-                                                                  seconds: 2,
-                                                                ),
-                                                            behavior: SnackBarBehavior.floating,
-                                                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                                          ),
-                                                        );
+                                                          );
+                                                          if (!context.mounted)
+                                                            return;
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                appLocalizations
+                                                                    .msgEmailCopied,
+                                                              ),
+                                                              duration:
+                                                                  const Duration(
+                                                                    seconds: 2,
+                                                                  ),
+                                                              behavior:
+                                                                  SnackBarBehavior
+                                                                      .floating,
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      10,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        } else {
+                                                          ScaffoldMessenger.of(
+                                                            context,
+                                                          ).showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                appLocalizations
+                                                                    .msgAppNotFound,
+                                                              ),
+                                                              duration:
+                                                                  const Duration(
+                                                                    seconds: 2,
+                                                                  ),
+                                                              behavior:
+                                                                  SnackBarBehavior
+                                                                      .floating,
+                                                              shape: RoundedRectangleBorder(
+                                                                borderRadius:
+                                                                    BorderRadius.circular(
+                                                                      10,
+                                                                    ),
+                                                              ),
+                                                            ),
+                                                          );
+                                                        }
                                                       }
                                                     }
-                                                  }
-                                                },
-                                                icon: const Icon(Icons.link),
-                                                label: Text(action.label),
-                                                style: OutlinedButton.styleFrom(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        vertical: 12,
-                                                      ),
-                                                  alignment:
-                                                      Alignment
-                                                          .center, // 버튼 글자 가운데 정렬
+                                                  },
+                                                  icon: const Icon(Icons.link),
+                                                  label: Text(action.label),
+                                                  style: OutlinedButton.styleFrom(
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                          vertical: 12,
+                                                        ),
+                                                    alignment:
+                                                        Alignment
+                                                            .center, // 버튼 글자 가운데 정렬
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                    ],
-                                    // ▲▲▲ 여기까지 ▲▲▲
+                                          ],
+                                          // ▲▲▲ 여기까지 ▲▲▲
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
-                            ],
-                          ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 12.0,
+                ),
                 child: Text(
                   appLocalizations.copyrightText,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
-                    color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha:0.5),
+                    color: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
                   ),
                 ),
               ),
