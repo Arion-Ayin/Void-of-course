@@ -53,9 +53,10 @@ class InfoScreen extends StatelessWidget {
 안녕하세요 아리온 아인입니다.
 이번 1.2.0+53 업데이트 사항입니다.
 
-1. Void 알림 오류 수정
+1. 보이드 알람 시간체크 방식 변경
 2. 캘린더 기능 수정 및 개선
 3. 날짜 설정 (연/월/일) 선택 방식 추가
+4. 보이드 미니 위젯 기능 추가
 
 앱을 편하게 사용하시고 계시거나 or 불편한 점이 있다면, 오픈카톡에 오셔서 점성학에 관한 이야기와, 앱에 대한 피드백을 나눠주세요. 
 
@@ -68,9 +69,10 @@ class InfoScreen extends StatelessWidget {
 Hello, this is Arion Ayin.
 This is a 1.2.0+53 update.
 
-1. Correct void notification error
+1. Void notification time check method changed
 2. Calendar feature update and improvement
 3. Date setting (Year/Month/Day) selection method added
+4. Void mini widget feature
 
 If you have any feedback or questions, please contact us.
 ''',

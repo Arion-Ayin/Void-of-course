@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/widget_background"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="16dp">
+
+    <!-- Top Row: Title -->
+    <TextView
+        android:id="@+id/widget_title_text"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:text="🌙 Void of course ♈︎"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="14sp"
+        android:autoSizeMaxTextSize="22sp"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Bottom Row: Icon + Times -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="2"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <!-- Icon -->
+        <TextView
+            android:id="@+id/widget_icon_text"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="✅"
+            android:gravity="center_vertical|end"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="18sp"
+            android:autoSizeMaxTextSize="36sp"
+            android:layout_marginEnd="12dp" />
+
+        <!-- Times (Multiline) -->
+        <TextView
+            android:id="@+id/widget_times_text"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2.5"
+            android:text="Start : 05/14 14:30\nEnd   : 05/14 18:00"
+            android:textColor="#EEEEEE"
+            android:textStyle="bold"
+            android:gravity="center_vertical|start"
+            android:lineSpacingExtra="4dp"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="12sp"
+            android:autoSizeMaxTextSize="18sp" />
+    </LinearLayout>
+
+</LinearLayout>

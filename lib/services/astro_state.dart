@@ -10,6 +10,7 @@ import 'notification_service.dart';
 import 'alarm_service.dart';
 import 'package:sweph/sweph.dart';
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'widget_service.dart';
 
 final AstroCalculator _calculator = AstroCalculator();
 
@@ -550,10 +551,21 @@ class AstroState with ChangeNotifier {
       var vocTimes = _calculator.findVoidOfCoursePeriod(dateForCalc);
 
       // If we are following time and the found VOC has already passed, find the next one
+      DateTime? nextVocStart;
+      DateTime? nextVocEnd;
       if (_isFollowingTime && vocTimes['end'] != null) {
         final now = DateTime.now();
+        final vocStart = vocTimes['start'] as DateTime?;
         final vocEnd = vocTimes['end'] as DateTime;
-        if (vocEnd.isBefore(now)) {
+        
+        if (vocStart != null && now.isAfter(vocStart) && now.isBefore(vocEnd)) {
+          // We are currently IN the VOC. We need the NEXT VOC start for the widget.
+          final nextVocTimes = _calculator.findVoidOfCoursePeriod(
+            vocEnd.add(const Duration(minutes: 1)),
+          );
+          nextVocStart = nextVocTimes['start'];
+          nextVocEnd = nextVocTimes['end'];
+        } else if (vocEnd.isBefore(now)) {
           // Search from the next day to ensure we find the next VOC event
           // (findVoidOfCoursePeriod resets search to start of the day)
           vocTimes = _calculator.findVoidOfCoursePeriod(
@@ -594,6 +606,8 @@ class AstroState with ChangeNotifier {
         'nextMoonPhaseTime': moonPhaseTimes['end'],
         'moonPhaseStartTime': moonPhaseTimes['start'],
         'moonPhaseEndTime': moonPhaseTimes['end'],
+        'nextVocStart': nextVocStart,
+        'nextVocEnd': nextVocEnd,
       };
 
       await _updateStateFromResult(result);
@@ -634,6 +648,17 @@ class AstroState with ChangeNotifier {
       await _prefs?.setString('cached_language_code', _currentLocale);
     } catch (_) {
       // 초기화 전이라면 무시하거나 기본값 사용
+    }
+
+    // Update the Android Widget
+    if (_isFollowingTime) {
+      await WidgetService.updateWidgetData(
+        vocStart: _vocStart,
+        vocEnd: _vocEnd,
+        nextVocStart: result['nextVocStart'] as DateTime?,
+        nextVocEnd: result['nextVocEnd'] as DateTime?,
+        moonZodiac: _moonZodiac,
+      );
     }
 
     // ... (나머지 코드는 동일)
