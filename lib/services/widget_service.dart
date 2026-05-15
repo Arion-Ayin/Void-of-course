@@ -58,12 +58,12 @@ class WidgetService {
 
       if (isVocNow) {
         widgetIcon = '🚫';
-        if (nextVocStart != null && nextVocEnd != null) {
+        if (vocStart != null && vocEnd != null) {
           widgetStartTimeText = dateFormat.format(
-            tz.TZDateTime.from(nextVocStart, location),
+            tz.TZDateTime.from(vocStart, location),
           );
           widgetEndTimeText = dateFormat.format(
-            tz.TZDateTime.from(nextVocEnd, location),
+            tz.TZDateTime.from(vocEnd, location),
           );
         } else {
           widgetStartTimeText = 'Calculating...';

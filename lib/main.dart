@@ -25,6 +25,7 @@ import 'package:void_of_course/services/background_service.dart';
 import 'package:void_of_course/services/native_ad_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:home_widget/home_widget.dart';
 
 void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요.
@@ -136,6 +137,22 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
       }
     });
     _checkForUpdate();
+    _checkWidgetStatus();
+  }
+
+  Future<void> _checkWidgetStatus() async {
+    try {
+      final installedWidgets = await HomeWidget.getInstalledWidgets();
+      final hasWidget = installedWidgets.isNotEmpty;
+      await FirebaseAnalytics.instance.setUserProperty(
+        name: 'has_home_widget',
+        value: hasWidget.toString(),
+      );
+    } catch (e) {
+      if (kDebugMode) {
+        developer.log('Error checking widget status: $e', name: 'Main');
+      }
+    }
   }
 
   @override
