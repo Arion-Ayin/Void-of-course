@@ -167,10 +167,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
       allEvents.addAll(nextEvents);
 
       if (mounted) {
+        final tzProvider = Provider.of<TimezoneProvider>(context, listen: false);
         setState(() {
           _rawVocEvents = allEvents;
           _isLoading = false;
         });
+        // 새 데이터 로드 후 타임존 반영된 데이터를 즉시 갱신
+        _updateTzAdjustedData(tzProvider);
+        if (_selectedDay != null) {
+          _selectedEvents.value = _getEventsForDay(_selectedDay!);
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -187,10 +193,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     final tzProvider = Provider.of<TimezoneProvider>(context);
     final appLocalizations = AppLocalizations.of(context)!;
 
-    // 타임존 설정이 변경되었거나 초기 로드 시 타임존을 반영하여 데이터 갱신
+    // 타임존 설정이 변경되었을 때만 데이터 갱신
     if (_lastTzId != tzProvider.selectedTimezoneId ||
-        _lastIsDst != tzProvider.isDstApplied ||
-        _tzAdjustedEvents.isEmpty) {
+        _lastIsDst != tzProvider.isDstApplied) {
       _updateTzAdjustedData(tzProvider);
       _lastTzId = tzProvider.selectedTimezoneId;
       _lastIsDst = tzProvider.isDstApplied;
