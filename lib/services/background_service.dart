@@ -193,8 +193,6 @@ void onStart(ServiceInstance service) async {
     cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
     cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
     tickCount = 0; // 갱신 타이머 리셋
-    // Ensure widget reflects latest data immediately
-    await _updateAppWidget(DateTime.now().toUtc(), prefs);
   });
 
   // 서비스 시작 직후 즉시 알림 업데이트 (빈 알림 방지)
@@ -422,8 +420,6 @@ void onStart(ServiceInstance service) async {
             // 상태가 변했을 때 홈 위젯(가젯)도 즉시 동기화
             await _updateAppWidget(utcNow, prefs);
           }
-          // Regardless of state change, ensure widget is refreshed regularly
-          await _updateAppWidget(utcNow, prefs);
 
           // 카운트다운 알림 업데이트 (소리/진동 없이, 삭제 불가)
           // 텍스트 내용이 변경되었을 때만 show 호출하여 배터리 절약
