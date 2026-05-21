@@ -263,7 +263,7 @@ Future<void> _vocMidAlarmCallback() async {
   }
 }
 
-/// 4) void: +
+/// 4) void end: direct notification (no service dependency)
 @pragma('vm:entry-point')
 Future<void> _vocEndAlarmCallback() async {
   DartPluginRegistrant.ensureInitialized();
@@ -273,6 +273,31 @@ Future<void> _vocEndAlarmCallback() async {
   final bool isEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
   if (!isEnabled) return;
 
+  // 1. 즉시 종료 알림 직접 전송
+  // 서비스 시작을 기다리지 않음 → 삼성 Doze/배터리 최적화로 인한 수시간 지연 방지
+  final plugin = await _initNotificationsPlugin();
+  final isKorean =
+      (prefs.getString('cached_language_code') ?? 'en').startsWith('ko');
+
+  await plugin.show(
+    999, // vocEndNotificationId
+    isKorean ? '✅ 보이드 종료!' : '✅ Void of Course Ended!',
+    isKorean ? '보이드가 종료되었습니다.' : 'The Void period has ended.',
+    const NotificationDetails(
+      android: AndroidNotificationDetails(
+        'void_end_channel',
+        'Void End Notifications',
+        channelDescription: 'Notification when Void of Course ends',
+        importance: Importance.high,
+        priority: Priority.high,
+        ongoing: false,
+        autoCancel: false, // 사용자가 직접 지울 때까지 유지
+        icon: '@drawable/ic_notification',
+      ),
+    ),
+  );
+
+  // 2. 서비스도 시작/갱신 (카운트다운 정리 + 다음 VOC 예약)
   try {
     final service = FlutterBackgroundService();
     final isRunning = await service.isRunning();
