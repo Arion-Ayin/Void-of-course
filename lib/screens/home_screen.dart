@@ -10,6 +10,8 @@ import '../widgets/moon_sign_card.dart';
 import '../widgets/reset_date_button.dart';
 import '../widgets/voc_info_card.dart';
 import '../widgets/timezone_selector_dialog.dart';
+import '../widgets/app_snackbar.dart';
+import 'package:void_of_course/services/ad_service.dart';
 import 'package:void_of_course/l10n/app_localizations.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 
@@ -55,24 +57,49 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _resetDateToToday() {
-    if (mounted) {
-      final provider = Provider.of<AstroState>(context, listen: false);
-      // updateDate 대신 followTime을 호출하여 'click_reset_today' 이벤트가 기록되도록 변경
-      provider.followTime();
+  static const Duration _pullRefreshMinSpinner = Duration(milliseconds: 800);
 
-      final locale = Localizations.localeOf(context).languageCode;
-      final message =
-          locale == 'ko' ? '오늘 날짜로 재설정되었습니다.' : 'Date has been reset to today.';
+  Future<void> _refreshToToday({required bool awaitFeedback}) async {
+    if (!mounted) return;
+    final provider = Provider.of<AstroState>(context, listen: false);
+    if (provider.isFollowingTime) {
+      await provider.refreshDataByUser();
+    } else {
+      await provider.followTime();
+    }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 1),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
+    if (!mounted) return;
+    final locale = Localizations.localeOf(context).languageCode;
+    final message =
+        locale == 'ko' ? '오늘 날짜로 재설정되었습니다.' : 'Date has been reset to today.';
+
+    if (!awaitFeedback) {
+      AppSnackBar.show(
+        context,
+        message: message,
+        duration: const Duration(seconds: 1),
       );
+      AdService().showAdIfNeeded(() {});
+      return;
+    }
+
+    await AppSnackBar.show(
+      context,
+      message: message,
+      duration: const Duration(seconds: 1),
+    );
+    await AdService().showAdIfNeeded(() {});
+  }
+
+  Future<void> _resetDateToToday() => _refreshToToday(awaitFeedback: true);
+
+  Future<void> _onPullRefresh() async {
+    final started = DateTime.now();
+    await _refreshToToday(awaitFeedback: false);
+    final elapsed = DateTime.now().difference(started);
+    final remaining = _pullRefreshMinSpinner - elapsed;
+    if (remaining > Duration.zero) {
+      await Future.delayed(remaining);
     }
   }
 
@@ -256,32 +283,53 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           child: SafeArea(
-            child: SingleChildScrollView(
-              child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: MediaQuery.of(context).size.width < 380 ? 12.0 : 16.0,
-                  vertical: 8,
-                ),
-                child: Column(
-                  children: [
-                    MoonPhaseCard(provider: astroState),
-                    const SizedBox(height: 4),
-                    MoonSignCard(provider: astroState),
-                    const SizedBox(height: 4),
-                    VocInfoCard(provider: astroState),
-                    const SizedBox(height: 4),
-                    DateSelector(
-                      dateController: _dateController,
-                      onPreviousDay: () => _changeDate(-1),
-                      onNextDay: () => _changeDate(1),
-                      showCalendar: () => showCalendarDialog(context),
-                      selectedDate: astroState.selectedDate,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                return RefreshIndicator(
+                  onRefresh: _onPullRefresh,
+                  color: isDark
+                      ? const Color(0xFFD4AF37)
+                      : const Color(0xFF2C3E50),
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight + 1,
+                      ),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal:
+                              MediaQuery.of(context).size.width < 380
+                                  ? 12.0
+                                  : 16.0,
+                          vertical: 8,
+                        ),
+                        child: Column(
+                          children: [
+                            MoonPhaseCard(provider: astroState),
+                            const SizedBox(height: 4),
+                            MoonSignCard(provider: astroState),
+                            const SizedBox(height: 4),
+                            VocInfoCard(provider: astroState),
+                            const SizedBox(height: 4),
+                            DateSelector(
+                              dateController: _dateController,
+                              onPreviousDay: () => _changeDate(-1),
+                              onNextDay: () => _changeDate(1),
+                              showCalendar: () => showCalendarDialog(context),
+                              selectedDate: astroState.selectedDate,
+                            ),
+                            const SizedBox(height: 7),
+                            ResetDateButton(
+                              onPressed: () => _resetDateToToday(),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    const SizedBox(height: 7),
-                    ResetDateButton(onPressed: _resetDateToToday),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
           ),
         );

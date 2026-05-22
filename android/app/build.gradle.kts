@@ -44,9 +44,7 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
 
-        // Android 15+ 16KB 페이지 크기 지원
         ndk {
-            // 네이티브 라이브러리를 16KB 경계에 맞춰 정렬
             debugSymbolLevel = "FULL"
         }
     }
@@ -81,12 +79,23 @@ android {
     }
 }
 
+configurations.all {
+    resolutionStrategy {
+        // home_widget transitive: compileSdk 36 / AGP 8.9 호환
+        force(
+            "androidx.glance:glance-appwidget:1.1.1",
+            "androidx.glance:glance:1.1.1",
+        )
+    }
+}
+
 flutter {
     source = "../.."
 }
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    implementation("androidx.activity:activity-ktx:1.10.1")
     implementation(platform("com.google.firebase:firebase-bom:34.8.0"))
     implementation("com.google.firebase:firebase-analytics")
 }

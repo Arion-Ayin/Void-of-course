@@ -9,7 +9,7 @@ import 'astro_calculator.dart';
 import 'notification_service.dart';
 import 'alarm_service.dart';
 import 'package:sweph/sweph.dart';
-import 'package:flutter_background_service/flutter_background_service.dart';
+import 'void_cycle_scheduler.dart';
 import 'widget_service.dart';
 
 final AstroCalculator _calculator = AstroCalculator();
@@ -141,16 +141,15 @@ class AstroState with ChangeNotifier {
       // 항상 스케줄링하여 서비스가 죽었더라도 재시작되도록 함
       // try-catch로 감싸서 서비스 시작 실패가 앱 초기화 실패로 번지지 않도록 함
       // (삼성 One UI / Android 15: 앱 첫 실행 시 ForegroundServiceStartNotAllowedException)
-      if (_voidAlarmEnabled) {
-        try {
-          await _schedulePreVoidAlarm();
-        } catch (e) {
-          if (kDebugMode) {
-            developer.log('_schedulePreVoidAlarm failed on init (ignored): $e', name: 'AstroState');
-          }
-          // 서비스 시작 실패는 무시 - 앱은 정상 실행되고 알림만 비활성화됨
+      try {
+        await _syncVocSchedules();
+      } catch (e) {
+        if (kDebugMode) {
+          developer.log('_syncVocSchedules failed on init (ignored): $e', name: 'AstroState');
         }
       }
+
+      await _updateAnalyticsUserSegment();
 
       _isInitialized = true;
       _lastError = null;
@@ -170,8 +169,8 @@ class AstroState with ChangeNotifier {
     _currentLocale = languageCode;
     await _prefs?.setString('cached_language_code', languageCode);
 
-    if (_voidAlarmEnabled) {
-      await _schedulePreVoidAlarm();
+    if (_voidAlarmEnabled || await WidgetService.isEnabled(_prefs)) {
+      await _syncVocSchedules();
     }
 
     // 언어가 변경되면 알림 메시지도 갱신되어야 하므로 데이터 갱신 (배경 서비스용)
@@ -224,7 +223,8 @@ class AstroState with ChangeNotifier {
         _voidAlarmEnabled = true;
         await _prefs?.setBool('voidAlarmEnabled', true);
         // _schedulePreVoidAlarm에서 pre-void 시작 여부에 따라 서비스 시작 결정
-        await _schedulePreVoidAlarm(isToggleOn: true);
+        await _syncVocSchedules();
+        await _updateAnalyticsUserSegment();
 
         notifyListeners();
         return AlarmPermissionStatus.granted;
@@ -238,184 +238,143 @@ class AstroState with ChangeNotifier {
       _voidAlarmEnabled = false;
       await _prefs?.setBool('voidAlarmEnabled', false);
       await _notificationService.cancelAllNotifications();
-      await _alarmService.cancelAlarm();
+      await VoidCycleScheduler.cancelVoidNotificationAlarms();
+      await VoidCycleScheduler.stopCountdownService();
 
-      // Stop Background Service
-      final service = FlutterBackgroundService();
-      service.invoke("stopService");
+      await _syncVocSchedules();
+      await _updateAnalyticsUserSegment();
 
       notifyListeners();
       return AlarmPermissionStatus.granted;
     }
   }
 
+  /// 홈 위젯 설치 여부 반영 (위젯이 있으면 자동 갱신·알람 재예약)
+  Future<void> syncHomeWidgetFromInstallStatus(bool hasInstalledWidget) async {
+    if (_prefs == null) return;
+    await WidgetService.setInstallStatus(hasInstalledWidget);
+    await _syncVocSchedules();
+    await _updateAnalyticsUserSegment();
+  }
+
+  Future<void> _updateAnalyticsUserSegment() async {
+    final hasWidget = await WidgetService.isEnabled(_prefs);
+    final segment = switch ((_voidAlarmEnabled, hasWidget)) {
+      (true, true) => 'alarm_and_widget',
+      (true, false) => 'alarm_only',
+      (false, true) => 'widget_only',
+      (false, false) => 'neither',
+    };
+    await FirebaseAnalytics.instance.setUserProperty(
+      name: 'void_usage_segment',
+      value: segment,
+    );
+    await FirebaseAnalytics.instance.setUserProperty(
+      name: 'home_widget_enabled',
+      value: hasWidget.toString(),
+    );
+  }
+
   /// 앱이 포그라운드로 복귀할 때 호출하여 서비스가 실행 중인지 확인하고 필요시 재시작
   Future<void> ensureServiceRunning() async {
-    if (!_isInitialized || !_voidAlarmEnabled) return;
-    await _schedulePreVoidAlarm();
+    if (!_isInitialized) return;
+    await _syncVocSchedules();
   }
 
   Future<void> setPreVoidAlarmHours(int hours) async {
     _preVoidAlarmHours = hours;
     await _prefs?.setInt('preVoidAlarmHours', hours);
-    await _schedulePreVoidAlarm(isToggleOn: false);
+    await _syncVocSchedules();
     notifyListeners();
   }
 
-  Future<void> _schedulePreVoidAlarm({bool isToggleOn = false}) async {
-    // 동시 실행 방지 (platform channel 병목으로 UI 프리징 방지)
+  /// 알림(AlarmManager) · 위젯 · FG 카운트다운을 각 설정에 맞게 동기화
+  Future<void> _syncVocSchedules() async {
     if (_isScheduling) return;
+    if (!_isInitialized || !_isFollowingTime) return;
+
     _isScheduling = true;
-
     try {
-    // 기존 예약된 알림들 병렬로 취소 (1000~1100번)
-    await Future.wait([
-      for (int i = 0; i < 100; i++)
-        _notificationService.cancelNotification(1000 + i),
-      _alarmService.cancelAlarm(), // AlarmManager 알람도 함께 취소
-    ]);
+      final prefs = _prefs ?? await SharedPreferences.getInstance();
+      await prefs.setInt('cached_pre_void_hours', _preVoidAlarmHours);
+      await prefs.setString('cached_language_code', _currentLocale);
 
-    if (!_voidAlarmEnabled) {
-      notifyListeners();
-      return;
-    }
+      final selectedTimezoneId =
+          prefs.getString('selected_timezone') ?? 'Asia/Seoul';
+      await prefs.setString('cached_selected_timezone', selectedTimezoneId);
 
-    // 선택된 타임존 ID 읽기 (기본값: Asia/Seoul)
-    final selectedTimezoneId = _prefs?.getString('selected_timezone') ?? 'Asia/Seoul';
-    
-    // 현재 시간을 UTC로 변환후 선택된 타임존으로 변환
-    try {
-      final location = tz.getLocation(selectedTimezoneId);
-      final utcNow = DateTime.now().toUtc();
-      final tzDateTime = tz.TZDateTime.from(utcNow, location);
-      
-      // 선택된 타임존의 현지 자정을 UTC로 변환하여 검색 시작
-      // (기기 타임존이 아닌 선택된 타임존 기준으로 날짜 경계를 결정)
-      DateTime searchDate = tz.TZDateTime(
-        location,
-        tzDateTime.year,
-        tzDateTime.month,
-        tzDateTime.day,
-      ).toUtc();
-
-      // 백그라운드 서비스용 타임존 및 pre-void 시간 동기화
-      await _prefs?.setString('cached_selected_timezone', selectedTimezoneId);
-      await _prefs?.setInt('cached_pre_void_hours', _preVoidAlarmHours);
-
-      DateTime? foundVocStart;
-      DateTime? foundVocEnd;
-
-      for (int i = 0; i < 10; i++) {
-        final vocTimes = _calculator.findVoidOfCoursePeriod(searchDate);
-        final vocStart = vocTimes['start'];
-        final vocEnd = vocTimes['end'];
-
-        if (vocStart == null || vocEnd == null) {
-          searchDate = searchDate.add(const Duration(days: 1));
-          continue;
+      final upcoming = await VoidCycleScheduler.findUpcomingVoc(prefs);
+      if (upcoming == null) {
+        if (await WidgetService.isEnabled(prefs)) {
+          await WidgetService.cancelRefreshAlarms();
         }
-
-        // 현재 타임존 시간 기준으로 이미 지난 VOC는 스킵
-        if (vocEnd.isBefore(utcNow)) {
-          searchDate = vocEnd.add(const Duration(minutes: 1));
-          continue;
+        if (_voidAlarmEnabled) {
+          await VoidCycleScheduler.cancelVoidNotificationAlarms();
+          await VoidCycleScheduler.stopCountdownService();
         }
-
-        // 첫 번째 유효한 VOC를 백그라운드 서비스용으로 캐시
-        await _prefs?.setString('cached_voc_start', vocStart.toIso8601String());
-        await _prefs?.setString('cached_voc_end', vocEnd.toIso8601String());
-
-        foundVocStart = vocStart;
-        foundVocEnd = vocEnd;
-
-        if (kDebugMode) {
-          developer.log('Cached VOC (Timezone: $selectedTimezoneId): start=$vocStart, end=$vocEnd', name: 'AstroState');
-        }
-
-        break; // 첫 번째 유효한 VOC만 캐시하면 됨
+        return;
       }
 
-      // 백그라운드 서비스는 pre-void 시작 이후에만 필요
-      // pre-void 시작 전이면 서비스를 시작하지 않음 (빈 알림 방지)
-      final service = FlutterBackgroundService();
-      final isRunning = await service.isRunning();
+      await VoidCycleScheduler.cacheVocPeriod(
+        prefs,
+        start: upcoming.start,
+        end: upcoming.end,
+      );
 
-      if (foundVocStart != null && foundVocEnd != null) {
-        final preVoidStart = foundVocStart.subtract(Duration(hours: _preVoidAlarmHours));
-        final shouldServiceRun = utcNow.isAfter(preVoidStart) || utcNow.isAtSameMomentAs(preVoidStart);
+      _vocStart = upcoming.start;
+      _vocEnd = upcoming.end;
 
-        if (shouldServiceRun && _voidAlarmEnabled) {
-          if (!isRunning) {
-            // 서비스가 실행 중이 아니면 시작
-            await service.startService();
-            if (kDebugMode) {
-              developer.log('Background service started for VOC monitoring', name: 'AstroState');
-            }
-          } else {
-            // 서비스가 실행 중이라고 보고하더라도,
-            // SharedPreferences를 즉시 반영하도록 refreshData 이벤트 전송
-            service.invoke("refreshData");
-            if (kDebugMode) {
-              developer.log('Background service refreshData invoked', name: 'AstroState');
-            }
-          }
-        } else if (!shouldServiceRun && isRunning) {
-          // pre-void 전인데 서비스가 실행 중이면 종료
-          service.invoke("stopService");
-          if (kDebugMode) {
-            developer.log('Background service stopped (pre-void not yet started)', name: 'AstroState');
-          }
+      if (await WidgetService.isEnabled(prefs)) {
+        DateTime? nextStart;
+        DateTime? nextEnd;
+        final now = DateTime.now().toUtc();
+        if (now.isAfter(upcoming.start) && now.isBefore(upcoming.end)) {
+          final next = await WidgetService.findNextVocPeriod(upcoming.end);
+          nextStart = next?.start;
+          nextEnd = next?.end;
         }
+        await WidgetService.updateWidgetData(
+          vocStart: upcoming.start,
+          vocEnd: upcoming.end,
+          nextVocStart: nextStart,
+          nextVocEnd: nextEnd,
+          moonZodiac: _moonZodiac,
+        );
+        await WidgetService.scheduleRefreshAlarms(
+          vocStart: upcoming.start,
+          vocEnd: upcoming.end,
+        );
+      } else {
+        await WidgetService.cancelRefreshAlarms();
+      }
 
-        // AlarmManager 예약 (4개 - 알림 4종 각각 보장):
-        // 1) pre-void 시작 → 서비스 시작 (pre-void 카운트다운)
-        // 2) void 시작    → "시작합니다!" 직접 전송 + 서비스 재시작 (void 카운트다운)
-        // 3) void 중간    → 서비스 재시작 (mid-void 죽었을 때 카운트다운 복구)
-        // 4) void 종료    → "종료됩니다." 직접 전송
-        if (preVoidStart.isAfter(utcNow)) {
-          await _alarmService.schedulePreVoidAlarm(preVoidStart);
-          if (kDebugMode) {
-            developer.log('Scheduled AlarmManager [1] pre-void at: $preVoidStart', name: 'AstroState');
-          }
-        }
-        if (foundVocStart.isAfter(utcNow)) {
-          await _alarmService.scheduleVocStartAlarm(foundVocStart);
-          if (kDebugMode) {
-            developer.log('Scheduled AlarmManager [2] voc-start at: $foundVocStart', name: 'AstroState');
-          }
-        }
-        // 장기 보이드(24시간 이상)에도 서비스가 생존하도록 12시간 간격으로 알람 체인 예약
-        const maxInterval = Duration(hours: 12);
-        final nextMidVoc = foundVocStart.add(maxInterval);
-
-        // 다음 중간 알람이 보이드 종료 시점보다 이르고, 현재보다 나중일 경우에만 예약
-        if (nextMidVoc.isBefore(foundVocEnd) && nextMidVoc.isAfter(utcNow)) {
-          await _alarmService.scheduleVocMidAlarm(nextMidVoc);
-          if (kDebugMode) {
-            developer.log(
-                'Scheduled chained voc-mid alarm at: $nextMidVoc',
-                name: 'AstroState');
-          }
-        }
-        // void 종료 알림은 항상 예약 (서비스가 죽어도 AlarmManager가 직접 전송)
-        await _alarmService.scheduleVocEndAlarm(foundVocEnd);
-        if (kDebugMode) {
-          developer.log('Scheduled AlarmManager [4] voc-end at: $foundVocEnd', name: 'AstroState');
-        }
-      } else if (isRunning) {
-        // VOC 데이터가 없으면 서비스 종료
-        service.invoke("stopService");
+      if (_voidAlarmEnabled) {
+        await Future.wait([
+          for (int i = 0; i < 100; i++)
+            _notificationService.cancelNotification(1000 + i),
+        ]);
+        await VoidCycleScheduler.scheduleVoidNotificationAlarms(
+          prefs,
+          vocStart: upcoming.start,
+          vocEnd: upcoming.end,
+        );
+        await VoidCycleScheduler.tryStartCountdownService(prefs);
+      } else {
+        await VoidCycleScheduler.cancelVoidNotificationAlarms();
+        await VoidCycleScheduler.stopCountdownService();
       }
     } catch (e) {
       if (kDebugMode) {
-        developer.log('Error in _schedulePreVoidAlarm: $e', name: 'AstroState');
+        developer.log('Error in _syncVocSchedules: $e', name: 'AstroState');
       }
-    }
-
-    notifyListeners();
     } finally {
       _isScheduling = false;
     }
+  }
+
+  Future<void> _schedulePreVoidAlarm() async {
+    await _syncVocSchedules();
+    notifyListeners();
   }
 
   void _scheduleNextUpdate() {
@@ -462,7 +421,7 @@ class AstroState with ChangeNotifier {
         developer.log('Scheduling next UI update in $duration for event at $nextEvent', name: 'AstroState');
       }
 
-      _timer = Timer(duration, () {
+      _timer = Timer(duration, () async {
         if (kDebugMode) {
           developer.log('Timer fired for UI update. Refreshing data...', name: 'AstroState');
         }
@@ -473,8 +432,8 @@ class AstroState with ChangeNotifier {
           refreshData(); // This will re-calculate event times and re-schedule the next update via _updateStateFromResult
 
           // Also reschedule alarms if they are enabled.
-          if (_voidAlarmEnabled) {
-            _schedulePreVoidAlarm();
+          if (_voidAlarmEnabled || await WidgetService.isEnabled(_prefs)) {
+            await _syncVocSchedules();
           }
         }
       });
@@ -659,18 +618,10 @@ class AstroState with ChangeNotifier {
       // 초기화 전이라면 무시하거나 기본값 사용
     }
 
-    // Update the Android Widget
     if (_isFollowingTime) {
-      await WidgetService.updateWidgetData(
-        vocStart: _vocStart,
-        vocEnd: _vocEnd,
-        nextVocStart: result['nextVocStart'] as DateTime?,
-        nextVocEnd: result['nextVocEnd'] as DateTime?,
-        moonZodiac: _moonZodiac,
-      );
+      await _syncVocSchedules();
     }
 
-    // ... (나머지 코드는 동일)
     _scheduleNextUpdate();
   }
 }

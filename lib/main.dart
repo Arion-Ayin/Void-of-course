@@ -26,10 +26,16 @@ import 'package:void_of_course/services/native_ad_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:void_of_course/services/widget_service.dart';
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 
 void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요.
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (Platform.isAndroid) {
+    await AndroidAlarmManager.initialize();
+  }
 
   // Firebase 초기화 (네트워크 불안정 등 실패 시에도 앱이 크래시되지 않도록 try-catch)
   // 삼성 Z Flip/Fold 등 폴더블 기기의 첫 실행 시 네트워크 지연 대응
@@ -168,6 +174,11 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
         name: 'has_home_widget',
         value: hasWidget.toString(),
       );
+      if (!mounted) return;
+      await Provider.of<AstroState>(
+        context,
+        listen: false,
+      ).syncHomeWidgetFromInstallStatus(hasWidget);
     } catch (e) {
       if (kDebugMode) {
         developer.log('Error checking widget status: $e', name: 'Main');
@@ -185,8 +196,9 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
-      // 앱이 포그라운드로 복귀하면 서비스 상태를 확인하고 필요시 재시작
+      _checkWidgetStatus();
       Provider.of<AstroState>(context, listen: false).ensureServiceRunning();
+      WidgetService.refreshFromPrefs();
     }
   }
 

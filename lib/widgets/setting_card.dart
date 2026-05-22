@@ -5,6 +5,7 @@ import '../themes.dart';
 class SettingCard extends StatelessWidget {
   final IconData icon; // 카드 왼쪽에 보여줄 아이콘 모양
   final String title; // 카드의 제목
+  final String? subtitle; // 카드 부제 (선택)
   final Widget trailing; // 카드 오른쪽에 보여줄 위젯 (스위치, 버튼 등)
   final Color iconColor; // 아이콘의 색깔
   final VoidCallback? onTap; // 카드 전체를 눌렀을 때 실행할 동작
@@ -14,6 +15,7 @@ class SettingCard extends StatelessWidget {
     super.key,
     required this.icon, // 아이콘은 꼭 필요해요.
     required this.title, // 제목도 꼭 필요해요.
+    this.subtitle,
     required this.trailing, // 오른쪽 위젯도 꼭 필요해요.
     required this.iconColor, // 아이콘 색깔도 꼭 필요해요.
     this.onTap, // 카드 전체 탭 동작 (선택사항)
@@ -69,13 +71,29 @@ class SettingCard extends StatelessWidget {
                 const SizedBox(width: 16),
                 // 아이콘 오른쪽에 제목을 보여줘요.
                 Expanded(
-                  child: Text(
-                    title, // '다크 모드' 같은 제목을 보여줘요.
-                    style: TextStyle(
-                      color: theme.textTheme.titleLarge?.color, // 앱의 큰 제목 글자 색상을 사용해요.
-                      fontSize: 20, // 글자 크기는 20
-                      fontWeight: FontWeight.w600, // 글자를 살짝 두껍게 만들어요.
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: theme.textTheme.titleLarge?.color,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          subtitle!,
+                          style: TextStyle(
+                            color: theme.textTheme.bodyMedium?.color
+                                ?.withValues(alpha: 0.7),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
                 trailing,

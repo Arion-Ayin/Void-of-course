@@ -69,6 +69,12 @@ class AdService {
   /// 광고를 표시할지 결정하고, 필요 시 광고를 보여줍니다.
   /// 광고가 표시되면 true, 아니면 false를 반환합니다.
   Future<bool> showAdIfNeeded(Function onAdDismissed) async {
+    if (kDebugMode) {
+      developer.log('showAdIfNeeded skipped (debug build)', name: 'AdService');
+      onAdDismissed();
+      return false;
+    }
+
     _calculateClickCount++;
     await _saveCalculateClickCount();
     if (kDebugMode) {
@@ -107,6 +113,12 @@ class AdService {
     required Function onAdDismissed,
     required Function onAdFailed,
   }) async {
+    if (kDebugMode) {
+      developer.log('showSplashAd skipped (debug build)', name: 'AdService');
+      onAdFailed();
+      return;
+    }
+
     final lastAdShowTimeMillis = _prefs?.getInt(_lastSplashAdShowTimeKey) ?? 0;
     final currentTimeMillis = DateTime.now().millisecondsSinceEpoch;
 

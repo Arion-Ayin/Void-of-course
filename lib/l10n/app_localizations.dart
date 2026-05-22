@@ -116,11 +116,11 @@ abstract class AppLocalizations {
   /// **'Info'**
   String get info;
 
-  /// No description provided for @languageSettings.
+  /// No description provided for @language.
   ///
   /// In en, this message translates to:
-  /// **'Language Settings'**
-  String get languageSettings;
+  /// **'Language'**
+  String get language;
 
   /// No description provided for @korean.
   ///
@@ -157,6 +157,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Void Alarm'**
   String get voidAlarmTitle;
+
+  /// No description provided for @voidAlarmSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Alerts from 6 hours before void.'**
+  String get voidAlarmSubtitle;
 
   /// No description provided for @voidAlarmEnabledMessage.
   ///

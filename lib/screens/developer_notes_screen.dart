@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart'; // 링크를 열기 위해 필요해요.
 import 'package:flutter/services.dart'; // 클립보드 사용을 위해 추가
 import 'package:void_of_course/l10n/app_localizations.dart';
+import 'package:void_of_course/widgets/app_snackbar.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 
 // 링크 버튼 정보를 담는 클래스예요.
@@ -46,12 +47,12 @@ class InfoScreen extends StatelessWidget {
     final List<DeveloperNote> notes = [
       // ▼▼▼ [최신 글] ▼▼▼
       DeveloperNote(
-        date: '2026-05-12',
-        titleKo: '<26-05-12 업데이트>',
-        titleEn: '<26-05-12 Update>',
+        date: '2026-05-00',
+        titleKo: '<26-05-00 업데이트>',
+        titleEn: '<26-05-00 Update>',
         contentKo: '''
 안녕하세요 아리온 아인입니다.
-이번 1.2.0+53 업데이트 사항입니다.
+이번 1.2.0+00 업데이트 사항입니다.
 
 1. 보이드 알람 시간체크 방식 변경
 2. 캘린더 기능 수정 및 개선
@@ -67,7 +68,7 @@ class InfoScreen extends StatelessWidget {
 ''',
         contentEn: '''
 Hello, this is Arion Ayin.
-This is a 1.2.0+53 update.
+This is a 1.2.0+00 update.
 
 1. Void notification time check method changed
 2. Calendar feature update and improvement
@@ -507,52 +508,18 @@ Warm reviews are a great strength to the developer.
                                                           );
                                                           if (!context.mounted)
                                                             return;
-                                                          ScaffoldMessenger.of(
+                                                          await AppSnackBar.show(
                                                             context,
-                                                          ).showSnackBar(
-                                                            SnackBar(
-                                                              content: Text(
+                                                            message:
                                                                 appLocalizations
                                                                     .msgEmailCopied,
-                                                              ),
-                                                              duration:
-                                                                  const Duration(
-                                                                    seconds: 2,
-                                                                  ),
-                                                              behavior:
-                                                                  SnackBarBehavior
-                                                                      .floating,
-                                                              shape: RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                      10,
-                                                                    ),
-                                                              ),
-                                                            ),
                                                           );
                                                         } else {
-                                                          ScaffoldMessenger.of(
+                                                          await AppSnackBar.show(
                                                             context,
-                                                          ).showSnackBar(
-                                                            SnackBar(
-                                                              content: Text(
+                                                            message:
                                                                 appLocalizations
                                                                     .msgAppNotFound,
-                                                              ),
-                                                              duration:
-                                                                  const Duration(
-                                                                    seconds: 2,
-                                                                  ),
-                                                              behavior:
-                                                                  SnackBarBehavior
-                                                                      .floating,
-                                                              shape: RoundedRectangleBorder(
-                                                                borderRadius:
-                                                                    BorderRadius.circular(
-                                                                      10,
-                                                                    ),
-                                                              ),
-                                                            ),
                                                           );
                                                         }
                                                       }

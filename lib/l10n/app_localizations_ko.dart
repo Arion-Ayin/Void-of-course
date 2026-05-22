@@ -18,7 +18,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get info => '정보';
 
   @override
-  String get languageSettings => '언어 설정';
+  String get language => '언어';
 
   @override
   String get korean => '한국어';
@@ -37,6 +37,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get voidAlarmTitle => '보이드 알람';
+
+  @override
+  String get voidAlarmSubtitle => '보이드 6시간 전부터 알림합니다.';
 
   @override
   String get voidAlarmEnabledMessage => '보이드 알람이 활성화되었습니다.\n6시간 이전부터 알람이 울립니다.';

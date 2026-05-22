@@ -1,14 +1,10 @@
 import 'dart:async';
 import 'dart:ui';
-import 'dart:developer' as developer;
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sweph/sweph.dart';
-import 'package:timezone/data/latest_all.dart' as tz;
-import 'alarm_service.dart';
-import 'astro_calculator.dart';
+import 'void_cycle_scheduler.dart';
 import 'widget_service.dart';
 
 // 알림 상태 상수
@@ -222,7 +218,7 @@ void onStart(ServiceInstance service) async {
       content =
           isKorean ? '보이드 시작 시간: $targetTimeStr' : 'Starts at: $targetTimeStr';
       previousState = statePreVoid;
-      await _updateAppWidget(utcNow, prefs);
+      await WidgetService.refreshFromPrefs();
     } else if (utcNow.isAfter(vocStart) && utcNow.isBefore(vocEnd)) {
       // Void Active 상태
       final String targetTimeStr = DateFormat(
@@ -232,7 +228,7 @@ void onStart(ServiceInstance service) async {
       content =
           isKorean ? '보이드 종료 시간: $targetTimeStr' : 'Ends at: $targetTimeStr';
       previousState = stateVocActive;
-      await _updateAppWidget(utcNow, prefs);
+      await WidgetService.refreshFromPrefs();
     }
 
     // 즉시 알림 표시 (빈 알림 덮어쓰기)
@@ -249,8 +245,8 @@ void onStart(ServiceInstance service) async {
             channelDescription: 'Shows countdown timer for Void of Course',
             importance: Importance.low,
             priority: Priority.low,
-            ongoing: true,
-            autoCancel: false,
+            ongoing: false,
+            autoCancel: true,
             playSound: false,
             enableVibration: false,
             onlyAlertOnce: true,
@@ -391,7 +387,7 @@ void onStart(ServiceInstance service) async {
                     importance: Importance.high,
                     priority: Priority.high,
                     ongoing: false,
-                    autoCancel: false, // 유저가 직접 지우기 전까지 유지
+                    autoCancel: true,
                     icon: '@drawable/ic_notification',
                   ),
                 ),
@@ -403,12 +399,11 @@ void onStart(ServiceInstance service) async {
               timer.cancel();
 
               // --- 다음 사이클(무한 루프)을 위한 백그라운드 재계약 ---
-              await _scheduleNextVocFromBackground(prefs, vocEnd);
-
-              // _scheduleNextVocFromBackground가 prefs에 새 VOC를 저장했으므로
-              // 최신 값을 읽기 위해 reload 후 위젯 업데이트
+              await VoidCycleScheduler.advanceAfterVocEnd(prefs, vocEnd);
               await prefs.reload();
-              await _updateAppWidget(utcNow, prefs);
+              if (await WidgetService.isEnabled(prefs)) {
+                await WidgetService.refreshFromPrefs();
+              }
 
               await Future.delayed(const Duration(seconds: 5));
               service.stopSelf();
@@ -418,7 +413,7 @@ void onStart(ServiceInstance service) async {
             previousState = currentState;
 
             // 상태가 변했을 때 홈 위젯(가젯)도 즉시 동기화
-            await _updateAppWidget(utcNow, prefs);
+            await WidgetService.refreshFromPrefs();
           }
 
           // 카운트다운 알림 업데이트 (소리/진동 없이, 삭제 불가)
@@ -437,8 +432,8 @@ void onStart(ServiceInstance service) async {
                         'Shows countdown timer for Void of Course',
                     importance: Importance.low,
                     priority: Priority.low,
-                    ongoing: true,
-                    autoCancel: false,
+                    ongoing: false,
+                    autoCancel: true,
                     playSound: false,
                     enableVibration: false,
                     onlyAlertOnce: true,
@@ -521,148 +516,3 @@ Future<void> _showVocStartNotification(
 }
 
 // _formatDuration는 더 이상 사용하지 않으므로 삭제함
-
-// 3. 백그라운드 무한 루프 알람 예약을 위한 다음 보이드 계산 및 등록
-Future<void> _scheduleNextVocFromBackground(
-  SharedPreferences prefs,
-  DateTime currentVocEnd,
-) async {
-  try {
-    final bool isEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
-    if (!isEnabled) return;
-
-    await Sweph.init();
-    tz.initializeTimeZones();
-
-    final calculator = AstroCalculator();
-    final preVoidHours = prefs.getInt('cached_pre_void_hours') ?? 6;
-
-    final utcNow = DateTime.now().toUtc();
-
-    // 안전을 위해 방금 끝난 보이드 종료시간(currentVocEnd)의 1분 뒤부터 다음 보이드를 검색
-    DateTime searchDate = currentVocEnd.add(const Duration(minutes: 1));
-    if (searchDate.isBefore(utcNow)) {
-      searchDate = utcNow;
-    }
-
-    DateTime? foundVocStart;
-    DateTime? foundVocEnd;
-
-    for (int i = 0; i < 10; i++) {
-      final vocTimes = calculator.findVoidOfCoursePeriod(searchDate);
-      final vocStart = vocTimes['start'] as DateTime?;
-      final vocEnd = vocTimes['end'] as DateTime?;
-
-      if (vocStart == null || vocEnd == null) {
-        searchDate = searchDate.add(const Duration(days: 1));
-        continue;
-      }
-
-      if (vocEnd.isBefore(utcNow)) {
-        searchDate = vocEnd.add(const Duration(minutes: 1));
-        continue;
-      }
-
-      foundVocStart = vocStart;
-      foundVocEnd = vocEnd;
-
-      // 새롭게 찾은 다음 보이드 시간을 SharedPreferences에 캐시 갱신
-      await prefs.setString('cached_voc_start', vocStart.toIso8601String());
-      await prefs.setString('cached_voc_end', vocEnd.toIso8601String());
-      break;
-    }
-
-    if (foundVocStart != null && foundVocEnd != null) {
-      final alarmService = AlarmService();
-      final preVoidStart = foundVocStart.subtract(
-        Duration(hours: preVoidHours),
-      );
-
-      if (preVoidStart.isAfter(utcNow)) {
-        await alarmService.schedulePreVoidAlarm(preVoidStart);
-      }
-      if (foundVocStart.isAfter(utcNow)) {
-        await alarmService.scheduleVocStartAlarm(foundVocStart);
-      }
-
-      const maxInterval = Duration(hours: 12);
-      final nextMidVoc = foundVocStart.add(maxInterval);
-      if (nextMidVoc.isBefore(foundVocEnd) && nextMidVoc.isAfter(utcNow)) {
-        await alarmService.scheduleVocMidAlarm(nextMidVoc);
-      }
-
-      await alarmService.scheduleVocEndAlarm(foundVocEnd);
-
-      developer.log(
-        'Successfully scheduled next VOC alarm from background. Next VOC Start: $foundVocStart',
-        name: 'BackgroundService',
-      );
-    }
-  } catch (e) {
-    developer.log(
-      'Error scheduling next VOC from background: $e',
-      name: 'BackgroundService',
-    );
-  }
-}
-
-// 4. 홈 위젯(가젯) 데이터 동기화
-Future<void> _updateAppWidget(DateTime utcNow, SharedPreferences prefs) async {
-  try {
-    final String? startStr = prefs.getString('cached_voc_start');
-    final String? endStr = prefs.getString('cached_voc_end');
-    if (startStr == null || endStr == null) return;
-
-    final vocStart = DateTime.parse(startStr);
-    final vocEnd = DateTime.parse(endStr);
-
-    await Sweph.init();
-    tz.initializeTimeZones();
-    final calculator = AstroCalculator();
-    final moonZodiac = calculator.getMoonZodiacEmoji(utcNow);
-
-    DateTime? nextVocStart;
-    DateTime? nextVocEnd;
-
-    if (utcNow.isAfter(vocStart) && utcNow.isBefore(vocEnd)) {
-      // 현재 보이드 중이라면 다음 보이드를 계산하여 위젯에 전달
-      final nextVocTimes = calculator.findVoidOfCoursePeriod(
-        vocEnd.add(const Duration(minutes: 1)),
-      );
-      nextVocStart = nextVocTimes['start'] as DateTime?;
-      nextVocEnd = nextVocTimes['end'] as DateTime?;
-    } else if (utcNow.isAfter(vocEnd)) {
-      // 보이드가 이미 종료된 경우:
-      // prefs에 저장된 값이 이미 다음 보이드로 갱신되었을 수 있으므로
-      // vocStart/vocEnd가 미래라면 그대로 사용, 과거라면 다음 보이드 계산
-      if (vocStart.isAfter(utcNow)) {
-        // prefs가 이미 다음 보이드로 갱신됨 → 그대로 사용 (nextVoc 불필요)
-      } else {
-        // 여전히 과거 데이터라면 다음 보이드를 직접 계산
-        final nextVocTimes = calculator.findVoidOfCoursePeriod(
-          vocEnd.add(const Duration(minutes: 1)),
-        );
-        nextVocStart = nextVocTimes['start'] as DateTime?;
-        nextVocEnd = nextVocTimes['end'] as DateTime?;
-      }
-    }
-
-    await WidgetService.updateWidgetData(
-      vocStart: vocStart,
-      vocEnd: vocEnd,
-      nextVocStart: nextVocStart,
-      nextVocEnd: nextVocEnd,
-      moonZodiac: moonZodiac,
-    );
-
-    developer.log(
-      'App Widget updated successfully from background service.',
-      name: 'BackgroundService',
-    );
-  } catch (e) {
-    developer.log(
-      'Error updating App Widget from background: $e',
-      name: 'BackgroundService',
-    );
-  }
-}

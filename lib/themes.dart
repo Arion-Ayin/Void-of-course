@@ -57,10 +57,9 @@ class Themes {
       foregroundColor: _lightPrimary,
       elevation: 0,
       shadowColor: Colors.transparent,
-      systemOverlayStyle: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
+      // Android 15+: statusBarColor/systemNavigationBarColor 설정 시 deprecated API 호출됨
+      systemOverlayStyle: const SystemUiOverlayStyle(
         statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.transparent,
         systemNavigationBarIconBrightness: Brightness.dark,
       ),
       titleTextStyle: TextStyle(
@@ -105,10 +104,8 @@ class Themes {
       foregroundColor: _darkPrimary,
       elevation: 0,
       shadowColor: Colors.transparent,
-      systemOverlayStyle: SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
+      systemOverlayStyle: const SystemUiOverlayStyle(
         statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: Colors.transparent,
         systemNavigationBarIconBrightness: Brightness.light,
       ),
       titleTextStyle: TextStyle(

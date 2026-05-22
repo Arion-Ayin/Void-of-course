@@ -52,13 +52,31 @@ subprojects {
 
 subprojects {
     project.evaluationDependsOn(":app")
-    
-    // 강제로 모든 서드파티 플러그인에 16KB 페이지 크기 정렬 적용
+
     plugins.withId("com.android.library") {
-        val androidExt = extensions.getByName("android") as com.android.build.gradle.LibraryExtension
+        val androidExt =
+            extensions.getByName("android") as com.android.build.gradle.LibraryExtension
         androidExt.ndkVersion = "27.0.12077973"
         androidExt.packaging {
             jniLibs.useLegacyPackaging = false
+        }
+
+        val hasNativeCMake = sequenceOf(
+            project.file("CMakeLists.txt"),
+            project.file("../native/CMakeLists.txt"),
+            project.file("src/main/cpp/CMakeLists.txt"),
+        ).any { it.exists() }
+        if (hasNativeCMake) {
+            val cmake = androidExt.defaultConfig.externalNativeBuild.cmake
+            val args = cmake.arguments.toMutableList()
+            if (!args.contains("-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON")) {
+                args.add("-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON")
+            }
+            val linkerFlag = "-DCMAKE_SHARED_LINKER_FLAGS=-Wl,-z,max-page-size=16384"
+            if (!args.contains(linkerFlag)) {
+                args.add(linkerFlag)
+            }
+            cmake.arguments(*args.toTypedArray())
         }
     }
 }

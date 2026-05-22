@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:void_of_course/services/ad_service.dart';
 import '../themes.dart';
 
 class ResetDateButton extends StatefulWidget {
@@ -12,7 +11,6 @@ class ResetDateButton extends StatefulWidget {
 }
 
 class _ResetDateButtonState extends State<ResetDateButton> {
-  final AdService _adService = AdService();
   bool _isPressed = false;
 
 
@@ -57,10 +55,7 @@ class _ResetDateButtonState extends State<ResetDateButton> {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: () {
-                  widget.onPressed();
-                  _adService.showAdIfNeeded(() {});
-                },
+                onTap: widget.onPressed,
                 borderRadius: BorderRadius.circular(buttonSize / 2),
                 splashColor: Colors.white.withValues(alpha: 0.3),
                 highlightColor: Colors.white.withValues(alpha: 0.1),

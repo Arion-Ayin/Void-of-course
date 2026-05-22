@@ -18,7 +18,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get info => 'Info';
 
   @override
-  String get languageSettings => 'Language Settings';
+  String get language => 'Language';
 
   @override
   String get korean => 'Korean';
@@ -37,6 +37,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voidAlarmTitle => 'Void Alarm';
+
+  @override
+  String get voidAlarmSubtitle => 'Alerts from 6 hours before void.';
 
   @override
   String get voidAlarmEnabledMessage =>

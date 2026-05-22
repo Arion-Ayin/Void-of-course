@@ -1,32 +1,28 @@
 package com.example.lioluna
 
 import android.os.Bundle
-import androidx.core.view.WindowCompat
-import io.flutter.embedding.android.FlutterActivity
+import androidx.activity.enableEdgeToEdge
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugins.googlemobileads.GoogleMobileAdsPlugin
 
-class MainActivity: FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Flutter에서 시스템 UI 인셋을 직접 처리하도록 설정
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-
+        // Android 15+ (SDK 35+) edge-to-edge (ComponentActivity 필요)
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
     }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        // Register the NativeAdFactory.
         GoogleMobileAdsPlugin.registerNativeAdFactory(
-            flutterEngine, "listTile", NativeAdFactory(context))
+            flutterEngine, "listTile", NativeAdFactory(this))
     }
 
     override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
         super.cleanUpFlutterEngine(flutterEngine)
-
-        // Unregister the NativeAdFactory to prevent memory leaks.
         GoogleMobileAdsPlugin.unregisterNativeAdFactory(flutterEngine, "listTile")
     }
 }
