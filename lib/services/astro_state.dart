@@ -9,6 +9,7 @@ import 'astro_calculator.dart';
 import 'notification_service.dart';
 import 'alarm_service.dart';
 import 'package:sweph/sweph.dart';
+import 'calendar_voc_cache.dart';
 import 'void_cycle_scheduler.dart';
 import 'widget_service.dart';
 
@@ -100,14 +101,40 @@ class AstroState with ChangeNotifier {
     await refreshData();
   }
 
+  static const _initializeTimeout = Duration(seconds: 20);
+
   Future<void> initialize() async {
     if (_isInitialized) return;
     _isLoading = true;
 
     try {
+      await _runInitializeBody().timeout(
+        _initializeTimeout,
+        onTimeout: () {
+          throw TimeoutException(
+            'AstroState initialize timed out after ${_initializeTimeout.inSeconds}s',
+          );
+        },
+      );
+      _isInitialized = true;
+      _lastError = null;
+    } catch (e, stack) {
+      if (kDebugMode) {
+        developer.log('Initialization error: $e\n$stack', name: 'AstroState');
+      }
+      _lastError = 'initializationError';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _runInitializeBody() async {
       //스위프 초기화
       //천문학 라이브러리 초기화
       await Sweph.init();
+      // 스플래시·홈 진입을 우선 — 캘린더 탭 진입 시 추가 프리로드
+      CalendarVocCache.instance.preloadAroundSilent(DateTime.now(), radius: 1);
       //shared preferences 초기화 (캐싱)
       _prefs = await SharedPreferences.getInstance();
       
@@ -150,18 +177,6 @@ class AstroState with ChangeNotifier {
       }
 
       await _updateAnalyticsUserSegment();
-
-      _isInitialized = true;
-      _lastError = null;
-    } catch (e, stack) {
-      if (kDebugMode) {
-        developer.log('Initialization error: $e\n$stack', name: 'AstroState');
-      }
-      _lastError = 'initializationError';
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
   }
 
   //

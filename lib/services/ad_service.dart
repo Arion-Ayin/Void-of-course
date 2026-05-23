@@ -25,6 +25,10 @@ class AdService {
 
   static const _clickCountKey = 'calculateClickCount';
   static const _lastSplashAdShowTimeKey = 'lastSplashAdShowTime';
+  static const _hasCompletedFirstLaunchKey = 'has_completed_first_launch';
+
+  /// 최초 설치 후 첫 실행 세션 동안 전면광고를 건너뜁니다.
+  bool _skipInterstitialForFirstLaunchSession = false;
 
   /// 서비스 초기화 시 광고와 클릭 횟수를 로드합니다.
   Future<void> initialize() async {
@@ -32,6 +36,8 @@ class AdService {
       return;
     }
     _prefs = await SharedPreferences.getInstance();
+    _skipInterstitialForFirstLaunchSession =
+        !(_prefs?.getBool(_hasCompletedFirstLaunchKey) ?? false);
     await _loadCalculateClickCount();
     if (kDebugMode) {
       developer.log('AdService initialized. Click count: $_calculateClickCount', name: 'AdService');
@@ -40,6 +46,31 @@ class AdService {
       _loadInterstitialAd();
     }
     _isInitialized = true;
+  }
+
+  /// 앱이 백그라운드로 가면 첫 실행 세션 스킵을 해제합니다.
+  void onAppPaused() {
+    _skipInterstitialForFirstLaunchSession = false;
+  }
+
+  Future<void> _persistFirstLaunchCompleted() async {
+    await _prefs?.setBool(_hasCompletedFirstLaunchKey, true);
+  }
+
+  Future<bool> _skipInterstitialForFirstLaunch() async {
+    if (!_skipInterstitialForFirstLaunchSession) {
+      return false;
+    }
+    if (!(_prefs?.getBool(_hasCompletedFirstLaunchKey) ?? false)) {
+      await _persistFirstLaunchCompleted();
+    }
+    if (kDebugMode) {
+      developer.log(
+        'Interstitial skipped (first launch after install)',
+        name: 'AdService',
+      );
+    }
+    return true;
   }
 
   /// 전면 광고를 로드합니다.
@@ -71,6 +102,11 @@ class AdService {
   Future<bool> showAdIfNeeded(Function onAdDismissed) async {
     if (kDebugMode) {
       developer.log('showAdIfNeeded skipped (debug build)', name: 'AdService');
+      onAdDismissed();
+      return false;
+    }
+
+    if (await _skipInterstitialForFirstLaunch()) {
       onAdDismissed();
       return false;
     }
@@ -115,6 +151,11 @@ class AdService {
   }) async {
     if (kDebugMode) {
       developer.log('showSplashAd skipped (debug build)', name: 'AdService');
+      onAdFailed();
+      return;
+    }
+
+    if (await _skipInterstitialForFirstLaunch()) {
       onAdFailed();
       return;
     }
@@ -169,13 +210,28 @@ class AdService {
           _loadInterstitialAd(); // 다음 광고를 미리 로드합니다.
         },
       );
-      await _interstitialAd!.show();
+      await _showInterstitialWithTimeout(
+        _interstitialAd!,
+        () => onAdFailed(),
+      );
     } else {
       // 광고가 아직 로드되지 않은 경우, 바로 onAdFailed를 호출합니다.
       if (kDebugMode) {
         developer.log('스플래시 광고: 미리 로드된 광고가 없습니다.', name: 'AdService');
       }
       onAdFailed();
+    }
+  }
+
+  Future<void> _showInterstitialWithTimeout(
+    InterstitialAd ad,
+    void Function() onGiveUp, {
+    Duration timeout = const Duration(seconds: 3),
+  }) async {
+    try {
+      await ad.show().timeout(timeout, onTimeout: onGiveUp);
+    } catch (_) {
+      onGiveUp();
     }
   }
 
@@ -186,7 +242,7 @@ class AdService {
     required String adUnitId,
     required Function onAdDismissed,
     required Function onAdFailed,
-    Duration timeout = const Duration(seconds: 5),
+    Duration timeout = const Duration(seconds: 3),
   }) async {
     // 디버그 모드에서는 스플래시 광고를 즉시 건너뜁니다.
     if (kDebugMode) {
@@ -196,6 +252,11 @@ class AdService {
     }
 
     if (!(Platform.isAndroid || Platform.isIOS)) {
+      onAdFailed();
+      return;
+    }
+
+    if (await _skipInterstitialForFirstLaunch()) {
       onAdFailed();
       return;
     }
@@ -254,7 +315,10 @@ class AdService {
         },
       );
 
-      await _interstitialAd!.show();
+      await _showInterstitialWithTimeout(
+        _interstitialAd!,
+        () => onAdFailed(),
+      );
       return;
     }
 

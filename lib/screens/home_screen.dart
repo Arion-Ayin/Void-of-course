@@ -33,14 +33,6 @@ class _HomeScreenState extends State<HomeScreen> {
       Future.microtask(() => provider.initialize());
     }
 
-    // [Analytics] 앱 진입 시 현재 다크모드 사용 여부를 파악하여 비율을 집계합니다.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      FirebaseAnalytics.instance.setUserProperty(
-        name: 'dark_mode_enabled',
-        value: isDark.toString(),
-      );
-    });
   }
 
   @override

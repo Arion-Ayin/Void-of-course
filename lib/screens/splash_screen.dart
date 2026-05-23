@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -16,88 +18,100 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   bool _adTriggered = false;
+  bool _hasNavigated = false;
   DateTime? _splashStartTime;
-  bool _timeoutTriggered = false;
+
+  /// 초기화가 느릴 때 광고 단계로 넘기기 전 대기 (스윗스팟: 대부분 1~3초 내 init 완료)
+  static const _softProceedTimeout = Duration(seconds: 3);
+
+  /// 어떤 경우에도 메인으로 넘기는 최대 스플래시 체류 시간
+  static const _hardNavigateTimeout = Duration(seconds: 6);
+
+  /// 스플래시 전면광고가 메인 진입을 막는 최대 시간
+  static const _adFlowMaxDuration = Duration(seconds: 3);
+
+  /// 광고 로드 대기 (미로드 시 빠르게 스킵)
+  static const _adLoadTimeout = Duration(seconds: 2);
 
   @override
   void initState() {
     super.initState();
-    // 안전장치: 10초 후에도 초기화 안되면 강제로 메인 화면으로 이동
-    Future.delayed(const Duration(seconds: 10), () {
-      if (mounted && !_adTriggered && !_timeoutTriggered) {
-        _timeoutTriggered = true;
-        _triggerAdShow();
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _tryProceed());
+
+    Future.delayed(_softProceedTimeout, () {
+      if (mounted) _tryProceed(force: true);
+    });
+
+    Future.delayed(_hardNavigateTimeout, () {
+      if (mounted) _forceNavigateToMain();
     });
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // astroState가 이미 초기화되었는지 확인
+  bool _canProceed(AstroState astroState) {
+    return astroState.isInitialized || astroState.lastError != null;
+  }
+
+  void _tryProceed({bool force = false}) {
+    if (_adTriggered || _hasNavigated || !mounted) return;
     final astroState = Provider.of<AstroState>(context, listen: false);
-    if (astroState.isInitialized && !_adTriggered) {
+    if (force || _canProceed(astroState)) {
       _triggerAdShow();
     }
   }
 
+  void _forceNavigateToMain() {
+    _navigateToMainScreen();
+  }
+
   void _navigateToMainScreen() {
-    if (!mounted) return;
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (context) => MainAppScreen()));
+    if (_hasNavigated || !mounted) return;
+    _hasNavigated = true;
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => const MainAppScreen()),
+    );
   }
 
   Future<void> _showAdAndNavigate() async {
+    if (_hasNavigated) return;
     _splashStartTime ??= DateTime.now();
 
     final adService = AdService();
-
-    // 광고 단위 ID 선택: 디버그는 구글 테스트 ID, 릴리즈는 Void 프로젝트의 실제 ID
     final adUnitId = AdIds.interstitial;
+    final minDuration =
+        kDebugMode ? const Duration(milliseconds: 800) : Duration.zero;
 
-    // 디버그 모드에서는 최소 2초 보장
-    final minDuration = kDebugMode ? const Duration(seconds: 2) : Duration.zero;
-    const maxTotal = Duration(seconds: 4);
-
-    void navigateRespectingTiming() {
+    void goToMain() {
+      if (_hasNavigated) return;
       final start = _splashStartTime ?? DateTime.now();
       final elapsed = DateTime.now().difference(start);
       final remaining = minDuration - elapsed;
-      if (remaining.inMilliseconds > 0) {
-        Future.delayed(remaining, () {
-          _navigateToMainScreen();
-        });
+      if (remaining > Duration.zero) {
+        Future.delayed(remaining, _navigateToMainScreen);
       } else {
         _navigateToMainScreen();
       }
     }
 
-    // 전체 최대 시간 초과 보호
-    Future.delayed(maxTotal, () {
-      if (mounted) navigateRespectingTiming();
-    });
+    final adFlowGuard = Timer(_adFlowMaxDuration, goToMain);
 
     try {
-      await adService.loadAndShowSplashAd(
-        adUnitId: adUnitId,
-        onAdDismissed: () {
-          if (!mounted) return;
-          navigateRespectingTiming();
-        },
-        onAdFailed: () {
-          if (!mounted) return;
-          navigateRespectingTiming();
-        },
-        timeout: const Duration(seconds: 3),
-      );
+      await adService
+          .loadAndShowSplashAd(
+            adUnitId: adUnitId,
+            onAdDismissed: goToMain,
+            onAdFailed: goToMain,
+            timeout: _adLoadTimeout,
+          )
+          .timeout(_adFlowMaxDuration, onTimeout: goToMain);
     } catch (_) {
-      if (mounted) navigateRespectingTiming();
+      goToMain();
+    } finally {
+      adFlowGuard.cancel();
     }
   }
 
   void _triggerAdShow() {
-    if (_adTriggered) return;
+    if (_adTriggered || _hasNavigated) return;
     _adTriggered = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _showAdAndNavigate();
@@ -107,22 +121,21 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      // Android 15+ Edge-to-Edge를 위한 시스템 UI 설정
       value: const SystemUiOverlayStyle(
         statusBarIconBrightness: Brightness.light,
         statusBarBrightness: Brightness.dark,
         systemNavigationBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
-        // Edge-to-Edge를 위해 배경색을 body 전체에 적용
         backgroundColor: Theme.of(context).colorScheme.primary,
         body: Consumer<AstroState>(
           builder: (context, astroState, child) {
-            if (astroState.isInitialized) {
-              _triggerAdShow();
+            if (_canProceed(astroState)) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _tryProceed();
+              });
             }
 
-            // 스플래시 화면은 전체 화면을 사용하므로 SafeArea 제거
             return Container(
               width: double.infinity,
               height: double.infinity,

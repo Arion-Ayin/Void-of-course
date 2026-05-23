@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
@@ -26,55 +27,70 @@ import 'package:void_of_course/services/native_ad_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:home_widget/home_widget.dart';
+import 'package:void_of_course/services/calendar_voc_cache.dart';
 import 'package:void_of_course/services/widget_service.dart';
+import 'package:void_of_course/services/app_analytics.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
+
+Future<void> _initWithTimeout(
+  String label,
+  Future<void> Function() action, {
+  Duration timeout = const Duration(seconds: 6),
+}) async {
+  try {
+    await action().timeout(timeout);
+  } catch (e) {
+    developer.log('$label skipped or timed out: $e', name: 'Main');
+  }
+}
 
 void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요.
   WidgetsFlutterBinding.ensureInitialized();
 
   if (Platform.isAndroid) {
-    await AndroidAlarmManager.initialize();
-  }
-
-  // Firebase 초기화 (네트워크 불안정 등 실패 시에도 앱이 크래시되지 않도록 try-catch)
-  // 삼성 Z Flip/Fold 등 폴더블 기기의 첫 실행 시 네트워크 지연 대응
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    developer.log('Firebase init failed (ignored): $e', name: 'Main');
+    await _initWithTimeout(
+      'AndroidAlarmManager',
+      AndroidAlarmManager.initialize,
+      timeout: const Duration(seconds: 3),
+    );
   }
 
   // Edge-to-Edge 모드 활성화 (Android 15+ 권장)
-  // 시스템 바를 투명하게 만들고 전체 화면을 사용합니다.
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.edgeToEdge,
-  );
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-  // 참고: SystemChrome.setSystemUIOverlayStyle()은 Android 15에서 deprecated된 API를 사용합니다.
-  // 대신 각 화면에서 AnnotatedRegion<SystemUiOverlayStyle>을 사용하여 개별적으로 설정합니다.
-  // 이 방식이 더 유연하고 Android 15의 권장사항에 부합합니다.
+  // Firebase·백그라운드는 서로 독립 → 병렬 초기화로 runApp 전 대기 시간 단축
+  await Future.wait([
+    _initWithTimeout('Firebase', () async {
+      try {
+        await Firebase.initializeApp();
+      } catch (e) {
+        developer.log('Firebase init failed (ignored): $e', name: 'Main');
+      }
+    }, timeout: const Duration(seconds: 5)),
+    _initWithTimeout('BackgroundService', () async {
+      try {
+        await initializeBackgroundService();
+      } catch (e) {
+        developer.log(
+          'Background service init failed (ignored): $e',
+          name: 'Main',
+        );
+      }
+    }, timeout: const Duration(seconds: 5)),
+  ]);
 
-  // 백그라운드 서비스 세팅
-  // try-catch로 감싸서 서비스 초기화 실패가 앱 전체 크래시로 이어지지 않도록 함
-  // (삼성 One UI / Android 15에서 ForegroundServiceStartNotAllowedException 방지)
-  try {
-    await initializeBackgroundService();
-  } catch (e) {
-    developer.log('Background service init failed (ignored): $e', name: 'Main');
-    // 서비스 초기화 실패는 무시하고 앱은 정상 실행 (알림 기능만 비활성화됨)
-  }
-
-  // Google Mobile Ads SDK와 AdService를 초기화해요.
-  // AdMob 초기화 실패 시에도 앱이 크래시되지 않도록 try-catch
+  // Google Mobile Ads — 스플래시 전면광고용, 네이티브 광고 로드는 runApp 이후로 미룸
   if (Platform.isAndroid || Platform.isIOS) {
-    try {
-      await MobileAds.instance.initialize();
-      await AdService().initialize();
-      NativeAdService().loadAd();
-    } catch (e) {
-      developer.log('AdMob init failed (ignored): $e', name: 'Main');
-    }
+    await _initWithTimeout('AdMob', () async {
+      try {
+        await MobileAds.instance.initialize();
+        await AdService().initialize();
+      } catch (e) {
+        developer.log('AdMob init failed (ignored): $e', name: 'Main');
+      }
+    }, timeout: const Duration(seconds: 5));
+    NativeAdService().loadAd();
   }
 
   //앱의 실행
@@ -153,6 +169,7 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncLaunchAnalytics();
       final initialLocale =
           Provider.of<LocaleProvider>(context, listen: false).locale;
       if (initialLocale != null) {
@@ -164,6 +181,17 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
     });
     _checkForUpdate();
     _checkWidgetStatus();
+  }
+
+  void _syncLaunchAnalytics() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    AppAnalytics.setDarkModeEnabled(isDark);
+
+    final locale =
+        Provider.of<LocaleProvider>(context, listen: false).locale;
+    if (locale != null) {
+      AppAnalytics.setLanguage(locale.languageCode);
+    }
   }
 
   Future<void> _checkWidgetStatus() async {
@@ -196,9 +224,14 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     if (state == AppLifecycleState.resumed) {
+      _syncLaunchAnalytics();
       _checkWidgetStatus();
       Provider.of<AstroState>(context, listen: false).ensureServiceRunning();
       WidgetService.refreshFromPrefs();
+    } else if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      AdService().onAppPaused();
     }
   }
 
@@ -224,6 +257,7 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
           break;
         case 1:
           eventName = 'click_calendar_tab';
+          CalendarVocCache.instance.preloadAroundSilent(DateTime.now(), radius: 2);
           break;
         case 2:
           eventName = 'click_settings_tab';
@@ -235,6 +269,15 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
 
       if (eventName != null) {
         FirebaseAnalytics.instance.logEvent(name: eventName);
+      }
+
+      switch (index) {
+        case 1:
+          AppAnalytics.logScreenView('calendar');
+          break;
+        case 3:
+          AppAnalytics.logScreenView('developer_notes');
+          break;
       }
 
       setState(() => _selectedIndex = index);
@@ -251,6 +294,20 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
       selector: (_, state) => (isInitialized: state.isInitialized, lastError: state.lastError),
       builder: (context, state, child) {
         if (!state.isInitialized) {
+          if (state.lastError != null) {
+            return Scaffold(
+              body: Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Text(
+                    '오류가 발생하여 앱을 실행할 수 없습니다.\n\n${state.lastError}',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.red, fontSize: 16),
+                  ),
+                ),
+              ),
+            );
+          }
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
           );

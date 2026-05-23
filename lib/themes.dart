@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class Themes {
-  // 우주적 색상 팔레트 - 달과 별의 신비로움을 담다
-
   // Light Theme Colors
   static const Color _lightBackground = Color(0xFFF8F6F0); // 따뜻한 아이보리
   static const Color _lightSurface = Color(0xFFFFFDF8); // 부드러운 크림색

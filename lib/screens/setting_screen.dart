@@ -13,6 +13,7 @@ import 'package:void_of_course/services/locale_provider.dart'; // 앱의 현재 
 import 'package:url_launcher/url_launcher.dart'; // 웹사이트나 이메일 앱을 열어주는 라이브러리예요.
 import '../widgets/reusable_native_ad_widget.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:void_of_course/services/app_analytics.dart';
 
 
 // 설정 화면을 보여주는 위젯이에요.
@@ -42,6 +43,8 @@ class SettingScreen extends StatelessWidget {
 
     final String noButton = isKorean ? '아니오' : 'No';
 
+    await AppAnalytics.logExternalLinkTap(serviceNameEn);
+
     return showDialog<void>(
       context: context,
 
@@ -65,8 +68,11 @@ class SettingScreen extends StatelessWidget {
             TextButton(
               child: Text(noButton),
 
-              onPressed: () {
-                Navigator.of(context).pop();
+              onPressed: () async {
+                await AppAnalytics.logExternalLinkCancel(serviceNameEn);
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
               },
             ),
 
@@ -74,10 +80,7 @@ class SettingScreen extends StatelessWidget {
               child: Text(yesButton),
 
               onPressed: () async {
-                await FirebaseAnalytics.instance.logEvent(
-                  name: 'click_external_link_confirm',
-                  parameters: {'service_name': serviceNameEn},
-                );
+                await AppAnalytics.logExternalLinkConfirm(serviceNameEn);
                 Navigator.of(context).pop();
 
                 final Uri uri = Uri.parse(url);
@@ -230,10 +233,7 @@ class SettingScreen extends StatelessWidget {
                                 name: 'toggle_dark_mode',
                                 parameters: {'enabled': value.toString()},
                               );
-                              await FirebaseAnalytics.instance.setUserProperty(
-                                name: 'dark_mode_enabled',
-                                value: value.toString(),
-                              );
+                              await AppAnalytics.setDarkModeEnabled(value);
                               // 스위치를 누르면 이 코드가 실행돼요.
                               // 스위치 상태에 따라 밝은 테마 또는 어두운 테마를 정해요.
                               final theme =
@@ -277,10 +277,7 @@ class SettingScreen extends StatelessWidget {
                             name: 'change_language',
                             parameters: {'lang': value},
                           );
-                          await FirebaseAnalytics.instance.setUserProperty(
-                            name: 'language',
-                            value: value,
-                          );
+                          await AppAnalytics.setLanguage(value);
       
                           final newLocale = Locale(value); // 선택된 값으로 새로운 언어 정보를 만들어요.
                           String message; // 화면 아래에 잠깐 나타날 메시지를 담을 변수예요.

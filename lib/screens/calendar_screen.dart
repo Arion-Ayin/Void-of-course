@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
-import 'package:intl/intl.dart';
 import 'package:void_of_course/l10n/app_localizations.dart';
-import '../services/astro_calculator.dart';
-import '../services/astro_state.dart';
+
+import '../services/app_analytics.dart';
+import '../services/calendar_voc_cache.dart';
 import '../services/timezone_provider.dart';
 import '../themes.dart';
+
+DateTime _calendarDayKey(DateTime day) =>
+    DateTime.utc(day.year, day.month, day.day);
 
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
@@ -16,21 +20,23 @@ class CalendarScreen extends StatefulWidget {
 }
 
 class _CalendarScreenState extends State<CalendarScreen> {
-  final AstroCalculator _calculator = AstroCalculator();
   late final ValueNotifier<List<Map<String, dynamic>>> _selectedEvents;
-  Map<DateTime, List<Map<String, dynamic>>> _rawVocEvents = {};
 
-  // 타임존이 반영된 이벤트와 스팬
+  final CalendarVocCache _vocCache = CalendarVocCache.instance;
+
+  Map<DateTime, List<Map<String, dynamic>>> _rawVocEvents = {};
   Map<DateTime, List<Map<String, dynamic>>> _tzAdjustedEvents = {};
   Map<DateTime, Map<String, dynamic>> _vocSpans = {};
 
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
 
-  bool _isLoading = true;
+  bool _isLoading = false;
   String? _error;
   String _lastTzId = '';
   bool _lastIsDst = false;
+  int _fetchGeneration = 0;
+  int? _lastAnalyticsMonthKey;
 
   @override
   void initState() {
@@ -38,7 +44,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _selectedDay = _focusedDay;
     _selectedEvents = ValueNotifier([]);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _fetchMonthVocEvents(_focusedDay);
+      _ensureMonthWindowLoaded(_focusedDay);
     });
   }
 
@@ -48,19 +54,31 @@ class _CalendarScreenState extends State<CalendarScreen> {
     super.dispose();
   }
 
-  // 타임존을 고려하여 이벤트를 재구성하고 스팬을 식별하는 함수
-  void _updateTzAdjustedData(TimezoneProvider tzProvider) {
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final tzProvider = Provider.of<TimezoneProvider>(context, listen: false);
+    if (_lastTzId != tzProvider.selectedTimezoneId ||
+        _lastIsDst != tzProvider.isDstApplied) {
+      _lastTzId = tzProvider.selectedTimezoneId;
+      _lastIsDst = tzProvider.isDstApplied;
+      _applyTzAdjustedData(tzProvider);
+      if (_selectedDay != null) {
+        _selectedEvents.value = _getEventsForDay(_selectedDay!);
+      }
+    }
+  }
+
+  void _applyTzAdjustedData(TimezoneProvider tzProvider) {
     _tzAdjustedEvents.clear();
     _vocSpans.clear();
 
-    // 1. 고유한 VOC 이벤트 추출
-    Set<Map<String, dynamic>> uniqueEvents = {};
-    for (var eventsList in _rawVocEvents.values) {
+    final Set<Map<String, dynamic>> uniqueEvents = {};
+    for (final eventsList in _rawVocEvents.values) {
       uniqueEvents.addAll(eventsList);
     }
 
-    // 2. 각 이벤트를 타임존에 맞게 날짜별로 매핑
-    for (var voc in uniqueEvents) {
+    for (final voc in uniqueEvents) {
       final startUtc = voc['start'] as DateTime?;
       final endUtc = voc['end'] as DateTime?;
       if (startUtc == null || endUtc == null) continue;
@@ -68,14 +86,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       final tzStart = tzProvider.convert(startUtc);
       final tzEnd = tzProvider.convert(endUtc);
 
-      final vocStartDay = DateTime.utc(
-        tzStart.year,
-        tzStart.month,
-        tzStart.day,
-      );
-      final vocEndDay = DateTime.utc(tzEnd.year, tzEnd.month, tzEnd.day);
-
-      var currentDay = vocStartDay;
+      var currentDay = _calendarDayKey(tzStart);
+      final vocEndDay = _calendarDayKey(tzEnd);
       while (currentDay.isBefore(vocEndDay) ||
           currentDay.isAtSameMomentAs(vocEndDay)) {
         _tzAdjustedEvents.putIfAbsent(currentDay, () => []).add(voc);
@@ -83,9 +95,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
       }
     }
 
-    // 3. 다중 날짜 스팬 식별
-    final List<DateTime> sortedDates = _tzAdjustedEvents.keys.toList()..sort();
-    for (var currentDate in sortedDates) {
+    final sortedDates = _tzAdjustedEvents.keys.toList()..sort();
+    for (final currentDate in sortedDates) {
       if (_vocSpans.containsKey(currentDate)) continue;
 
       final currentVoc = _tzAdjustedEvents[currentDate]?.first;
@@ -93,17 +104,13 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
       final startUtc = currentVoc['start'] as DateTime?;
       final endUtc = currentVoc['end'] as DateTime?;
-      if (startUtc == null || endUtc == null) continue;
+      if (startUtc == null || endUtc == null) continue;                                                
 
       final tzStart = tzProvider.convert(startUtc);
       final tzEnd = tzProvider.convert(endUtc);
 
-      final vocStartDay = DateTime.utc(
-        tzStart.year,
-        tzStart.month,
-        tzStart.day,
-      );
-      final vocEndDay = DateTime.utc(tzEnd.year, tzEnd.month, tzEnd.day);
+      final vocStartDay = _calendarDayKey(tzStart);
+      final vocEndDay = _calendarDayKey(tzEnd);
 
       final dayDifference = vocEndDay.difference(vocStartDay).inDays;
       final isMultiDay = dayDifference > 0;
@@ -124,9 +131,16 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+  void _mergeWindowIntoRawEvents(DateTime month) {
+    _rawVocEvents = _vocCache.mergeWindow(month);
+  }
+
+  void _schedulePreload(DateTime month) {
+    _vocCache.preloadAroundSilent(month, radius: 2);
+  }
+
   List<Map<String, dynamic>> _getEventsForDay(DateTime day) {
-    final dayUtc = DateTime.utc(day.year, day.month, day.day);
-    return _tzAdjustedEvents[dayUtc] ?? [];
+    return _tzAdjustedEvents[_calendarDayKey(day)] ?? [];
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
@@ -136,55 +150,74 @@ class _CalendarScreenState extends State<CalendarScreen> {
         _focusedDay = focusedDay;
       });
       _selectedEvents.value = _getEventsForDay(selectedDay);
+      final events = _getEventsForDay(selectedDay);
+      AppAnalytics.logCalendarDaySelected(
+        year: selectedDay.year,
+        month: selectedDay.month,
+        day: selectedDay.day,
+        hasVoc: events.isNotEmpty,
+      );
     }
   }
 
-  Future<void> _fetchMonthVocEvents(DateTime month) async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+  void _onCalendarPageChanged(DateTime focusedDay) {
+    final monthKey = focusedDay.year * 12 + focusedDay.month;
+    if (_lastAnalyticsMonthKey != monthKey) {
+      _lastAnalyticsMonthKey = monthKey;
+      AppAnalytics.logCalendarMonthChanged(focusedDay.year, focusedDay.month);
+    }
+    setState(() => _focusedDay = focusedDay);
+    _ensureMonthWindowLoaded(focusedDay);
+  }
+
+  Future<void> _ensureMonthWindowLoaded(DateTime month) async {
+    if (_vocCache.isWindowCached(month)) {
+      _mergeWindowIntoRawEvents(month);
+      if (!mounted) return;
+      final tzProvider = Provider.of<TimezoneProvider>(context, listen: false);
+      _applyTzAdjustedData(tzProvider);
+      if (_selectedDay != null) {
+        _selectedEvents.value = _getEventsForDay(_selectedDay!);
+      }
+      if (mounted) setState(() {});
+      _schedulePreload(month);
+      return;
+    }
+
+    final generation = ++_fetchGeneration;
+    if (mounted) {
+      setState(() {
+        _isLoading = true;
+        _error = null;
+      });
+    }
+
     try {
-      // 캘린더에서 보여지는 날짜 범위를 조금 더 넓게 가져와서 타임존 경계 문제 방지
-      // 이전 달, 이번 달, 다음 달의 데이터를 가져옴 (선택적 최적화 가능)
-      // 여기서는 이번 달만 가져오던 것을 앞뒤 달까지 확장하여 가져오는 것이 안전합니다.
-      final prevMonth = DateTime.utc(month.year, month.month - 1, 1);
-      final nextMonth = DateTime.utc(month.year, month.month + 1, 1);
+      await _vocCache.ensureWindowLoaded(month);
+      if (!mounted || generation != _fetchGeneration) return;
 
-      final prevEvents = await Future.microtask(
-        () => _calculator.getVocEventsForMonth(prevMonth.year, prevMonth.month),
-      );
-      final currentEvents = await Future.microtask(
-        () => _calculator.getVocEventsForMonth(month.year, month.month),
-      );
-      final nextEvents = await Future.microtask(
-        () => _calculator.getVocEventsForMonth(nextMonth.year, nextMonth.month),
-      );
+      _mergeWindowIntoRawEvents(month);
 
-      final Map<DateTime, List<Map<String, dynamic>>> allEvents = {};
-      allEvents.addAll(prevEvents);
-      allEvents.addAll(currentEvents);
-      allEvents.addAll(nextEvents);
+      final tzProvider = Provider.of<TimezoneProvider>(context, listen: false);
+      _applyTzAdjustedData(tzProvider);
+      if (_selectedDay != null) {
+        _selectedEvents.value = _getEventsForDay(_selectedDay!);
+      }
 
       if (mounted) {
-        final tzProvider = Provider.of<TimezoneProvider>(context, listen: false);
         setState(() {
-          _rawVocEvents = allEvents;
           _isLoading = false;
-        });
-        // 새 데이터 로드 후 타임존 반영된 데이터를 즉시 갱신
-        _updateTzAdjustedData(tzProvider);
-        if (_selectedDay != null) {
-          _selectedEvents.value = _getEventsForDay(_selectedDay!);
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _error = 'Failed to load VOC data.';
-          _isLoading = false;
+          _error = null;
         });
       }
+      _schedulePreload(month);
+    } catch (e, stack) {
+      debugPrint('Calendar VOC load failed: $e\n$stack');
+      if (!mounted || generation != _fetchGeneration) return;
+      setState(() {
+        _error = 'Failed to load VOC data.';
+        _isLoading = false;
+      });
     }
   }
 
@@ -192,23 +225,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Widget build(BuildContext context) {
     final tzProvider = Provider.of<TimezoneProvider>(context);
     final appLocalizations = AppLocalizations.of(context)!;
-
-    // 타임존 설정이 변경되었을 때만 데이터 갱신
-    if (_lastTzId != tzProvider.selectedTimezoneId ||
-        _lastIsDst != tzProvider.isDstApplied) {
-      _updateTzAdjustedData(tzProvider);
-      _lastTzId = tzProvider.selectedTimezoneId;
-      _lastIsDst = tzProvider.isDstApplied;
-
-      // 선택된 이벤트 목록 갱신
-      if (_selectedDay != null) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            _selectedEvents.value = _getEventsForDay(_selectedDay!);
-          }
-        });
-      }
-    }
 
     return Scaffold(
       appBar: AppBar(
@@ -220,7 +236,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
               size: 24,
             ),
             const SizedBox(width: 8),
-            Text(appLocalizations.voidCalendar),
+            Flexible(
+              child: Text(
+                appLocalizations.voidCalendar,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (_isLoading) ...[
+              const SizedBox(width: 12),
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ],
           ],
         ),
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
@@ -229,23 +261,37 @@ class _CalendarScreenState extends State<CalendarScreen> {
       ),
       body: Column(
         children: [
-          // VOC 바 오버레이를 포함한 커스텀 캘린더
-          Stack(
-            children: [
-              TableCalendar<Map<String, dynamic>>(
+          TableCalendar<Map<String, dynamic>>(
                 firstDay: DateTime.utc(2020, 1, 1),
                 lastDay: DateTime.utc(2050, 12, 31),
                 focusedDay: _focusedDay,
                 locale: appLocalizations.localeName,
+                pageAnimationEnabled: true,
+                pageJumpingEnabled: false,
+                daysOfWeekHeight: 24,
+                daysOfWeekStyle: DaysOfWeekStyle(
+                  weekdayStyle: TextStyle(
+                    fontSize: 13,
+                    height: 1.0,
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white70
+                            : Colors.black54,
+                  ),
+                  weekendStyle: TextStyle(
+                    fontSize: 13,
+                    height: 1.0,
+                    color:
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.redAccent
+                            : Colors.red,
+                  ),
+                ),
                 selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
                 eventLoader: _getEventsForDay,
                 onDaySelected: _onDaySelected,
-                onPageChanged: (focusedDay) {
-                  _focusedDay = focusedDay;
-                  _fetchMonthVocEvents(focusedDay);
-                },
+                onPageChanged: _onCalendarPageChanged,
                 calendarStyle: CalendarStyle(
-                  // 오늘 날짜 스타일
                   todayDecoration: BoxDecoration(
                     color:
                         Theme.of(context).brightness == Brightness.dark
@@ -253,7 +299,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             : Themes.midnightBlue.withOpacity(0.3),
                     shape: BoxShape.circle,
                   ),
-                  // 선택된 날짜 스타일
                   selectedDecoration: BoxDecoration(
                     color:
                         Theme.of(context).brightness == Brightness.dark
@@ -261,7 +306,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             : Themes.midnightBlue,
                     shape: BoxShape.circle,
                   ),
-                  // 마커 스타일 - 1일 VOC 용 점
                   markerDecoration: BoxDecoration(
                     color:
                         Theme.of(context).brightness == Brightness.dark
@@ -297,11 +341,35 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   ),
                 ),
                 calendarBuilders: CalendarBuilders(
-                  // 2일 이상 VOC를 굵은 선으로 표시
+                  dowBuilder: (context, day) {
+                    final isWeekend =
+                        day.weekday == DateTime.saturday ||
+                        day.weekday == DateTime.sunday;
+                    final isDark =
+                        Theme.of(context).brightness == Brightness.dark;
+                    final label = DateFormat.E(
+                      appLocalizations.localeName,
+                    ).format(day);
+
+                    return Align(
+                      alignment: const Alignment(0, -0.35),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 13,
+                          height: 1.0,
+                          color:
+                              isWeekend
+                                  ? (isDark ? Colors.redAccent : Colors.red)
+                                  : (isDark ? Colors.white70 : Colors.black54),
+                        ),
+                      ),
+                    );
+                  },
                   defaultBuilder: (context, day, focusedDay) {
-                    final vocSpan = _vocSpans[day];
+                    final vocSpan = _vocSpans[_calendarDayKey(day)];
                     if (vocSpan == null || !vocSpan['isMultiDay']) {
-                      return null; // 기본 렌더링 사용 (1일 VOC는 점으로 표시)
+                      return null;
                     }
 
                     final isFirstDay = vocSpan['isFirstDay'] as bool;
@@ -313,9 +381,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
                     return Stack(
                       children: [
-                        // 굵은 선 (아래쪽)
                         Align(
-                          alignment: Alignment(0, 0.8), // 날짜 텍스트 아래쪽에 위치
+                          alignment: const Alignment(0, 0.8),
                           child: Container(
                             height: 6,
                             margin: const EdgeInsets.symmetric(horizontal: 1),
@@ -334,7 +401,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                             ),
                           ),
                         ),
-                        // 날짜 텍스트 (위쪽, 위에 표시됨)
                         Align(
                           alignment: Alignment.center,
                           child: Text(
@@ -349,15 +415,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     );
                   },
                 ),
-              ),
-            ],
           ),
           const SizedBox(height: 8.0),
           Expanded(
             child:
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _error != null
+                _error != null
                     ? Center(child: Text(_error!))
                     : ValueListenableBuilder<List<Map<String, dynamic>>>(
                       valueListenable: _selectedEvents,
@@ -380,10 +442,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
                               );
                             }
 
-                            // 타임존 변환
                             final tzStart = tzProvider.convert(vocStart);
                             final tzEnd = tzProvider.convert(vocEnd);
-
                             final timeFormat = DateFormat('HH:mm');
 
                             return Card(

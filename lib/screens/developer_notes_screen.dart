@@ -7,6 +7,7 @@ import 'package:flutter/services.dart'; // 클립보드 사용을 위해 추가
 import 'package:void_of_course/l10n/app_localizations.dart';
 import 'package:void_of_course/widgets/app_snackbar.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:void_of_course/services/app_analytics.dart';
 
 // 링크 버튼 정보를 담는 클래스예요.
 class NoteAction {
@@ -374,6 +375,13 @@ Warm reviews are a great strength to the developer.
                                   context,
                                 ).copyWith(dividerColor: Colors.transparent),
                                 child: ExpansionTile(
+                                  onExpansionChanged: (expanded) {
+                                    if (expanded) {
+                                      AppAnalytics.logDeveloperNoteExpanded(
+                                        note.date,
+                                      );
+                                    }
+                                  },
                                   tilePadding: const EdgeInsets.symmetric(
                                     horizontal: 16.0,
                                     vertical: 8.0,
