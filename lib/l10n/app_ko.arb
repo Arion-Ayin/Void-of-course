@@ -178,5 +178,6 @@
     "calendar": "캘린더",
     "voidCalendar": "보이드 캘린더",
     "noVocFound": "이 날에는 보이드 기간이 없습니다.",
-    "invalidVocData": "잘못된 VOC 데이터"
+    "invalidVocData": "잘못된 VOC 데이터",
+    "premium": "프리미엄"
 }
