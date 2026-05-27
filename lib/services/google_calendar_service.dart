@@ -11,6 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'astro_calculator.dart';
+import 'timezone_provider.dart';
 import 'package:sweph/sweph.dart';
 
 /// 동기화 기간 옵션 (오늘 기준 미래 방향)
@@ -40,7 +41,7 @@ class GoogleCalendarService extends ChangeNotifier {
 
   // ─── 전용 캘린더 설정 ─────────────────────────────────────────────────────
   static const _kCalendarName = 'Void of Course 🌙';
-  static const _kCalendarColor = '#D50000'; // Tomato Red (구글 캘린더 빨간색)
+  static const _kCalendarColor = '#ff0000'; // 생성 캘린더 색상 고정
   static const _kCalendarFgColor = '#FFFFFF';
 
   // ─── google_sign_in v6 ───────────────────────────────────────────────────
@@ -68,6 +69,10 @@ class GoogleCalendarService extends ChangeNotifier {
   String? get vocCalendarId => _vocCalendarId;
   String? get lastError => _lastError;
 
+  // TODO: 실제 프리미엄(결제) 여부를 확인하는 로직으로 교체해야 합니다.
+  // 현재는 기능을 테스트할 수 있도록 기본값을 true로 설정해 두었습니다.
+  bool get isPremiumUser => true;
+
   // ─── 초기화 ───────────────────────────────────────────────────────────────
 
   Future<void> init() async {
@@ -90,6 +95,11 @@ class GoogleCalendarService extends ChangeNotifier {
         _currentUser = account;
         await _initCalendarApi(account);
         debugPrint('[GoogleCalendar] 조용한 로그인 복원: ${account.email}');
+
+        // 앱 초기화 시 프리미엄 유저라면 자동 동기화 실행 (백그라운드)
+        if (isPremiumUser) {
+          autoSyncIfPremium();
+        }
       }
     } catch (e) {
       debugPrint('[GoogleCalendar] 조용한 로그인 복원 실패 (무시): $e');
@@ -159,14 +169,49 @@ class GoogleCalendarService extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_kSyncRangeMonths, range.months);
     notifyListeners();
+
+    // 기간 설정이 변경되면 자동으로 동기화 수행
+    if (isPremiumUser && isSignedIn) {
+      // 강제 동기화를 위해 마지막 동기화 시간 무시
+      await syncVocEvents();
+      await prefs.setString(
+        'gcal_last_auto_sync',
+        DateTime.now().toIso8601String(),
+      );
+    }
   }
 
   // ─── VOC 이벤트 동기화 ───────────────────────────────────────────────────
+
+  /// 프리미엄 유저를 위한 자동 동기화 (구글 캘린더 API 호출 제한 방지를 위해 최소 1시간 간격 유지)
+  Future<void> autoSyncIfPremium({String locale = 'ko'}) async {
+    if (!isPremiumUser || !isSignedIn || _isSyncing) return;
+
+    final prefs = await SharedPreferences.getInstance();
+    final lastSyncStr = prefs.getString('gcal_last_auto_sync');
+    final now = DateTime.now();
+
+    if (lastSyncStr != null) {
+      final lastSync = DateTime.parse(lastSyncStr);
+      // 마지막 동기화로부터 1시간이 지나지 않았다면 스킵
+      if (now.difference(lastSync).inHours < 1) {
+        debugPrint('[GoogleCalendar] 1시간 이내 자동 동기화 방지 스킵');
+        return;
+      }
+    }
+
+    await syncVocEvents(locale: locale);
+    await prefs.setString('gcal_last_auto_sync', now.toIso8601String());
+  }
 
   /// VOC 이벤트를 전용 캘린더에 일괄 동기화
   /// 범위: 오늘 기준 2주 전 ~ 선택 기간(1/3/6개월) 이후
   /// 반환: 동기화된 이벤트 수 (실패 시 -1)
   Future<int> syncVocEvents({String locale = 'ko'}) async {
+    if (!isPremiumUser) {
+      _lastError = 'premium_required';
+      return -1;
+    }
     if (!isSignedIn || _calendarApi == null) {
       _lastError = 'not_signed_in';
       return -1;
@@ -233,7 +278,11 @@ class GoogleCalendarService extends ChangeNotifier {
 
       vocPeriods.sort((a, b) => a['start']!.compareTo(b['start']!));
 
-      // 4. 구글 캘린더에 이벤트 추가
+      // 타임존 프로바이더 로드 (홈에서 설정한 타임존 기준 적용)
+      final tzProvider = TimezoneProvider();
+      await tzProvider.loadTimezone();
+
+      // 4. 구글 캘린더에 이벤트 추가 (속도 개선을 위해 10개씩 병렬 처리)
       final List<String> createdEventIds = [];
       final title = 'Void of Course 🌙';
       final description =
@@ -241,15 +290,24 @@ class GoogleCalendarService extends ChangeNotifier {
               ? '달이 보이드 오브 코스 상태입니다.\n이 시간에는 중요한 결정이나 시작을 피하는 것이 좋습니다.'
               : 'The Moon is Void of Course.\nAvoid important decisions or new beginnings during this time.';
 
-      for (final period in vocPeriods) {
-        final eventId = await _addEventToCalendar(
-          calendarId: calendarId,
-          startUtc: period['start']!,
-          endUtc: period['end']!,
-          title: title,
-          description: description,
+      const batchSize = 10;
+      for (var i = 0; i < vocPeriods.length; i += batchSize) {
+        final chunk = vocPeriods.skip(i).take(batchSize);
+        final results = await Future.wait(
+          chunk.map((period) {
+            return _addEventToCalendar(
+              calendarId: calendarId,
+              startUtc: period['start']!,
+              endUtc: period['end']!,
+              title: title,
+              description: description,
+              tzProvider: tzProvider,
+            );
+          }),
         );
-        if (eventId != null) createdEventIds.add(eventId);
+        for (final id in results) {
+          if (id != null) createdEventIds.add(id);
+        }
       }
 
       // 6. 이벤트 ID 저장
@@ -352,16 +410,54 @@ class GoogleCalendarService extends ChangeNotifier {
     required DateTime endUtc,
     required String title,
     required String description,
+    required TimezoneProvider tzProvider,
   }) async {
     final api = _calendarApi;
     if (api == null) return null;
+
+    // 홈에서 설정한 타임존 기준으로 로컬 시간 변환
+    final startLocal = tzProvider.convert(startUtc);
+    final endLocal = tzProvider.convert(endUtc);
+    final isMultiDay =
+        startLocal.year != endLocal.year ||
+        startLocal.month != endLocal.month ||
+        startLocal.day != endLocal.day;
+
     try {
+      gcal.EventDateTime startEvent;
+      gcal.EventDateTime endEvent;
+      String eventTitle = title;
+
+      if (isMultiDay) {
+        // 이틀 이상 넘어가는 이벤트는 All-Day(종일) 이벤트로 설정하여 긴 바로 표시
+        startEvent = gcal.EventDateTime(
+          date: DateTime.utc(startLocal.year, startLocal.month, startLocal.day),
+        );
+        // 종일 이벤트의 end date는 exclusive(포함하지 않음)이므로 1일 추가
+        final endDate = endLocal.add(const Duration(days: 1));
+        endEvent = gcal.EventDateTime(
+          date: DateTime.utc(endDate.year, endDate.month, endDate.day),
+        );
+
+        // 종일 이벤트로 변경 시 캘린더에서 시간을 알 수 없으므로 제목에 날짜와 시간 추가
+        final startStr =
+            '${startLocal.month}/${startLocal.day} ${startLocal.hour.toString().padLeft(2, '0')}:${startLocal.minute.toString().padLeft(2, '0')}';
+        final endStr =
+            '${endLocal.month}/${endLocal.day} ${endLocal.hour.toString().padLeft(2, '0')}:${endLocal.minute.toString().padLeft(2, '0')}';
+        eventTitle = '$title ($startStr ~ $endStr)';
+      } else {
+        // 단일 날짜 이벤트는 시간 지정 이벤트로 설정
+        startEvent = gcal.EventDateTime(dateTime: startUtc, timeZone: 'UTC');
+        endEvent = gcal.EventDateTime(dateTime: endUtc, timeZone: 'UTC');
+      }
+
       final event = gcal.Event(
-        summary: title,
+        summary: eventTitle,
         description: description,
-        start: gcal.EventDateTime(dateTime: startUtc, timeZone: 'UTC'),
-        end: gcal.EventDateTime(dateTime: endUtc, timeZone: 'UTC'),
+        start: startEvent,
+        end: endEvent,
         transparency: 'transparent', // 시간 차단 안 함
+        // colorId 지정 생략: 캘린더의 #ff0000 색상을 자동으로 상속받음
         reminders: gcal.EventReminders(useDefault: false, overrides: []),
       );
       final created = await api.events.insert(event, calendarId);
@@ -379,13 +475,19 @@ class GoogleCalendarService extends ChangeNotifier {
     if (ids.isEmpty) return;
 
     int deleted = 0;
-    for (final id in ids) {
-      try {
-        await api.events.delete(calendarId, id);
-        deleted++;
-      } catch (e) {
-        debugPrint('[GoogleCalendar] 이벤트 삭제 실패 ($id): $e');
-      }
+    const batchSize = 10;
+    for (int i = 0; i < ids.length; i += batchSize) {
+      final chunk = ids.skip(i).take(batchSize);
+      await Future.wait(
+        chunk.map((id) async {
+          try {
+            await api.events.delete(calendarId, id);
+            deleted++;
+          } catch (e) {
+            debugPrint('[GoogleCalendar] 이벤트 삭제 실패 ($id): $e');
+          }
+        }),
+      );
     }
     await _clearEventIds();
     debugPrint('[GoogleCalendar] $deleted개 이벤트 삭제');

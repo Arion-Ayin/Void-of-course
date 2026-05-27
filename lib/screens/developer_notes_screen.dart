@@ -48,12 +48,12 @@ class InfoScreen extends StatelessWidget {
     final List<DeveloperNote> notes = [
       // ▼▼▼ [최신 글] ▼▼▼
       DeveloperNote(
-        date: '2026-05-00',
-        titleKo: '<26-05-00 업데이트>',
-        titleEn: '<26-05-00 Update>',
+        date: '2026-05-31',
+        titleKo: '<26-05-31 업데이트>',
+        titleEn: '<26-05-31 Update>',
         contentKo: '''
 안녕하세요 아리온 아인입니다.
-이번 1.2.0+00 업데이트 사항입니다.
+이번 1.2.0+54 업데이트 사항입니다.
 
 1. 보이드 알람 시간체크 방식 변경
 2. 캘린더 기능 UTC 시간 수정 및 개선
@@ -69,7 +69,7 @@ class InfoScreen extends StatelessWidget {
 ''',
         contentEn: '''
 Hello, this is Arion Ayin.
-This is a 1.2.0+00 update.
+This is a 1.2.0+54 update.
 
 1. Void notification time check method changed
 2. Calendar feature UTC time correction and improvement
