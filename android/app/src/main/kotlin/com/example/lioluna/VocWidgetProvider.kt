@@ -34,9 +34,9 @@ class VocWidgetProvider : HomeWidgetProvider() {
         markWidgetInstalled(context)
         for (appWidgetId in appWidgetIds) {
             val views = RemoteViews(context.packageName, R.layout.voc_widget).apply {
-                val icon = widgetData.getString("widget_icon", "✅")
-                val titleText = widgetData.getString("widget_title_text", "🌙 Void of course")
-                val timesText = widgetData.getString("widget_times_text", "Start : N/A\nEnd   : N/A")
+                val icon      = widgetData.getString("widget_icon", "✅") ?: "✅"
+                val titleText = widgetData.getString("widget_title_text", "🌙 Void of course") ?: "🌙 Void of course"
+                val timesText = widgetData.getString("widget_times_text", "Start : N/A\nEnd   : N/A") ?: "Start : N/A\nEnd   : N/A"
 
                 setTextViewText(R.id.widget_icon_text, icon)
                 setTextViewText(R.id.widget_title_text, titleText)

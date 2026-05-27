@@ -36,8 +36,9 @@ dependencies:
   firebase_core: ^4.4.0
   firebase_analytics: ^12.1.1
   home_widget: ^0.9.1
-  google_sign_in: ^7.2.0
-  googleapis: ^16.0.0
+  google_sign_in: ^6.2.2  # v7은 API 완전 변경됨 → v6 유지
+  googleapis_auth: ^2.3.1
+  googleapis: ^13.2.0  # Google Calendar API
 
 
 dependency_overrides:
