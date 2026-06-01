@@ -208,7 +208,7 @@
     "googleCalendar": "Google Calendar",
     "linked": "Linked",
     "linkGoogleCalendar": "Link with Google Account",
-    "googleCalendarVocSync": "Google Calendar VOC Sync",
+    "googleCalendarVocSync": "Google Calendar VOC",
     "notLinked": "Not linked",
     "syncDuration": "Sync Range",
     "syncing": "Syncing...",
@@ -231,5 +231,8 @@
     "syncFailedRetry": "Sync failed. Please try again.",
     "unlinkGoogleCalendarTitle": "Unlink Google Calendar",
     "unlinkGoogleCalendarContent": "Unlinking will remove the \"Void of Course 🌙\" calendar from Google Calendar.\nDo you want to continue?",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "addHomeWidget": "Add Widget",
+    "addHomeWidgetDesc": "Add the Void widget to your home screen.",
+    "widgetAutoPinNotSupported": "Auto-pinning widgets is not supported on this device. Please add it manually by long-pressing your home screen."
 }

@@ -189,22 +189,34 @@ class _SnackBarOverlayState extends State<_SnackBarOverlay>
           opacity: _fade,
           child: Material(
             color: Colors.transparent,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-              decoration: BoxDecoration(
-                color: widget.backgroundColor,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Text(
-                widget.message,
-                style: TextStyle(color: widget.textColor, fontSize: 14),
+            child: GestureDetector(
+              onTap: dismissAnimated,
+              onVerticalDragUpdate: (details) {
+                // 아래로 스와이프하면 닫히도록 설정
+                if (details.primaryDelta! > 3) {
+                  dismissAnimated();
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                decoration: BoxDecoration(
+                  color: widget.backgroundColor,
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  widget.message,
+                  style: TextStyle(color: widget.textColor, fontSize: 14),
+                ),
               ),
             ),
           ),

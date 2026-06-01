@@ -182,7 +182,8 @@ class MainAppScreen extends StatefulWidget {
   State<MainAppScreen> createState() => _MainAppScreenState();
 }
 
-class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserver {
+class _MainAppScreenState extends State<MainAppScreen>
+    with WidgetsBindingObserver {
   int _selectedIndex = 0;
 
   @override
@@ -208,8 +209,7 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
     final isDark = Theme.of(context).brightness == Brightness.dark;
     AppAnalytics.setDarkModeEnabled(isDark);
 
-    final locale =
-        Provider.of<LocaleProvider>(context, listen: false).locale;
+    final locale = Provider.of<LocaleProvider>(context, listen: false).locale;
     if (locale != null) {
       AppAnalytics.setLanguage(locale.languageCode);
     }
@@ -251,7 +251,12 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
       WidgetService.refreshFromPrefs();
 
       // 앱 복귀 시 구글 캘린더 자동 동기화 시도 (프리미엄만, 1시간 쿨타임 적용됨)
-      final localeCode = Provider.of<LocaleProvider>(context, listen: false).locale?.languageCode ?? 'ko';
+      final localeCode =
+          Provider.of<LocaleProvider>(
+            context,
+            listen: false,
+          ).locale?.languageCode ??
+          'ko';
       GoogleCalendarService.instance.autoSyncIfPremium(locale: localeCode);
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
@@ -282,7 +287,10 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
           break;
         case 1:
           eventName = 'click_calendar_tab';
-          CalendarVocCache.instance.preloadAroundSilent(DateTime.now(), radius: 2);
+          CalendarVocCache.instance.preloadAroundSilent(
+            DateTime.now(),
+            radius: 2,
+          );
           break;
         case 2:
           eventName = 'click_premium_tab';
@@ -322,7 +330,11 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
 
     // Selector를 사용해서 초기화 상태만 확인 (불필요한 rebuild 방지)
     return Selector<AstroState, ({bool isInitialized, String? lastError})>(
-      selector: (_, state) => (isInitialized: state.isInitialized, lastError: state.lastError),
+      selector:
+          (_, state) => (
+            isInitialized: state.isInitialized,
+            lastError: state.lastError,
+          ),
       builder: (context, state, child) {
         if (!state.isInitialized) {
           if (state.lastError != null) {
@@ -395,20 +407,26 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
                       children: _buildScreens(),
                     ),
                   ),
-                  const BannerAdWidget(),
+                  Consumer<PurchaseService>(
+                    builder: (context, purchaseService, child) {
+                      if (purchaseService.isLite) {
+                        return const SizedBox.shrink();
+                      }
+                      return const BannerAdWidget();
+                    },
+                  ),
                 ],
               ),
             ),
             bottomNavigationBar: Container(
               decoration: BoxDecoration(
-                color: isDarkMode
-                    ? const Color(0xFF1A1A2E)
-                    : Colors.white,
+                color: isDarkMode ? const Color(0xFF1A1A2E) : Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: isDarkMode
-                        ? Colors.black.withValues(alpha: 0.4)
-                        : Colors.black.withValues(alpha: 0.08),
+                    color:
+                        isDarkMode
+                            ? Colors.black.withValues(alpha: 0.4)
+                            : Colors.black.withValues(alpha: 0.08),
                     blurRadius: 15,
                     offset: const Offset(0, -3),
                   ),
@@ -420,9 +438,13 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
                 backgroundColor: Colors.transparent,
                 elevation: 0,
                 selectedItemColor:
-                    isDarkMode ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
+                    isDarkMode
+                        ? const Color(0xFFD4AF37)
+                        : const Color(0xFF2C3E50),
                 unselectedItemColor:
-                    isDarkMode ? const Color(0xFFB8B5AD) : const Color(0xFF6B7280),
+                    isDarkMode
+                        ? const Color(0xFFB8B5AD)
+                        : const Color(0xFF6B7280),
                 type: BottomNavigationBarType.fixed,
                 items: [
                   BottomNavigationBarItem(
@@ -460,7 +482,7 @@ class _MainAppScreenState extends State<MainAppScreen> with WidgetsBindingObserv
       const CalendarScreen(),
       const PremiumScreen(),
       const SettingScreen(),
-      const InfoScreen()
+      const InfoScreen(),
     ];
   }
 }
@@ -495,7 +517,7 @@ class _BannerAdWidgetState extends State<BannerAdWidget> {
             _isAdLoaded = true;
           });
         },
-          onAdFailedToLoad: (ad, err) {
+        onAdFailedToLoad: (ad, err) {
           if (kDebugMode) {
             developer.log('BannerAd failed to load: $err', name: 'Main');
           }

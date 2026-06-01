@@ -20,11 +20,13 @@ class PurchaseService extends ChangeNotifier {
   bool _isLite = false;
   bool _isPlus = false;
   bool _isPro = false;
+  String _debugActiveEntitlements = '';
   Offerings? _offerings;
 
   bool get isLite => _isLite;
   bool get isPlus => _isPlus;
   bool get isPro => _isPro;
+  String get debugActiveEntitlements => _debugActiveEntitlements;
 
   // 구글 캘린더 연동 등 프리미엄 기능은 플러스 권한 이상일 때 사용 가능합니다.
   bool get isPremiumUser => _isPlus;
@@ -71,17 +73,44 @@ class PurchaseService extends ChangeNotifier {
   }
 
   void _updateStatus(CustomerInfo customerInfo) {
-    bool hasLite =
+    // 1. Entitlement 기준으로 확인 (정석)
+    bool hasLiteEntitlement =
         customerInfo.entitlements.all[entitlementLite]?.isActive ?? false;
-    bool hasPlus =
+    bool hasPlusEntitlement =
         customerInfo.entitlements.all[entitlementPlus]?.isActive ?? false;
-    bool hasPro =
+    bool hasProEntitlement =
         customerInfo.entitlements.all[entitlementPro]?.isActive ?? false;
+
+    // 2. Product ID 직접 구매 내역 기준으로 확인 (Entitlement 연결 누락 대비 백업)
+    final purchased = customerInfo.allPurchasedProductIdentifiers;
+    bool hasLiteProduct = purchased.contains('lite');
+    bool hasPlusProduct = purchased.contains('plus');
+    bool hasProProduct = purchased.contains('pro');
+
+    bool hasLite = hasLiteEntitlement || hasLiteProduct;
+    bool hasPlus = hasPlusEntitlement || hasPlusProduct;
+    bool hasPro = hasProEntitlement || hasProProduct;
 
     // 프로 패스는 모든 기능을 포함합니다.
     _isPro = hasPro;
     _isLite = hasLite || hasPro;
     _isPlus = hasPlus || hasPro;
+
+    // 디버그용: 활성화된 모든 Entitlement ID 추출
+    final activeIds =
+        customerInfo.entitlements.all.values
+            .where((e) => e.isActive)
+            .map((e) => e.identifier)
+            .toList();
+
+    // 만약 Entitlement가 비어있다면, Product ID라도 샀는지 확인 (Entitlement 연결 누락 디버깅용)
+    if (activeIds.isEmpty &&
+        customerInfo.allPurchasedProductIdentifiers.isNotEmpty) {
+      _debugActiveEntitlements =
+          'PROD: ${customerInfo.allPurchasedProductIdentifiers.join(', ')}';
+    } else {
+      _debugActiveEntitlements = activeIds.join(', ');
+    }
 
     notifyListeners();
   }

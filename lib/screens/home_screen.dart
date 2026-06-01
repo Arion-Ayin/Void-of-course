@@ -12,6 +12,7 @@ import '../widgets/voc_info_card.dart';
 import '../widgets/timezone_selector_dialog.dart';
 import '../widgets/app_snackbar.dart';
 import 'package:void_of_course/services/ad_service.dart';
+import 'package:void_of_course/services/purchase_service.dart';
 import 'package:void_of_course/l10n/app_localizations.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 
@@ -107,20 +108,109 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            children: [
-              Icon(
-                Icons.auto_awesome,
-                color:
-                    isDark ? const Color(0xFFD4AF37) : const Color(0xFF2C3E50),
-                size: 22,
-              ),
-              const SizedBox(width: 10),
-              Text(
-                'Void of Course',
-                style: Theme.of(context).appBarTheme.titleTextStyle,
-              ),
-            ],
+          Consumer<PurchaseService>(
+            builder: (context, purchaseService, child) {
+              return Row(
+                children: [
+                  Icon(
+                    Icons.auto_awesome,
+                    color:
+                        purchaseService.isPro
+                            ? (isDark
+                                ? const Color(0xFFFFD700)
+                                : const Color(0xFFFFA500))
+                            : (isDark
+                                ? const Color(0xFFD4AF37)
+                                : const Color(0xFF2C3E50)),
+                    size: 22,
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    'Void of Course',
+                    style: Theme.of(context).appBarTheme.titleTextStyle,
+                  ),
+                  if (purchaseService.isPro ||
+                      purchaseService.isPlus ||
+                      purchaseService.isLite) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        gradient:
+                            purchaseService.isPro
+                                ? const LinearGradient(
+                                  colors: [
+                                    Color(0xFFFFD700),
+                                    Color(0xFFFFA500),
+                                  ],
+                                )
+                                : purchaseService.isPlus
+                                ? const LinearGradient(
+                                  colors: [
+                                    Color(0xFF4facfe),
+                                    Color(0xFF00f2fe),
+                                  ],
+                                )
+                                : const LinearGradient(
+                                  colors: [
+                                    Color(0xFFa18cd1),
+                                    Color(0xFFfbc2eb),
+                                  ],
+                                ),
+                        borderRadius: BorderRadius.circular(6),
+                        boxShadow:
+                            purchaseService.isPro
+                                ? [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFFFFD700,
+                                    ).withValues(alpha: 0.4),
+                                    blurRadius: 4,
+                                    spreadRadius: 1,
+                                  ),
+                                ]
+                                : [],
+                      ),
+                      child: Text(
+                        purchaseService.isPro
+                            ? 'PRO'
+                            : purchaseService.isPlus
+                            ? 'PLUS'
+                            : 'LITE',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                  if (!purchaseService.isPro &&
+                      !purchaseService.isPlus &&
+                      !purchaseService.isLite) ...[
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 4,
+                        vertical: 2,
+                      ),
+                      color: Colors.red,
+                      child: Text(
+                        'DBG: ${purchaseService.debugActiveEntitlements.isEmpty ? "NONE" : purchaseService.debugActiveEntitlements}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
           // 타임존 정보 표시
           Consumer<TimezoneProvider>(

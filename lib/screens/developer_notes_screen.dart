@@ -48,17 +48,17 @@ class InfoScreen extends StatelessWidget {
     final List<DeveloperNote> notes = [
       // ▼▼▼ [최신 글] ▼▼▼
       DeveloperNote(
-        date: '2026-05-31',
-        titleKo: '<26-05-31 업데이트>',
-        titleEn: '<26-05-31 Update>',
+        date: '2026-06-02',
+        titleKo: '<26-06-02 업데이트>',
+        titleEn: '<26-06-02 Update>',
         contentKo: '''
 안녕하세요 아리온 아인입니다.
-이번 1.2.0+54 업데이트 사항입니다.
+이번 1.2.0+ 00000000000000000 업데이트 사항입니다.
 
 1. 보이드 알람 시간체크 방식 변경
 2. 캘린더 기능 UTC 시간 수정 및 개선
 3. 날짜 설정 (연/월/일) 선택 방식 추가
-4. 프리미엄 기능(구글 캘린더 연동, 광고제거, 바탕화면 위젯) 추가
+4. 프리미엄 기능(구글 캘린더 연동, 광고제거, 보이드 위젯) 추가
 
 앱을 편하게 사용하시고 계시거나 or 불편한 점이 있다면, 오픈카톡에 오셔서 점성학에 관한 이야기와, 앱에 대한 피드백을 나눠주세요. 
 
@@ -69,7 +69,7 @@ class InfoScreen extends StatelessWidget {
 ''',
         contentEn: '''
 Hello, this is Arion Ayin.
-This is a 1.2.0+54 update.
+This is a 1.2.0+ 00000000000000000000 update.
 
 1. Void notification time check method changed
 2. Calendar feature UTC time correction and improvement

@@ -6,8 +6,9 @@ import 'package:void_of_course/services/purchase_service.dart';
 import '../widgets/setting_card.dart';
 import '../widgets/app_snackbar.dart';
 import '../widgets/premium_dialog.dart';
-import '../themes.dart';
+import 'package:void_of_course/themes.dart';
 import 'package:void_of_course/l10n/app_localizations.dart';
+import 'package:home_widget/home_widget.dart';
 
 class PremiumScreen extends StatelessWidget {
   const PremiumScreen({super.key});
@@ -52,6 +53,9 @@ class PremiumScreen extends StatelessWidget {
                   ),
                   onTap: () => showPremiumDialog(context),
                 ),
+
+                // 홈 화면 위젯 카드
+                const HomeWidgetCard(),
 
                 // 구글 캘린더 연동 카드
                 const GoogleCalendarCard(),
@@ -416,6 +420,69 @@ class _GoogleCalendarCardState extends State<GoogleCalendarCard> {
               ],
             ),
           ),
+        );
+      },
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// 홈 화면 위젯 추가 카드
+// ────────────────────────────────────────────────────────────────────────────
+class HomeWidgetCard extends StatelessWidget {
+  const HomeWidgetCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final appLocalizations = AppLocalizations.of(context)!;
+
+    return Consumer<PurchaseService>(
+      builder: (context, purchaseService, _) {
+        final isPremium = purchaseService.isPlus;
+
+        return SettingCard(
+          icon: Icons.widgets,
+          title: appLocalizations.addHomeWidget,
+          subtitle: appLocalizations.addHomeWidgetDesc,
+          iconColor: Colors.blueAccent,
+          trailing: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: isPremium
+                  ? Colors.blueAccent.withValues(alpha: 0.15)
+                  : Colors.grey.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Text(
+              !isPremium ? '🔒 ${appLocalizations.premium}' : '+',
+              style: TextStyle(
+                fontSize: !isPremium ? 12 : 20,
+                fontWeight: FontWeight.bold,
+                color: !isPremium ? Colors.amber : Colors.blueAccent,
+              ),
+            ),
+          ),
+          onTap: () async {
+            if (!isPremium) {
+              showDialog(
+                context: context,
+                builder: (ctx) => const PremiumDialog(),
+              );
+              return;
+            }
+
+            final supported = await HomeWidget.isRequestPinWidgetSupported();
+            if (supported == true) {
+              await HomeWidget.requestPinWidget(
+                androidName: 'VocWidgetProvider',
+                qualifiedAndroidName: 'com.example.lioluna.VocWidgetProvider',
+              );
+            } else {
+              if (context.mounted) {
+                AppSnackBar.show(context, message: appLocalizations.widgetAutoPinNotSupported);
+              }
+            }
+          },
         );
       },
     );

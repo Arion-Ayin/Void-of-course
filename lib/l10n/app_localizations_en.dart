@@ -341,7 +341,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get linkGoogleCalendar => 'Link with Google Account';
 
   @override
-  String get googleCalendarVocSync => 'Google Calendar VOC Sync';
+  String get googleCalendarVocSync => 'Google Calendar VOC';
 
   @override
   String get notLinked => 'Not linked';
@@ -395,4 +395,14 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cancel => 'Cancel';
+
+  @override
+  String get addHomeWidget => 'Add Widget';
+
+  @override
+  String get addHomeWidgetDesc => 'Add the Void widget to your home screen.';
+
+  @override
+  String get widgetAutoPinNotSupported =>
+      'Auto-pinning widgets is not supported on this device. Please add it manually by long-pressing your home screen.';
 }

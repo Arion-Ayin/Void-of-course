@@ -358,7 +358,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get plusPassFeature => '플러스 패스 전용 기능';
 
   @override
-  String get premiumCalendarSyncDesc => '프리미엄을 구매하시면 캘린더 동기화가 활성화됩니다.';
+  String get premiumCalendarSyncDesc => '프리미엄을 구매시 캘린더 동기화가 활성화됩니다.';
 
   @override
   String get explorePremium => '프리미엄 혜택 알아보기';
@@ -389,4 +389,14 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get cancel => '취소';
+
+  @override
+  String get addHomeWidget => '보이드 위젯';
+
+  @override
+  String get addHomeWidgetDesc => '바탕화면에 보이드 위젯을\n추가합니다.';
+
+  @override
+  String get widgetAutoPinNotSupported =>
+      '이 기기에서는 위젯 자동 추가를 지원하지 않습니다. 홈 화면을 길게 눌러 직접 추가해주세요.';
 }

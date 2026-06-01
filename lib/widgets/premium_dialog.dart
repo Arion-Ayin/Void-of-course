@@ -48,33 +48,30 @@ class _PremiumDialogState extends State<PremiumDialog>
   // 기본 가격 및 티어 정보 매핑
   // 실제 RevenueCat 패키지 식별자(Identifier)와 일치해야 합니다.
   static const Map<PremiumTier, String> _tierPackageIds = {
-    PremiumTier.lite: 'lite',
-    PremiumTier.plus: 'plus',
-    PremiumTier.pro: 'pro',
+    PremiumTier.lite: 'lite_lifetime',
+    PremiumTier.plus: 'plus_lifetime',
+    PremiumTier.pro: 'pro_lifetime',
   };
 
   List<_TierInfo> _getDefaultTiers(bool isKo) {
     return [
       _TierInfo(
         tier: PremiumTier.lite,
-        label: isKo ? '라이트 - 광고제거' : 'Lite - Ad Removal',
-        price: '\$4.99',
+        label: isKo ? 'Lite - 광고제거' : 'Lite - Remove ads',
+        price: isKo ? '₩ 7,500' : '\$4.99',
       ),
       _TierInfo(
         tier: PremiumTier.plus,
-        label:
-            isKo
-                ? '플러스 - 바탕화면 위젯 \n+ 보이드 구글 캘린더'
-                : 'Plus - Home Widget \n+ Void Google Calendar',
-        price: '\$16.99',
+        label: isKo ? 'Plus - 위젯 + 캘린더' : 'Plus - Widget + Calendar',
+        price: isKo ? '₩ 25,000' : '\$16.99',
       ),
       _TierInfo(
         tier: PremiumTier.pro,
         label:
             isKo
-                ? '프로 - 전체기능 \n(광고제거 + 위젯 + 캘린더)'
-                : 'Pro - All Features \n(Ad Removal + Widget + Calendar)',
-        price: '\$19.99',
+                ? 'Pro - 광고제거\n+ 위젯 + 캘린더'
+                : 'Pro - Remove ads + Widget + Calendar',
+        price: isKo ? '₩ 30,000' : '\$19.99',
         recommended: true,
       ),
     ];
@@ -97,15 +94,40 @@ class _PremiumDialogState extends State<PremiumDialog>
 
   // RevenueCat 오퍼링에서 해당 티어의 패키지를 찾습니다.
   Package? _getPackageForTier(PremiumTier tier, Offerings? offerings) {
-    if (offerings == null || offerings.current == null) return null;
+    if (offerings == null) return null;
+
+    // RevenueCat 대시보드에서 설정된 'main_offering' 또는 식별자 'ofrng5f35ae8b2b'
+    // 혹은 기본 current 중 유효한 것을 사용합니다.
+    final offering =
+        offerings.all['ofrng5f35ae8b2b'] ??
+        offerings.all['main_offering'] ??
+        offerings.current;
+
+    if (offering == null) return null;
+
     final packageId = _tierPackageIds[tier];
     try {
-      return offerings.current!.availablePackages.firstWhere(
+      return offering.availablePackages.firstWhere(
         (p) => p.identifier == packageId,
       );
     } catch (_) {
       return null;
     }
+  }
+
+  String _getDebugMessage(Offerings? offerings) {
+    if (offerings == null) return "Offerings is NULL";
+    final offering =
+        offerings.all['ofrng5f35ae8b2b'] ??
+        offerings.all['main_offering'] ??
+        offerings.current;
+    if (offering == null) {
+      return "No matching offering found. Keys: ${offerings.all.keys.join(',')}";
+    }
+    final packages = offering.availablePackages
+        .map((e) => e.identifier)
+        .join(', ');
+    return "Pkg not found. Avail: $packages";
   }
 
   // 현재 선택된 티어의 정보를 가져와요. (RevenueCat에서 불러온 실제 가격 반영)
@@ -122,7 +144,8 @@ class _PremiumDialogState extends State<PremiumDialog>
       return _TierInfo(
         tier: defaultInfo.tier,
         label: defaultInfo.label,
-        price: package.storeProduct.priceString, // 앱스토어/플레이스토어 실제 표기 가격
+        // RevenueCat의 스토어 지역 가격(priceString) 대신, 대표님이 요청하신 언어별 고정 가격을 강제로 보여줍니다.
+        price: defaultInfo.price,
         recommended: defaultInfo.recommended,
       );
     }
@@ -246,6 +269,8 @@ class _PremiumDialogState extends State<PremiumDialog>
                                 titleColor,
                                 subtitleColor,
                                 isDark,
+                                purchaseService,
+                                isKo,
                               );
                             }).toList(),
                       ),
@@ -258,6 +283,8 @@ class _PremiumDialogState extends State<PremiumDialog>
                         selectedInfo,
                         selectedPackage,
                         isKo,
+                        offerings,
+                        purchaseService,
                       ),
                     ),
 
@@ -348,9 +375,19 @@ class _PremiumDialogState extends State<PremiumDialog>
     Color titleColor,
     Color subtitleColor,
     bool isDark,
+    PurchaseService purchaseService,
+    bool isKo,
   ) {
     final isSelected = _selectedTier == info.tier;
     final isRecommended = info.recommended;
+
+    bool isOwned = false;
+    if (info.tier == PremiumTier.pro)
+      isOwned = purchaseService.isPro;
+    else if (info.tier == PremiumTier.plus)
+      isOwned = purchaseService.isPlus;
+    else if (info.tier == PremiumTier.lite)
+      isOwned = purchaseService.isLite;
 
     // 골드 테두리 & 하이라이트 — 추천 티어이면서 선택된 경우
     final bool showGoldHighlight = isRecommended && isSelected;
@@ -472,26 +509,33 @@ class _PremiumDialogState extends State<PremiumDialog>
                           ),
                         ),
                       ),
-                      if (isRecommended) ...[
+                      if (isOwned) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                            border: Border.all(color: Colors.green, width: 1),
+                          ),
+                          child: Text(
+                            isKo ? '보유중' : 'Owned',
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ] else if (isRecommended) ...[
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 7,
                             vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            '★ 추천',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
                           ),
                         ),
                       ],
@@ -501,20 +545,22 @@ class _PremiumDialogState extends State<PremiumDialog>
               ),
             ),
             const SizedBox(width: 8),
-            // 가격
-            Text(
-              info.price,
-              style: TextStyle(
-                color:
-                    isSelected
-                        ? (isRecommended
-                            ? const Color.fromARGB(255, 0, 0, 0)
-                            : const Color.fromARGB(255, 0, 0, 0))
-                        : subtitleColor,
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            // 가격 (보유중이면 가격 대신 표시)
+            isOwned
+                ? Icon(Icons.check_circle, color: Colors.green, size: 20)
+                : Text(
+                  info.price,
+                  style: TextStyle(
+                    color:
+                        isSelected
+                            ? (isRecommended
+                                ? const Color.fromARGB(255, 0, 0, 0)
+                                : const Color.fromARGB(255, 0, 0, 0))
+                            : subtitleColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
           ],
         ),
       ),
@@ -522,8 +568,45 @@ class _PremiumDialogState extends State<PremiumDialog>
   }
 
   // 구매 버튼이에요. 선택된 티어의 가격을 보여줘요.
-  Widget _buildPurchaseButton(_TierInfo info, Package? package, bool isKo) {
+  Widget _buildPurchaseButton(
+    _TierInfo info,
+    Package? package,
+    bool isKo,
+    Offerings? offerings,
+    PurchaseService purchaseService,
+  ) {
     final isGold = info.recommended;
+
+    bool isOwned = false;
+    if (info.tier == PremiumTier.pro)
+      isOwned = purchaseService.isPro;
+    else if (info.tier == PremiumTier.plus)
+      isOwned = purchaseService.isPlus;
+    else if (info.tier == PremiumTier.lite)
+      isOwned = purchaseService.isLite;
+
+    if (isOwned) {
+      return SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: Colors.grey.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(
+            child: Text(
+              isKo ? '이미 보유 중인 서비스입니다' : 'Already Owned',
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
 
     return SizedBox(
       width: double.infinity,

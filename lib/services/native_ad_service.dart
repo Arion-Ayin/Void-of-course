@@ -6,7 +6,9 @@ import 'package:void_of_course/services/purchase_service.dart';
 class NativeAdService extends ChangeNotifier {
   static final NativeAdService _instance = NativeAdService._internal();
   factory NativeAdService() => _instance;
-  NativeAdService._internal();
+  NativeAdService._internal() {
+    PurchaseService.instance.addListener(_onPurchaseChanged);
+  }
 
   NativeAd? _nativeAd;
   bool _isAdLoaded = false;
@@ -26,6 +28,13 @@ class NativeAdService extends ChangeNotifier {
       factoryId: 'listTile',
       listener: NativeAdListener(
         onAdLoaded: (ad) {
+          if (PurchaseService.instance.isLite) {
+            // 결제 상태가 확인되었는데 광고가 뒤늦게 로드된 경우 즉시 파기
+            ad.dispose();
+            _isAdLoaded = false;
+            notifyListeners();
+            return;
+          }
           _nativeAd = ad as NativeAd;
           _isAdLoaded = true;
           notifyListeners();
@@ -40,10 +49,21 @@ class NativeAdService extends ChangeNotifier {
     _nativeAd?.load();
   }
 
-  @override
   void dispose() {
     _nativeAd?.dispose();
     _isAdLoaded = false;
+    PurchaseService.instance.removeListener(_onPurchaseChanged);
     super.dispose();
+  }
+
+  void _onPurchaseChanged() {
+    if (PurchaseService.instance.isLite) {
+      if (_nativeAd != null) {
+        _nativeAd?.dispose();
+        _nativeAd = null;
+      }
+      _isAdLoaded = false;
+      notifyListeners();
+    }
   }
 }

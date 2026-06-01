@@ -659,7 +659,7 @@ abstract class AppLocalizations {
   /// No description provided for @googleCalendarVocSync.
   ///
   /// In en, this message translates to:
-  /// **'Google Calendar VOC Sync'**
+  /// **'Google Calendar VOC'**
   String get googleCalendarVocSync;
 
   /// No description provided for @notLinked.
@@ -757,6 +757,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancel'**
   String get cancel;
+
+  /// No description provided for @addHomeWidget.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Widget'**
+  String get addHomeWidget;
+
+  /// No description provided for @addHomeWidgetDesc.
+  ///
+  /// In en, this message translates to:
+  /// **'Add the Void widget to your home screen.'**
+  String get addHomeWidgetDesc;
+
+  /// No description provided for @widgetAutoPinNotSupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-pinning widgets is not supported on this device. Please add it manually by long-pressing your home screen.'**
+  String get widgetAutoPinNotSupported;
 }
 
 class _AppLocalizationsDelegate

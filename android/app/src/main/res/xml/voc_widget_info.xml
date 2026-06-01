@@ -6,5 +6,6 @@
     android:targetCellHeight="1"
     android:updatePeriodMillis="0"
     android:initialLayout="@layout/voc_widget"
+    android:previewImage="@mipmap/ic_launcher"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen" />
