@@ -10,6 +10,7 @@ import 'package:void_of_course/themes.dart';
 import 'package:void_of_course/l10n/app_localizations.dart';
 import 'package:home_widget/home_widget.dart';
 import '../widgets/premium_badge.dart';
+import '../services/app_analytics.dart';
 
 class PremiumScreen extends StatelessWidget {
   const PremiumScreen({super.key});
@@ -85,6 +86,7 @@ class _GoogleCalendarCardState extends State<GoogleCalendarCard> {
   bool _isLoading = false;
 
   Future<void> _handleSignIn() async {
+    AppAnalytics.logPremiumCalendarSyncClick(); // Or a separate log like logPremiumCalendarLinkAttempt
     setState(() => _isLoading = true);
     final calService = GoogleCalendarService.instance;
     final success = await calService.signIn();
@@ -114,6 +116,7 @@ class _GoogleCalendarCardState extends State<GoogleCalendarCard> {
   }
 
   Future<void> _handleSync() async {
+    AppAnalytics.logPremiumCalendarSyncClick();
     final calService = GoogleCalendarService.instance;
     final localeProvider = Provider.of<LocaleProvider>(context, listen: false);
     final locale = localeProvider.locale?.languageCode ?? 'ko';
@@ -298,6 +301,7 @@ class _GoogleCalendarCardState extends State<GoogleCalendarCard> {
                                 ? null
                                 : (range) {
                                   if (range != null) {
+                                    AppAnalytics.logPremiumCalendarSyncDuration(range.months);
                                     calService.setSyncRange(range);
                                   }
                                 },
@@ -469,6 +473,7 @@ class HomeWidgetCard extends StatelessWidget {
             ),
           ),
           onTap: () async {
+            AppAnalytics.logPremiumWidgetClick();
             if (!isPremium) {
               showDialog(
                 context: context,

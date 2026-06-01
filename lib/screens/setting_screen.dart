@@ -13,7 +13,7 @@ import 'package:void_of_course/services/locale_provider.dart'; // 앱의 현재 
 import 'package:url_launcher/url_launcher.dart'; // 웹사이트나 이메일 앱을 열어주는 라이브러리예요.
 import '../widgets/reusable_native_ad_widget.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
-import 'package:void_of_course/services/app_analytics.dart';
+import '../services/app_analytics.dart';
 import '../widgets/premium_badge.dart';
 
 // 설정 화면을 보여주는 위젯이에요.
@@ -154,15 +154,7 @@ class SettingScreen extends StatelessWidget {
                                   astroState
                                       .voidAlarmEnabled, // 스위치의 현재 상태(켜짐/꺼짐)를 AstroState에서 가져와요.
                               onChanged: (value) async {
-                                await FirebaseAnalytics.instance.logEvent(
-                                  name: 'toggle_void_alarm',
-                                  parameters: {'enabled': value.toString()},
-                                );
-                                await FirebaseAnalytics.instance
-                                    .setUserProperty(
-                                      name: 'void_alarm_enabled',
-                                      value: value.toString(),
-                                    );
+                                await AppAnalytics.setVoidAlarmEnabled(value);
                                 // 스위치를 누르면 이 코드가 실행돼요.
                                 // 보이드 알람을 켜거나 끄는 함수를 불러와요.
                                 final status = await astroState.toggleVoidAlarm(

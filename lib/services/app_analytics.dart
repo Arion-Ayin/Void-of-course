@@ -20,6 +20,17 @@ class AppAnalytics {
     );
   }
 
+  static Future<void> setVoidAlarmEnabled(bool enabled) async {
+    await _analytics.logEvent(
+      name: 'toggle_void_alarm',
+      parameters: {'enabled': enabled.toString()},
+    );
+    await _analytics.setUserProperty(
+      name: 'void_alarm_enabled',
+      value: enabled.toString(),
+    );
+  }
+
   static Future<void> logScreenView(String screenName) {
     return _analytics.logScreenView(
       screenName: screenName,
@@ -79,6 +90,48 @@ class AppAnalytics {
     return _analytics.logEvent(
       name: 'click_external_link_cancel',
       parameters: {'service_name': serviceName},
+    );
+  }
+
+  // 프리미엄 관련 로깅
+  static Future<void> logPremiumTabClick() {
+    return _analytics.logEvent(name: 'click_premium_tab');
+  }
+
+  static Future<void> logPremiumInfoButtonClick() {
+    return _analytics.logEvent(name: 'click_premium_info');
+  }
+
+  static Future<void> logPremiumTierSelect(String tier) {
+    return _analytics.logEvent(
+      name: 'select_premium_tier',
+      parameters: {'tier': tier},
+    );
+  }
+
+  static Future<void> logPremiumPurchase(String tier) {
+    return _analytics.logEvent(
+      name: 'purchase_premium_attempt',
+      parameters: {'tier': tier},
+    );
+  }
+
+  static Future<void> logPremiumRestore() {
+    return _analytics.logEvent(name: 'restore_premium_attempt');
+  }
+
+  static Future<void> logPremiumWidgetClick() {
+    return _analytics.logEvent(name: 'click_premium_widget');
+  }
+
+  static Future<void> logPremiumCalendarSyncClick() {
+    return _analytics.logEvent(name: 'click_premium_calendar_sync');
+  }
+
+  static Future<void> logPremiumCalendarSyncDuration(int months) {
+    return _analytics.logEvent(
+      name: 'select_calendar_sync_duration',
+      parameters: {'months': months},
     );
   }
 }

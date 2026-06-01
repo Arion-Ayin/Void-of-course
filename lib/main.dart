@@ -249,15 +249,7 @@ class _MainAppScreenState extends State<MainAppScreen>
       _checkWidgetStatus();
       Provider.of<AstroState>(context, listen: false).ensureServiceRunning();
       WidgetService.refreshFromPrefs();
-
-      // 앱 복귀 시 구글 캘린더 자동 동기화 시도 (프리미엄만, 1시간 쿨타임 적용됨)
-      final localeCode =
-          Provider.of<LocaleProvider>(
-            context,
-            listen: false,
-          ).locale?.languageCode ??
-          'ko';
-      GoogleCalendarService.instance.autoSyncIfPremium(locale: localeCode);
+      WidgetService.refreshFromPrefs();
     } else if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive ||
         state == AppLifecycleState.detached) {

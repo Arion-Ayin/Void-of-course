@@ -54,12 +54,12 @@ class InfoScreen extends StatelessWidget {
         titleEn: '<26-06-05 Update>',
         contentKo: '''
 안녕하세요 리오입니다.
-이번 1.2.0+ 00000000000000000 업데이트 사항입니다.
+이번 1.2.0+59 업데이트 사항입니다.
 
 1. 보이드 알람 시간체크 방식 변경
 2. 캘린더 기능 UTC 시간 수정 및 개선
 3. 날짜 설정 (연/월/일) 선택 방식 추가
-4. 프리미엄 기능(구글 캘린더 연동, 광고제거, 보이드 위젯) 추가
+4. 프리미엄 기능(광고제거, 보이드 위젯, 구글 캘린더 연동) 추가
 
 앱을 편하게 사용하시고 계시거나 or 불편한 점이 있다면, 오픈카톡에 오셔서 점성학에 관한 이야기와, 앱에 대한 피드백을 나눠주세요. 
 
@@ -70,12 +70,12 @@ class InfoScreen extends StatelessWidget {
 ''',
         contentEn: '''
 Hi, this is developer Lio.
-This is a 1.2.0+ 00000000000000000000 update.
+This is a 1.2.0+59 update.
 
 1. Void notification time check method changed
 2. Calendar feature UTC time correction and improvement
 3. Date setting (Year/Month/Day) selection method added
-4. Premium features (Google Calendar integration, Ad removal, Home screen widget) added
+4. Premium features (Remove ads, Void Widget, Google Calendar Sync) added
 
 If you have any feedback or questions, please contact us.
 ''',

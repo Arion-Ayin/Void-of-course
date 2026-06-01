@@ -7,6 +7,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 import '../services/purchase_service.dart';
 import '../widgets/app_snackbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/app_analytics.dart';
 
 // 결제 티어를 나타내는 열거형이에요.
 enum PremiumTier {
@@ -124,6 +125,7 @@ class _PremiumDialogState extends State<PremiumDialog>
   }
 
   void _showInfoCarousel(bool isKo) {
+    AppAnalytics.logPremiumInfoButtonClick();
     _markInfoSeen();
     showDialog(
       context: context,
@@ -294,6 +296,7 @@ class _PremiumDialogState extends State<PremiumDialog>
       _getDynamicTierInfo(_selectedTier, offerings, isKo);
 
   Future<void> _handlePurchase(Package package, bool isKo) async {
+    AppAnalytics.logPremiumPurchase(_selectedTier.name);
     setState(() => _isPurchasing = true);
 
     final success = await PurchaseService.instance.purchasePackage(package);
@@ -322,6 +325,7 @@ class _PremiumDialogState extends State<PremiumDialog>
   }
 
   Future<void> _handleRestore(bool isKo) async {
+    AppAnalytics.logPremiumRestore();
     setState(() => _isPurchasing = true);
 
     final success = await PurchaseService.instance.restorePurchases();
@@ -557,73 +561,57 @@ class _PremiumDialogState extends State<PremiumDialog>
     final bool showGoldHighlight = isRecommended && isSelected;
 
     return GestureDetector(
-      onTap: () => setState(() => _selectedTier = info.tier),
-      child: AnimatedBuilder(
-        animation: _shimmerController,
-        builder: (context, child) {
-          // shimmer gradient offset
-          final shimmerOffset = _shimmerController.value;
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              // 선택 상태에 따라 배경색을 다르게 해요.
-              color:
-                  isSelected
-                      ? (isDark
-                          ? const Color.fromARGB(
-                            255,
-                            0,
-                            0,
-                            0,
-                          ).withValues(alpha: 0.9)
-                          : const Color(0xFFF5EEFF))
-                      : (isDark
-                          ? const Color(0xFF13102B).withValues(alpha: 0.6)
-                          : const Color(0xFFF8F8F8)),
-              // 골드 shimmer 테두리 또는 일반 테두리
-              border:
-                  showGoldHighlight
-                      ? Border.all(
-                        color:
-                            Color.lerp(
-                              const Color(0xFFFFD700),
-                              const Color(0xFFFFA500),
-                              (shimmerOffset * 2).clamp(0.0, 1.0),
-                            )!,
-                        width: 2.2,
-                      )
-                      : isSelected
-                      ? Border.all(
-                        color: const Color.fromARGB(255, 0, 0, 0),
-                        width: 1.8,
-                      )
-                      : Border.all(
-                        color:
-                            isDark
-                                ? Colors.white.withValues(alpha: 0.08)
-                                : Colors.grey.withValues(alpha: 0.2),
-                        width: 1.2,
-                      ),
-              // 추천+선택 시 골드 글로우 그림자
-              boxShadow:
-                  showGoldHighlight
-                      ? [
-                        BoxShadow(
-                          color: const Color(
-                            0xFFFFD700,
-                          ).withValues(alpha: 0.25),
-                          blurRadius: 12,
-                          spreadRadius: 1,
-                        ),
-                      ]
-                      : [],
-            ),
-            child: child,
-          );
-        },
+      onTap: () {
+        AppAnalytics.logPremiumTierSelect(info.tier.name);
+        setState(() => _selectedTier = info.tier);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          // 선택 상태에 따라 배경색을 다르게 해요.
+          color:
+              isSelected
+                  ? (isDark
+                      ? const Color.fromARGB(
+                        255,
+                        0,
+                        0,
+                        0,
+                      ).withValues(alpha: 0.9)
+                      : const Color(0xFFF5EEFF))
+                  : (isDark
+                      ? const Color(0xFF13102B).withValues(alpha: 0.6)
+                      : const Color(0xFFF8F8F8)),
+          // 주황 겉 테두리 또는 일반 테두리
+          border:
+              showGoldHighlight
+                  ? Border.all(color: const Color(0xFFFFA500), width: 2.2)
+                  : isSelected
+                  ? Border.all(
+                    color: const Color.fromARGB(255, 0, 0, 0),
+                    width: 1.8,
+                  )
+                  : Border.all(
+                    color:
+                        isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : Colors.grey.withValues(alpha: 0.2),
+                    width: 1.2,
+                  ),
+          // 노랑 그림자
+          boxShadow:
+              showGoldHighlight
+                  ? [
+                    BoxShadow(
+                      color: const Color(0xFFFFD700).withValues(alpha: 0.25),
+                      blurRadius: 12,
+                      spreadRadius: 1,
+                    ),
+                  ]
+                  : [],
+        ),
         child: Row(
           children: [
             // 라디오 버튼 역할을 하는 동그라미

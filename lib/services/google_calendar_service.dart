@@ -95,11 +95,6 @@ class GoogleCalendarService extends ChangeNotifier {
         _currentUser = account;
         await _initCalendarApi(account);
         debugPrint('[GoogleCalendar] 조용한 로그인 복원: ${account.email}');
-
-        // 앱 초기화 시 프리미엄 유저라면 자동 동기화 실행 (백그라운드)
-        if (isPremiumUser) {
-          autoSyncIfPremium();
-        }
       }
     } catch (e) {
       debugPrint('[GoogleCalendar] 조용한 로그인 복원 실패 (무시): $e');
