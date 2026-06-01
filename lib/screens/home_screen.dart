@@ -128,9 +128,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       size: 22,
                     ),
                     const SizedBox(width: 10),
-                    Text(
-                      'Void of Course',
-                      style: Theme.of(context).appBarTheme.titleTextStyle,
+                    Flexible(
+                      child: Text(
+                        'Void of Course',
+                        style: Theme.of(context).appBarTheme.titleTextStyle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
                     if (purchaseService.isPro ||
                         purchaseService.isPlus ||
@@ -189,6 +192,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontSize: 11,
                         color: isDark ? Colors.white60 : Colors.black54,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   );
                 }

@@ -18,32 +18,39 @@ class PremiumBadge extends StatelessWidget {
         final isPro = purchaseService.isPro;
         final isPlus = purchaseService.isPlus;
 
-        final gradient = isPro
-            ? const LinearGradient(
-                colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-              )
-            : isPlus
+        final gradient =
+            isPro
                 ? const LinearGradient(
-                    colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
-                  )
+                  colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                )
+                : isPlus
+                ? const LinearGradient(
+                  colors: [Color(0xFF4facfe), Color(0xFF00f2fe)],
+                )
                 : const LinearGradient(
-                    colors: [Color(0xFFa18cd1), Color(0xFFfbc2eb)],
-                  );
+                  colors: [Color(0xFFa18cd1), Color(0xFFfbc2eb)],
+                );
 
-        final shadows = isPro
-            ? [
-                BoxShadow(
-                  color: const Color(0xFFFFD700).withValues(alpha: 0.4),
-                  blurRadius: 4,
-                  spreadRadius: 1,
-                ),
-              ]
-            : <BoxShadow>[];
+        final shadows =
+            isPro
+                ? [
+                  BoxShadow(
+                    color: const Color(0xFFFFD700).withValues(alpha: 0.4),
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                  ),
+                ]
+                : <BoxShadow>[];
 
-        final text = isPro ? 'PRO' : isPlus ? 'PLUS' : 'LITE';
+        final text =
+            isPro
+                ? 'PRO'
+                : isPlus
+                ? 'PLUS'
+                : 'LITE';
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
           decoration: BoxDecoration(
             gradient: gradient,
             borderRadius: BorderRadius.circular(6),
