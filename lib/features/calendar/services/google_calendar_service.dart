@@ -263,7 +263,8 @@ class GoogleCalendarService extends ChangeNotifier {
             // 범위 내 이벤트만 (end가 rangeStart 이후 && start가 rangeEnd 이전)
             if (end.isBefore(rangeStart) || start.isAfter(rangeEnd)) continue;
 
-            final dedupeKey = '${start.millisecondsSinceEpoch}';
+            // 반올림해서 분 단위로 키 생성 (천문 계산 정밀도 오차로 인한 중복 생성 방지)
+            final dedupeKey = '${(start.millisecondsSinceEpoch / 60000).round()}';
             if (seenKeys.add(dedupeKey)) {
               vocPeriods.add({'start': start, 'end': end});
             }
@@ -285,24 +286,19 @@ class GoogleCalendarService extends ChangeNotifier {
               ? '달이 보이드 오브 코스 상태입니다.\n이 시간에는 중요한 결정이나 시작을 피하는 것이 좋습니다.'
               : 'The Moon is Void of Course.\nAvoid important decisions or new beginnings during this time.';
 
-      const batchSize = 40;
-      for (var i = 0; i < vocPeriods.length; i += batchSize) {
-        final chunk = vocPeriods.skip(i).take(batchSize);
-        final results = await Future.wait(
-          chunk.map((period) {
-            return _addEventToCalendar(
-              calendarId: calendarId,
-              startUtc: period['start']!,
-              endUtc: period['end']!,
-              title: title,
-              description: description,
-              tzProvider: tzProvider,
-            );
-          }),
+      for (final period in vocPeriods) {
+        final id = await _addEventToCalendar(
+          calendarId: calendarId,
+          startUtc: period['start']!,
+          endUtc: period['end']!,
+          title: title,
+          description: description,
         );
-        for (final id in results) {
-          if (id != null) createdEventIds.add(id);
+        if (id != null) {
+          createdEventIds.add(id);
         }
+        // 구글 캘린더 API 속도 제한(Rate Limit) 방지를 위해 약간 대기
+        await Future.delayed(const Duration(milliseconds: 200));
       }
 
       // 6. 이벤트 ID 저장
@@ -413,45 +409,48 @@ class GoogleCalendarService extends ChangeNotifier {
     required DateTime endUtc,
     required String title,
     required String description,
-    required TimezoneProvider tzProvider,
   }) async {
     final api = _calendarApi;
     if (api == null) return null;
-
-    // 홈에서 설정한 타임존 기준으로 로컬 시간 변환
-    final startLocal = tzProvider.convert(startUtc);
-    final endLocal = tzProvider.convert(endUtc);
-    final isMultiDay =
-        startLocal.year != endLocal.year ||
-        startLocal.month != endLocal.month ||
-        startLocal.day != endLocal.day;
-
+    
     try {
+      // 1. 유저가 설정한 타임존 기준의 로컬 시간 구하기
+      final startLocal = TimezoneProvider().convert(startUtc);
+      final endLocal = TimezoneProvider().convert(endUtc);
+
+      // 2. 자정(Midnight)을 넘기는지 확인
+      final isSameDay = startLocal.year == endLocal.year &&
+          startLocal.month == endLocal.month &&
+          startLocal.day == endLocal.day;
+
       gcal.EventDateTime startEvent;
       gcal.EventDateTime endEvent;
       String eventTitle = title;
 
-      if (isMultiDay) {
-        // 이틀 이상 넘어가는 이벤트는 All-Day(종일) 이벤트로 설정하여 긴 바로 표시
-        startEvent = gcal.EventDateTime(
-          date: DateTime.utc(startLocal.year, startLocal.month, startLocal.day),
-        );
-        // 종일 이벤트의 end date는 exclusive(포함하지 않음)이므로 1일 추가
-        final endDate = endLocal.add(const Duration(days: 1));
-        endEvent = gcal.EventDateTime(
-          date: DateTime.utc(endDate.year, endDate.month, endDate.day),
-        );
-
-        // 종일 이벤트로 변경 시 캘린더에서 시간을 알 수 없으므로 제목에 날짜와 시간 추가
-        final startStr =
-            '${startLocal.month}/${startLocal.day} ${startLocal.hour.toString().padLeft(2, '0')}:${startLocal.minute.toString().padLeft(2, '0')}';
-        final endStr =
-            '${endLocal.month}/${endLocal.day} ${endLocal.hour.toString().padLeft(2, '0')}:${endLocal.minute.toString().padLeft(2, '0')}';
-        eventTitle = '$title ($startStr ~ $endStr)';
-      } else {
-        // 단일 날짜 이벤트는 시간 지정 이벤트로 설정
+      if (isSameDay) {
+        // 단일 날짜 이벤트: 정확한 시간(dateTime) 지정
         startEvent = gcal.EventDateTime(dateTime: startUtc, timeZone: 'UTC');
         endEvent = gcal.EventDateTime(dateTime: endUtc, timeZone: 'UTC');
+      } else {
+        // 자정을 넘기는 이벤트: 1개의 이벤트로 유지하되 구글 캘린더 먼스 뷰(Month View)에서
+        // 이틀짜리 띠(Block)로 표시되도록 '종일(All-Day)' 이벤트로 변환합니다.
+        // 종일 이벤트는 'date' 필드(YYYY-MM-DD)를 사용해야 띠 모양으로 나옵니다.
+        final startDate = DateTime(startLocal.year, startLocal.month, startLocal.day);
+        // 종일 이벤트의 종료일은 exclusive(포함되지 않음)이므로 +1일을 해줍니다.
+        final endDate = DateTime(endLocal.year, endLocal.month, endLocal.day).add(const Duration(days: 1));
+
+        startEvent = gcal.EventDateTime(date: startDate);
+        endEvent = gcal.EventDateTime(date: endDate);
+
+        // 종일 이벤트로 변환하면 캘린더 뷰에서 시간이 사라지므로, 제목에 시간을 명시해줍니다.
+        final startMin = startLocal.minute.toString().padLeft(2, '0');
+        final endMin = endLocal.minute.toString().padLeft(2, '0');
+        final startAmpm = startLocal.hour < 12 ? 'AM' : 'PM';
+        final endAmpm = endLocal.hour < 12 ? 'AM' : 'PM';
+        final startH = startLocal.hour % 12 == 0 ? 12 : startLocal.hour % 12;
+        final endH = endLocal.hour % 12 == 0 ? 12 : endLocal.hour % 12;
+        
+        eventTitle = '$title ($startAmpm $startH:$startMin ~ $endAmpm $endH:$endMin)';
       }
 
       final event = gcal.Event(
@@ -459,10 +458,10 @@ class GoogleCalendarService extends ChangeNotifier {
         description: description,
         start: startEvent,
         end: endEvent,
-        transparency: 'transparent', // 시간 차단 안 함
-        // colorId 지정 생략: 캘린더의 #ff0000 색상을 자동으로 상속받음
+        transparency: 'transparent',
         reminders: gcal.EventReminders(useDefault: false, overrides: []),
       );
+      
       final created = await api.events.insert(event, calendarId);
       return created.id;
     } catch (e) {

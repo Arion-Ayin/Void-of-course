@@ -29,7 +29,7 @@ class PurchaseService extends ChangeNotifier {
   bool get isPro => _isPro;
   String get debugActiveEntitlements => _debugActiveEntitlements;
 
-  bool get isPremiumUser => _isPlus;
+  bool get isPremiumUser => _isPlus || _isPro;
 
   Offerings? get offerings => _offerings;
 
