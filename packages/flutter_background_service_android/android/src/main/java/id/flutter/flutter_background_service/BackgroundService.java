@@ -108,6 +108,7 @@ public class BackgroundService extends Service implements MethodChannel.MethodCa
             Log.w(TAG, "Service timeout reached: startId=" + startId + ", fgsType=" + fgsType);
             isManuallyStopped = true;
             WatchdogReceiver.remove(this);
+            stopForeground(true);
             stopSelf();
         }
     }
