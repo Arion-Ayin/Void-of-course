@@ -55,6 +55,7 @@ class FlutterBackgroundServiceAndroid extends FlutterBackgroundServicePlatform {
     }
   }
 
+  @override
   Future<bool> start() async {
     final result = await _channel.invokeMethod('start');
     return result ?? false;
@@ -71,6 +72,7 @@ class FlutterBackgroundServiceAndroid extends FlutterBackgroundServicePlatform {
   );
 
   StreamSubscription<dynamic>? _eventChannelListener;
+  @override
   Future<bool> configure({
     required IosConfiguration iosConfiguration,
     required AndroidConfiguration androidConfiguration,
@@ -94,12 +96,12 @@ class FlutterBackgroundServiceAndroid extends FlutterBackgroundServicePlatform {
         androidConfiguration.foregroundServiceTypes;
     List<String>? foregroundServiceTypes;
     if (configForegroundServiceTypes != null &&
-        configForegroundServiceTypes.length > 0) {
+        configForegroundServiceTypes.isNotEmpty) {
       foregroundServiceTypes = [];
-      androidConfiguration.foregroundServiceTypes!
-          .forEach((foregroundServiceType) {
+      for (var foregroundServiceType
+          in androidConfiguration.foregroundServiceTypes!) {
         foregroundServiceTypes!.add(foregroundServiceType.name);
-      });
+      }
     }
 
     final result = await _channel.invokeMethod(
@@ -123,6 +125,7 @@ class FlutterBackgroundServiceAndroid extends FlutterBackgroundServicePlatform {
     return result ?? false;
   }
 
+  @override
   Future<bool> isServiceRunning() async {
     var result = await _channel.invokeMethod("isServiceRunning");
     return result ?? false;
@@ -157,7 +160,7 @@ class FlutterBackgroundServiceAndroid extends FlutterBackgroundServicePlatform {
 }
 
 class AndroidServiceInstance extends ServiceInstance {
-  static const MethodChannel _channel = const MethodChannel(
+  static const MethodChannel _channel = MethodChannel(
     'id.flutter/background_service_android_bg',
     JSONMethodCodec(),
   );

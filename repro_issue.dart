@@ -1,8 +1,10 @@
+import 'package:flutter/material.dart';
 import 'package:sweph/sweph.dart';
 import 'lib/core/astro/astro_calculator.dart';
 import 'dart:developer' as developer;
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Sweph.init();
   final calculator = AstroCalculator();
 
