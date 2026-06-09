@@ -264,7 +264,8 @@ class GoogleCalendarService extends ChangeNotifier {
             if (end.isBefore(rangeStart) || start.isAfter(rangeEnd)) continue;
 
             // 반올림해서 분 단위로 키 생성 (천문 계산 정밀도 오차로 인한 중복 생성 방지)
-            final dedupeKey = '${(start.millisecondsSinceEpoch / 60000).round()}';
+            final dedupeKey =
+                '${(start.millisecondsSinceEpoch / 60000).round()}';
             if (seenKeys.add(dedupeKey)) {
               vocPeriods.add({'start': start, 'end': end});
             }
@@ -280,16 +281,19 @@ class GoogleCalendarService extends ChangeNotifier {
 
       // 4. 구글 캘린더에 이벤트 추가 (속도 개선을 위해 10개씩 병렬 처리)
       final List<String> createdEventIds = [];
-      final title = 'Void of Course 🌙';
       final description =
           locale == 'ko'
               ? '달이 보이드 오브 코스 상태입니다.\n이 시간에는 중요한 결정이나 시작을 피하는 것이 좋습니다.'
               : 'The Moon is Void of Course.\nAvoid important decisions or new beginnings during this time.';
 
       for (final period in vocPeriods) {
+        final start = period['start']!;
+        final moonZodiac = calculator.getMoonZodiacEmoji(start);
+        final title = '🌙 Void of Course $moonZodiac';
+
         final id = await _addEventToCalendar(
           calendarId: calendarId,
-          startUtc: period['start']!,
+          startUtc: start,
           endUtc: period['end']!,
           title: title,
           description: description,
@@ -360,7 +364,7 @@ class GoogleCalendarService extends ChangeNotifier {
       try {
         // 구글 서버에 캘린더가 완전히 생성될 때까지 약간 대기 (404 에러 방지)
         await Future.delayed(const Duration(milliseconds: 500));
-        
+
         await api.calendarList.patch(
           gcal.CalendarListEntry(
             backgroundColor: '#ff0000',
@@ -412,14 +416,15 @@ class GoogleCalendarService extends ChangeNotifier {
   }) async {
     final api = _calendarApi;
     if (api == null) return null;
-    
+
     try {
       // 1. 유저가 설정한 타임존 기준의 로컬 시간 구하기
       final startLocal = TimezoneProvider().convert(startUtc);
       final endLocal = TimezoneProvider().convert(endUtc);
 
       // 2. 자정(Midnight)을 넘기는지 확인
-      final isSameDay = startLocal.year == endLocal.year &&
+      final isSameDay =
+          startLocal.year == endLocal.year &&
           startLocal.month == endLocal.month &&
           startLocal.day == endLocal.day;
 
@@ -435,9 +440,17 @@ class GoogleCalendarService extends ChangeNotifier {
         // 자정을 넘기는 이벤트: 1개의 이벤트로 유지하되 구글 캘린더 먼스 뷰(Month View)에서
         // 이틀짜리 띠(Block)로 표시되도록 '종일(All-Day)' 이벤트로 변환합니다.
         // 종일 이벤트는 'date' 필드(YYYY-MM-DD)를 사용해야 띠 모양으로 나옵니다.
-        final startDate = DateTime(startLocal.year, startLocal.month, startLocal.day);
+        final startDate = DateTime(
+          startLocal.year,
+          startLocal.month,
+          startLocal.day,
+        );
         // 종일 이벤트의 종료일은 exclusive(포함되지 않음)이므로 +1일을 해줍니다.
-        final endDate = DateTime(endLocal.year, endLocal.month, endLocal.day).add(const Duration(days: 1));
+        final endDate = DateTime(
+          endLocal.year,
+          endLocal.month,
+          endLocal.day,
+        ).add(const Duration(days: 1));
 
         startEvent = gcal.EventDateTime(date: startDate);
         endEvent = gcal.EventDateTime(date: endDate);
@@ -449,8 +462,9 @@ class GoogleCalendarService extends ChangeNotifier {
         final endAmpm = endLocal.hour < 12 ? 'AM' : 'PM';
         final startH = startLocal.hour % 12 == 0 ? 12 : startLocal.hour % 12;
         final endH = endLocal.hour % 12 == 0 ? 12 : endLocal.hour % 12;
-        
-        eventTitle = '$title ($startAmpm $startH:$startMin ~ $endAmpm $endH:$endMin)';
+
+        eventTitle =
+            '$title ($startAmpm $startH:$startMin ~ $endAmpm $endH:$endMin)';
       }
 
       final event = gcal.Event(
@@ -461,7 +475,7 @@ class GoogleCalendarService extends ChangeNotifier {
         transparency: 'transparent',
         reminders: gcal.EventReminders(useDefault: false, overrides: []),
       );
-      
+
       final created = await api.events.insert(event, calendarId);
       return created.id;
     } catch (e) {
