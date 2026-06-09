@@ -47,7 +47,7 @@ class GoogleCalendarService extends ChangeNotifier {
 
   // ─── google_sign_in v6 ───────────────────────────────────────────────────
   static const String _serverClientId =
-      '5706956834-4l1hgsvd7lft5omnf785brpo9njc2j5k.apps.googleusercontent.com';
+      '5706956834-38n0iju022dblk7eg36dqpha9irdfob3.apps.googleusercontent.com';
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     serverClientId: _serverClientId,

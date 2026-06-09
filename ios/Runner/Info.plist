@@ -9,7 +9,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Void Of Course</string>
+	<string>Void of Course</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -70,6 +70,8 @@
 	</array>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-7332476431820224~9601097386</string>
+	<key>GIDClientID</key>
+	<string>5706956834-km5eip9qgbqb2c3ed6ni9sml6b49f5ha.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -77,8 +79,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<!-- TODO: Replace with your actual iOS Client ID's reversed URL scheme -->
-				<string>com.googleusercontent.apps.5706956834-4l1hgsvd7lft5omnf785brpo9njc2j5k</string>
+				<string>com.googleusercontent.apps.5706956834-km5eip9qgbqb2c3ed6ni9sml6b49f5ha</string>
 			</array>
 		</dict>
 	</array>

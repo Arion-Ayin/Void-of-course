@@ -21,7 +21,7 @@ const int _widgetVocEndAlarmId = 111;
 const int _widgetVocMidAlarmBaseId = 120; // 120..149 슬롯 사용
 
 class WidgetService {
-  static const String appGroupId = 'dev.lioluna.voidofcourse';
+  static const String appGroupId = 'group.dev.lioluna.voidofcourse';
 
   static const String androidWidgetName = 'VocWidgetProvider';
 
@@ -35,6 +35,10 @@ class WidgetService {
     SharedPreferences? prefs, {
     bool allowClear = false,
   }) async {
+    if (Platform.isIOS) {
+      await HomeWidget.setAppGroupId(appGroupId);
+      return true;
+    }
     final p = prefs ?? await SharedPreferences.getInstance();
     try {
       final widgets = await HomeWidget.getInstalledWidgets();
@@ -60,12 +64,16 @@ class WidgetService {
 
   /// 알람·백그라운드: pref 우선 (getInstalledWidgets가 빈 목록을 줄 수 있음)
   static Future<bool> isEnabled([SharedPreferences? prefs]) async {
+    if (Platform.isIOS) {
+      return true;
+    }
     final p = prefs ?? await SharedPreferences.getInstance();
     if (p.getBool(_installedPrefKey) ?? false) return true;
     return refreshInstalledFlag(p, allowClear: false);
   }
 
   static Future<void> setInstallStatus(bool installed) async {
+    if (Platform.isIOS) return;
     final prefs = await SharedPreferences.getInstance();
     // false로 임의 초기화되는 현상을 방지하여, 위젯이 설치되었던 이력이 있으면 업데이트가 유지되도록 함
     if (installed) {
@@ -255,6 +263,9 @@ class WidgetService {
     required String moonZodiac,
   }) async {
     try {
+      if (Platform.isIOS) {
+        await HomeWidget.setAppGroupId(appGroupId);
+      }
       final prefsForCheck = await SharedPreferences.getInstance();
       final isPlusUser = prefsForCheck.getBool('sp_is_plus') ?? false;
 
@@ -269,7 +280,10 @@ class WidgetService {
           'widget_times_text',
           '앱 내 [설정]에서 플러스 또는 프로 패스를\n구매하시면 위젯이 활성화됩니다.',
         );
-        await HomeWidget.updateWidget(androidName: androidWidgetName);
+        await HomeWidget.updateWidget(
+          androidName: androidWidgetName,
+          iOSName: 'VoidWidget',
+        );
         return;
       }
 
@@ -380,7 +394,10 @@ class WidgetService {
 
       await HomeWidget.saveWidgetData<String>('moon_zodiac', moonZodiac);
 
-      await HomeWidget.updateWidget(androidName: androidWidgetName);
+      await HomeWidget.updateWidget(
+        androidName: androidWidgetName,
+        iOSName: 'VoidWidget',
+      );
 
       if (kDebugMode) {
         developer.log(
