@@ -9,7 +9,7 @@ class PurchaseService extends ChangeNotifier {
   static final PurchaseService instance = PurchaseService._();
 
   // TODO: RevenueCat 대시보드에서 발급받은 API 키로 변경해주세요.
-  static const String _appleApiKey = 'appl_YOUR_APPLE_API_KEY';
+  static const String _appleApiKey = 'appl_IMTVWCnnhxzzjWReaILYlsnMyiY';
   static const String _googleApiKey = 'goog_aDuTsOqaJNZcWsTxPsJsnChRfYb';
 
   // Entitlements (RevenueCat 대시보드의 Entitlements ID와 정확히 일치해야 합니다)
@@ -56,7 +56,7 @@ class PurchaseService extends ChangeNotifier {
     // 초기 상태 불러오기 및 재설치 유저 자동 복원
     try {
       final prefs = await SharedPreferences.getInstance();
-      
+
       // 로컬 캐시된 프리미엄 상태 우선 복원 (오프라인 및 즉시 로딩 대응)
       _isLite = prefs.getBool('sp_is_lite') ?? false;
       _isPlus = prefs.getBool('sp_is_plus') ?? false;
@@ -113,13 +113,18 @@ class PurchaseService extends ChangeNotifier {
     _isPlus = hasPlus || hasPro;
 
     // 백그라운드 isolate 및 위젯 서비스에서 접근할 수 있도록 SharedPreferences에 저장
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('sp_is_lite', _isLite);
-      prefs.setBool('sp_is_plus', _isPlus);
-      prefs.setBool('sp_is_pro', _isPro);
-    }).catchError((e) {
-      developer.log('Failed to save premium status to SharedPreferences', error: e);
-    });
+    SharedPreferences.getInstance()
+        .then((prefs) {
+          prefs.setBool('sp_is_lite', _isLite);
+          prefs.setBool('sp_is_plus', _isPlus);
+          prefs.setBool('sp_is_pro', _isPro);
+        })
+        .catchError((e) {
+          developer.log(
+            'Failed to save premium status to SharedPreferences',
+            error: e,
+          );
+        });
 
     // 디버그용: 활성화된 모든 Entitlement ID 추출
     final activeIds =

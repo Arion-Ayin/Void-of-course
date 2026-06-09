@@ -14,6 +14,13 @@ class _ReusableNativeAdWidgetState extends State<ReusableNativeAdWidget> {
   final NativeAdService _nativeAdService = NativeAdService();
 
   @override
+  void initState() {
+    super.initState();
+    // 위젯이 로드될 때 광고가 아직 없다면 비동기 로드 시도
+    _nativeAdService.loadAd();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _nativeAdService,

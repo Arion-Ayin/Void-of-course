@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:void_of_course/features/ads/services/ad_ids.dart';
 import 'package:void_of_course/features/premium/services/purchase_service.dart';
@@ -22,6 +22,11 @@ class NativeAdService extends ChangeNotifier {
       return;
     }
 
+    if (_nativeAd != null) {
+      // 이미 로딩 중이거나 로드되었습니다.
+      return;
+    }
+
     _nativeAd = NativeAd(
       adUnitId: AdIds.nativeAd,
       request: const AdRequest(),
@@ -31,6 +36,7 @@ class NativeAdService extends ChangeNotifier {
           if (PurchaseService.instance.isLite) {
             // 결제 상태가 확인되었는데 광고가 뒤늦게 로드된 경우 즉시 파기
             ad.dispose();
+            _nativeAd = null;
             _isAdLoaded = false;
             notifyListeners();
             return;
@@ -40,15 +46,29 @@ class NativeAdService extends ChangeNotifier {
           notifyListeners();
         },
         onAdFailedToLoad: (ad, error) {
+          if (kDebugMode) {
+            print('Native ad failed to load: $error');
+          }
           ad.dispose();
+          _nativeAd = null; // 실패 시 null로 설정하여 재시도할 수 있도록 함
           _isAdLoaded = false;
           notifyListeners();
         },
       ),
     );
-    _nativeAd?.load();
+    try {
+      _nativeAd?.load();
+    } catch (e) {
+      if (kDebugMode) {
+        print('Native ad load failed with exception: $e');
+      }
+      _nativeAd = null;
+      _isAdLoaded = false;
+      notifyListeners();
+    }
   }
 
+  @override
   void dispose() {
     _nativeAd?.dispose();
     _isAdLoaded = false;

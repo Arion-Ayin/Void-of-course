@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CADisableMinimumFrameDurationOnPhone</key>
 	<true/>
 	<key>CFBundleDevelopmentRegion</key>
@@ -67,8 +69,7 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>GADApplicationIdentifier</key>
-	<!-- TODO: Replace with your actual iOS AdMob App ID -->
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-7332476431820224~9601097386</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

@@ -51,65 +51,19 @@ void main() async {
   // 플러터 위젯들이 준비될 때까지 기다려요.
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (Platform.isAndroid) {
-    await _initWithTimeout(
-      'AndroidAlarmManager',
-      AndroidAlarmManager.initialize,
-      timeout: const Duration(seconds: 3),
-    );
-  }
-
   // Edge-to-Edge 모드 활성화 (Android 15+ 권장)
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
-  // Firebase·백그라운드는 서로 독립 → 병렬 초기화로 runApp 전 대기 시간 단축
-  await Future.wait([
-    _initWithTimeout('Firebase', () async {
-      try {
-        await Firebase.initializeApp();
-      } catch (e) {
-        developer.log('Firebase init failed (ignored): $e', name: 'Main');
-      }
-    }, timeout: const Duration(seconds: 5)),
-    _initWithTimeout('BackgroundService', () async {
-      try {
-        await initializeBackgroundService();
-      } catch (e) {
-        developer.log(
-          'Background service init failed (ignored): $e',
-          name: 'Main',
-        );
-      }
-    }, timeout: const Duration(seconds: 5)),
-  ]);
-
-  // Google Mobile Ads — 스플래시 전면광고용, 네이티브 광고 로드는 runApp 이후로 미룸
-  if (Platform.isAndroid || Platform.isIOS) {
-    await _initWithTimeout('AdMob', () async {
-      try {
-        await MobileAds.instance.initialize();
-        await AdService().initialize();
-      } catch (e) {
-        developer.log('AdMob init failed (ignored): $e', name: 'Main');
-      }
-    }, timeout: const Duration(seconds: 5));
-    NativeAdService().loadAd();
+  // Firebase는 다른 서비스(Analytics 등)에서 즉시 사용할 수 있도록 먼저 초기화 (보통 매우 빠름)
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    developer.log('Firebase init failed: $e', name: 'Main');
   }
 
-  //앱의 실행
-  // 구글 캘린더 서비스 초기화 (이전 로그인 상태 복원)
-  await _initWithTimeout(
-    'GoogleCalendarService',
-    () => GoogleCalendarService.instance.init(),
-    timeout: const Duration(seconds: 5),
-  );
-
-  // RevenueCat(인앱 결제) 서비스 초기화
-  await _initWithTimeout(
-    'PurchaseService',
-    () => PurchaseService.instance.init(),
-    timeout: const Duration(seconds: 5),
-  );
+  // 나머지 무거운 초기화 작업들은 앱 실행(runApp)을 블로킹하지 않도록 백그라운드로 던집니다.
+  // 이 덕분에 사용자는 하얀 화면 대신 곧바로 앱의 스플래시 화면을 볼 수 있습니다.
+  _initHeavyServicesInBackground();
 
   runApp(
     MultiProvider(
@@ -125,6 +79,50 @@ void main() async {
       ],
       child: const MyApp(),
     ),
+  );
+}
+
+// 무거운 서비스들을 병렬로 비동기 초기화하는 함수
+void _initHeavyServicesInBackground() async {
+  if (Platform.isAndroid) {
+    _initWithTimeout(
+      'AndroidAlarmManager',
+      AndroidAlarmManager.initialize,
+      timeout: const Duration(seconds: 3),
+    );
+  }
+
+  _initWithTimeout('BackgroundService', () async {
+    try {
+      await initializeBackgroundService();
+    } catch (e) {
+      developer.log('Background service init failed: $e', name: 'Main');
+    }
+  }, timeout: const Duration(seconds: 5));
+
+  if (Platform.isAndroid || Platform.isIOS) {
+    _initWithTimeout('AdMob', () async {
+      try {
+        await MobileAds.instance.initialize();
+        await AdService().initialize();
+      } catch (e) {
+        developer.log('AdMob init failed: $e', name: 'Main');
+      }
+    }, timeout: const Duration(seconds: 5)).then((_) {
+      NativeAdService().loadAd();
+    });
+  }
+
+  _initWithTimeout(
+    'GoogleCalendarService',
+    () => GoogleCalendarService.instance.init(),
+    timeout: const Duration(seconds: 5),
+  );
+
+  _initWithTimeout(
+    'PurchaseService',
+    () => PurchaseService.instance.init(),
+    timeout: const Duration(seconds: 5),
   );
 }
 

@@ -108,11 +108,13 @@ class AdService {
   /// 광고를 표시할지 결정하고, 필요 시 광고를 보여줍니다.
   /// 광고가 표시되면 true, 아니면 false를 반환합니다.
   Future<bool> showAdIfNeeded(Function onAdDismissed) async {
+    /*
     if (kDebugMode) {
       developer.log('showAdIfNeeded skipped (debug build)', name: 'AdService');
       onAdDismissed();
       return false;
     }
+    */
 
     // 프리미엄(라이트 이상) 결제 유저인 경우 광고를 표시하지 않습니다.
     if (PurchaseService.instance.isLite) {
@@ -166,11 +168,13 @@ class AdService {
     required Function onAdDismissed,
     required Function onAdFailed,
   }) async {
+    /*
     if (kDebugMode) {
       developer.log('showSplashAd skipped (debug build)', name: 'AdService');
       onAdFailed();
       return;
     }
+    */
 
     // 프리미엄(라이트 이상) 결제 유저인 경우 광고를 표시하지 않습니다.
     if (PurchaseService.instance.isLite) {
@@ -268,11 +272,13 @@ class AdService {
     Duration timeout = const Duration(seconds: 3),
   }) async {
     // 디버그 모드에서는 스플래시 광고를 즉시 건너뜁니다.
+    /*
     if (kDebugMode) {
       developer.log('디버그 모드이므로 스플래시 광고를 건너뜁니다.', name: 'AdService');
       onAdFailed();
       return;
     }
+    */
 
     // 프리미엄(라이트 이상) 결제 유저인 경우 광고를 표시하지 않습니다.
     if (PurchaseService.instance.isLite) {

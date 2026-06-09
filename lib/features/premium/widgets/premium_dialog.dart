@@ -1,6 +1,7 @@
 // 이 파일은 프리미엄 서비스 해금 팝업을 만드는 코드예요.
 // 세 가지 결제 티어를 보여주고, 선택된 티어에 맞는 버튼을 표시해요.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:purchases_flutter/purchases_flutter.dart';
@@ -62,16 +63,17 @@ class _PremiumDialogState extends State<PremiumDialog>
   };
 
   List<_TierInfo> _getDefaultTiers(bool isKo) {
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
     return [
       _TierInfo(
         tier: PremiumTier.lite,
         label: isKo ? 'LITE - 광고제거' : 'LITE - Remove ads',
-        price: isKo ? '₩ 7,500' : '\$4.99',
+        price: '\$4.99',
       ),
       _TierInfo(
         tier: PremiumTier.plus,
         label: isKo ? 'PLUS - 위젯 + 캘린더' : 'PLUS - Widget + Calendar',
-        price: isKo ? '₩ 25,000' : '\$16.99',
+        price: isAndroid ? '\$16.99' : '\$19.99',
       ),
       _TierInfo(
         tier: PremiumTier.pro,
@@ -79,7 +81,7 @@ class _PremiumDialogState extends State<PremiumDialog>
             isKo
                 ? 'PRO - 광고제거\n+ 위젯 + 캘린더'
                 : 'PRO - Remove ads + Widget + Calendar',
-        price: isKo ? '₩ 30,000' : '\$19.99',
+        price: isAndroid ? '\$19.99' : '\$24.99',
         recommended: true,
       ),
     ];
