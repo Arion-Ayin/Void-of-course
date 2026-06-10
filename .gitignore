@@ -120,9 +120,10 @@ captures/
 # Google Services (e.g. APIs or Firebase)
 **/android/app/google-services.json
 **/ios/Runner/GoogleService-Info.plist
+lib/firebase_options.dart
 
 # Ad IDs (sensitive)
-lib/services/ad_ids.dart
+lib/features/ads/services/ad_ids.dart
 
 # Android Patch
 gen-external-apklibs
