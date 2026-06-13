@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -200,7 +201,7 @@ void onStart(ServiceInstance service) async {
 
   // 서비스 시작 직후 즉시 알림 업데이트 (빈 알림 방지)
   // Timer.periodic 전에 먼저 실행하여 빈 포그라운드 알림을 덮어씀
-  if (cachedIsEnabled && cachedStartStr != null && cachedEndStr != null) {
+  if (Platform.isAndroid && cachedIsEnabled && cachedStartStr != null && cachedEndStr != null) {
     // UTC 기준으로 비교 (기기 타임존과 무관하게 정확한 epoch 비교)
     final DateTime utcNow = DateTime.now().toUtc();
     final String startStr = cachedStartStr!;
@@ -264,211 +265,213 @@ void onStart(ServiceInstance service) async {
     }
   }
 
-  // 15초마다 확인 (기존 1초 단위 업데이트에서 배터리 절약을 위해 변경)
-  Timer.periodic(const Duration(seconds: 15), (timer) async {
-    if (isProcessing) return;
-    isProcessing = true;
+  if (Platform.isAndroid) {
+    // 15초마다 확인 (기존 1초 단위 업데이트에서 배터리 절약을 위해 변경)
+    Timer.periodic(const Duration(seconds: 15), (timer) async {
+      if (isProcessing) return;
+      isProcessing = true;
 
-    try {
-      if (service is AndroidServiceInstance) {
-        // 2번 주기(30초)마다 한 번씩 SharedPreferences 갱신
-        tickCount++;
-        if (tickCount >= 2) {
-          tickCount = 0;
-          await prefs.reload();
-          cachedStartStr = prefs.getString('cached_voc_start');
-          cachedEndStr = prefs.getString('cached_voc_end');
-          cachedPreHours = prefs.getInt('cached_pre_void_hours') ?? 6;
-          cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
-          cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
-        }
+      try {
+        if (service is AndroidServiceInstance) {
+          // 2번 주기(30초)마다 한 번씩 SharedPreferences 갱신
+          tickCount++;
+          if (tickCount >= 2) {
+            tickCount = 0;
+            await prefs.reload();
+            cachedStartStr = prefs.getString('cached_voc_start');
+            cachedEndStr = prefs.getString('cached_voc_end');
+            cachedPreHours = prefs.getInt('cached_pre_void_hours') ?? 6;
+            cachedIsEnabled = prefs.getBool('voidAlarmEnabled') ?? false;
+            cachedLanguageCode = prefs.getString('cached_language_code') ?? 'en';
+          }
 
-        // 캐시된 값 사용 (30초마다 갱신됨)
-        final String? startStr = cachedStartStr;
-        final String? endStr = cachedEndStr;
-        final int preHours = cachedPreHours;
-        final bool isEnabled = cachedIsEnabled;
-        final bool isKorean = cachedLanguageCode.startsWith('ko');
+          // 캐시된 값 사용 (30초마다 갱신됨)
+          final String? startStr = cachedStartStr;
+          final String? endStr = cachedEndStr;
+          final int preHours = cachedPreHours;
+          final bool isEnabled = cachedIsEnabled;
+          final bool isKorean = cachedLanguageCode.startsWith('ko');
 
-        if (!isEnabled) {
-          // 알림 비활성화 - 모든 알림 삭제 후 서비스 종료
-          await notificationsPlugin.cancel(countdownNotificationId);
-          await notificationsPlugin.cancel(preVoidNotificationId);
-          await notificationsPlugin.cancel(vocStartNotificationId);
-          await notificationsPlugin.cancel(
-            vocEndNotificationId,
-          ); // 사용자가 알람 끄면 종료 알림도 삭제
-          previousState = stateNone;
-          timer.cancel();
-          service.stopSelf();
-          return;
-        }
+          if (!isEnabled) {
+            // 알림 비활성화 - 모든 알림 삭제 후 서비스 종료
+            await notificationsPlugin.cancel(countdownNotificationId);
+            await notificationsPlugin.cancel(preVoidNotificationId);
+            await notificationsPlugin.cancel(vocStartNotificationId);
+            await notificationsPlugin.cancel(
+              vocEndNotificationId,
+            ); // 사용자가 알람 끄면 종료 알림도 삭제
+            previousState = stateNone;
+            timer.cancel();
+            service.stopSelf();
+            return;
+          }
 
-        if (startStr != null && endStr != null) {
-          // UTC 기준으로 비교 (기기 타임존과 무관하게 정확한 epoch 비교)
-          final DateTime utcNow = DateTime.now().toUtc();
+          if (startStr != null && endStr != null) {
+            // UTC 기준으로 비교 (기기 타임존과 무관하게 정확한 epoch 비교)
+            final DateTime utcNow = DateTime.now().toUtc();
 
-          final DateTime vocStart = DateTime.parse(startStr);
-          final DateTime vocEnd = DateTime.parse(endStr);
-          final DateTime preVoidStart = vocStart.subtract(
-            Duration(hours: preHours),
-          );
+            final DateTime vocStart = DateTime.parse(startStr);
+            final DateTime vocEnd = DateTime.parse(endStr);
+            final DateTime preVoidStart = vocStart.subtract(
+              Duration(hours: preHours),
+            );
 
-          int currentState = stateNone;
-          String title = '';
-          String content = '';
+            int currentState = stateNone;
+            String title = '';
+            String content = '';
 
-          if (utcNow.isBefore(preVoidStart)) {
-            // 대기 중 (pre-void 시작 전) - 서비스 필요 없음, 종료
-            // vocEndNotificationId는 취소하지 않음 (이전 보이드 종료 알림 유지)
+            if (utcNow.isBefore(preVoidStart)) {
+              // 대기 중 (pre-void 시작 전) - 서비스 필요 없음, 종료
+              // vocEndNotificationId는 취소하지 않음 (이전 보이드 종료 알림 유지)
+              await notificationsPlugin.cancel(countdownNotificationId);
+              await notificationsPlugin.cancel(preVoidNotificationId);
+              await notificationsPlugin.cancel(vocStartNotificationId);
+              timer.cancel();
+              service.stopSelf();
+              return;
+            } else if (utcNow.isBefore(vocStart)) {
+              // Pre-Void
+              currentState = statePreVoid;
+              final String targetTimeStr = DateFormat(
+                'MM/dd HH:mm',
+              ).format(vocStart.toLocal());
+              title = isKorean ? '⏰ 보이드 시작 알림' : '⏰ Void Starting Soon';
+              content =
+                  isKorean
+                      ? '보이드 시작 시간: $targetTimeStr'
+                      : 'Starts at: $targetTimeStr';
+            } else if (utcNow.isBefore(vocEnd)) {
+              // Void Active
+              currentState = stateVocActive;
+              final String targetTimeStr = DateFormat(
+                'MM/dd HH:mm',
+              ).format(vocEnd.toLocal());
+              title = isKorean ? '지금은 보이드입니다!' : 'Void of Course Active!';
+              content =
+                  isKorean
+                      ? '보이드 종료 시간: $targetTimeStr'
+                      : 'Ends at: $targetTimeStr';
+            } else {
+              // Void 종료
+              currentState = stateVocEnded;
+            }
+
+            // 상태 전환 처리
+            if (currentState != previousState) {
+              if (currentState == statePreVoid) {
+                // 1. Pre-Void 시작 - 이전 알림들 정리 후 시작 전 알림 팝업 띄우기
+                await notificationsPlugin.cancel(vocStartNotificationId);
+                await notificationsPlugin.cancel(vocEndNotificationId);
+
+                await _showPreVoidNotification(
+                  notificationsPlugin,
+                  isKorean
+                      ? '⏰ 보이드가 ${preHours}시간 후 시작됩니다!'
+                      : '⏰ Void starts in $preHours hours!',
+                  isKorean ? '미리 준비하세요.' : 'Prepare in advance.',
+                );
+              } else if (currentState == stateVocActive) {
+                // 2. Void 시작 - Void 시작 알림 표시
+                await notificationsPlugin.cancel(preVoidNotificationId);
+                await _showVocStartNotification(
+                  notificationsPlugin,
+                  isKorean ? '보이드가 시작되었습니다!' : 'Void of Course Started!',
+                  isKorean ? '중요한 결정을 피하세요.' : 'Avoid important decisions.',
+                );
+              } else if (currentState == stateVocEnded) {
+                // 4. Void 종료 - 카운트다운 알림 삭제, Void 종료 알림 표시
+                await notificationsPlugin.cancel(countdownNotificationId);
+                await notificationsPlugin.cancel(preVoidNotificationId);
+                await notificationsPlugin.cancel(vocStartNotificationId);
+
+                await notificationsPlugin.show(
+                  vocEndNotificationId,
+                  isKorean ? '✅ 보이드 종료!' : '✅ Void of Course Ended!',
+                  isKorean ? '보이드가 종료되었습니다.' : 'The Void period has ended.',
+                  const NotificationDetails(
+                    android: AndroidNotificationDetails(
+                      'void_end_channel',
+                      'Void End Notifications',
+                      channelDescription: 'Notification when Void of Course ends',
+                      importance: Importance.high,
+                      priority: Priority.high,
+                      ongoing: false,
+                      autoCancel: true,
+                      icon: '@drawable/ic_notification',
+                    ),
+                  ),
+                );
+
+                // 알림이 시스템에 완전히 등록될 때까지 대기 후 서비스 종료
+                // (즉시 종료하면 삼성 등 일부 기기에서 프로세스와 함께 알림도 정리됨)
+                previousState = currentState;
+                timer.cancel();
+
+                // --- 다음 사이클(무한 루프)을 위한 백그라운드 재계약 ---
+                await VoidCycleScheduler.advanceAfterVocEnd(prefs, vocEnd);
+                await prefs.reload();
+                if (await WidgetService.isEnabled(prefs)) {
+                  await WidgetService.refreshFromPrefs();
+                }
+
+                await Future.delayed(const Duration(seconds: 5));
+                service.stopSelf();
+                return;
+              }
+
+              previousState = currentState;
+
+              // 상태가 변했을 때 홈 위젯(가젯)도 즉시 동기화
+              await WidgetService.refreshFromPrefs();
+            }
+
+            // 카운트다운 알림 업데이트 (소리/진동 없이, 삭제 불가)
+            // 텍스트 내용이 변경되었을 때만 show 호출하여 배터리 절약
+            if (currentState == statePreVoid || currentState == stateVocActive) {
+              if (content != previousContent) {
+                await notificationsPlugin.show(
+                  countdownNotificationId,
+                  title,
+                  content,
+                  const NotificationDetails(
+                    android: AndroidNotificationDetails(
+                      'void_service_channel',
+                      'Void Countdown',
+                      channelDescription:
+                          'Shows countdown timer for Void of Course',
+                      importance: Importance.low,
+                      priority: Priority.low,
+                      ongoing: false,
+                      autoCancel: true,
+                      playSound: false,
+                      enableVibration: false,
+                      onlyAlertOnce: true,
+                      icon: '@drawable/ic_notification',
+                    ),
+                  ),
+                );
+                previousContent = content;
+              }
+            }
+          } else {
+            // 데이터 없음 - 카운트다운/시작 알림만 삭제 후 서비스 종료
+            // vocEndNotificationId는 유지 (사용자가 직접 삭제)
             await notificationsPlugin.cancel(countdownNotificationId);
             await notificationsPlugin.cancel(preVoidNotificationId);
             await notificationsPlugin.cancel(vocStartNotificationId);
             timer.cancel();
             service.stopSelf();
             return;
-          } else if (utcNow.isBefore(vocStart)) {
-            // Pre-Void
-            currentState = statePreVoid;
-            final String targetTimeStr = DateFormat(
-              'MM/dd HH:mm',
-            ).format(vocStart.toLocal());
-            title = isKorean ? '⏰ 보이드 시작 알림' : '⏰ Void Starting Soon';
-            content =
-                isKorean
-                    ? '보이드 시작 시간: $targetTimeStr'
-                    : 'Starts at: $targetTimeStr';
-          } else if (utcNow.isBefore(vocEnd)) {
-            // Void Active
-            currentState = stateVocActive;
-            final String targetTimeStr = DateFormat(
-              'MM/dd HH:mm',
-            ).format(vocEnd.toLocal());
-            title = isKorean ? '지금은 보이드입니다!' : 'Void of Course Active!';
-            content =
-                isKorean
-                    ? '보이드 종료 시간: $targetTimeStr'
-                    : 'Ends at: $targetTimeStr';
-          } else {
-            // Void 종료
-            currentState = stateVocEnded;
           }
-
-          // 상태 전환 처리
-          if (currentState != previousState) {
-            if (currentState == statePreVoid) {
-              // 1. Pre-Void 시작 - 이전 알림들 정리 후 시작 전 알림 팝업 띄우기
-              await notificationsPlugin.cancel(vocStartNotificationId);
-              await notificationsPlugin.cancel(vocEndNotificationId);
-
-              await _showPreVoidNotification(
-                notificationsPlugin,
-                isKorean
-                    ? '⏰ 보이드가 ${preHours}시간 후 시작됩니다!'
-                    : '⏰ Void starts in $preHours hours!',
-                isKorean ? '미리 준비하세요.' : 'Prepare in advance.',
-              );
-            } else if (currentState == stateVocActive) {
-              // 2. Void 시작 - Void 시작 알림 표시
-              await notificationsPlugin.cancel(preVoidNotificationId);
-              await _showVocStartNotification(
-                notificationsPlugin,
-                isKorean ? '보이드가 시작되었습니다!' : 'Void of Course Started!',
-                isKorean ? '중요한 결정을 피하세요.' : 'Avoid important decisions.',
-              );
-            } else if (currentState == stateVocEnded) {
-              // 4. Void 종료 - 카운트다운 알림 삭제, Void 종료 알림 표시
-              await notificationsPlugin.cancel(countdownNotificationId);
-              await notificationsPlugin.cancel(preVoidNotificationId);
-              await notificationsPlugin.cancel(vocStartNotificationId);
-
-              await notificationsPlugin.show(
-                vocEndNotificationId,
-                isKorean ? '✅ 보이드 종료!' : '✅ Void of Course Ended!',
-                isKorean ? '보이드가 종료되었습니다.' : 'The Void period has ended.',
-                const NotificationDetails(
-                  android: AndroidNotificationDetails(
-                    'void_end_channel',
-                    'Void End Notifications',
-                    channelDescription: 'Notification when Void of Course ends',
-                    importance: Importance.high,
-                    priority: Priority.high,
-                    ongoing: false,
-                    autoCancel: true,
-                    icon: '@drawable/ic_notification',
-                  ),
-                ),
-              );
-
-              // 알림이 시스템에 완전히 등록될 때까지 대기 후 서비스 종료
-              // (즉시 종료하면 삼성 등 일부 기기에서 프로세스와 함께 알림도 정리됨)
-              previousState = currentState;
-              timer.cancel();
-
-              // --- 다음 사이클(무한 루프)을 위한 백그라운드 재계약 ---
-              await VoidCycleScheduler.advanceAfterVocEnd(prefs, vocEnd);
-              await prefs.reload();
-              if (await WidgetService.isEnabled(prefs)) {
-                await WidgetService.refreshFromPrefs();
-              }
-
-              await Future.delayed(const Duration(seconds: 5));
-              service.stopSelf();
-              return;
-            }
-
-            previousState = currentState;
-
-            // 상태가 변했을 때 홈 위젯(가젯)도 즉시 동기화
-            await WidgetService.refreshFromPrefs();
-          }
-
-          // 카운트다운 알림 업데이트 (소리/진동 없이, 삭제 불가)
-          // 텍스트 내용이 변경되었을 때만 show 호출하여 배터리 절약
-          if (currentState == statePreVoid || currentState == stateVocActive) {
-            if (content != previousContent) {
-              await notificationsPlugin.show(
-                countdownNotificationId,
-                title,
-                content,
-                const NotificationDetails(
-                  android: AndroidNotificationDetails(
-                    'void_service_channel',
-                    'Void Countdown',
-                    channelDescription:
-                        'Shows countdown timer for Void of Course',
-                    importance: Importance.low,
-                    priority: Priority.low,
-                    ongoing: false,
-                    autoCancel: true,
-                    playSound: false,
-                    enableVibration: false,
-                    onlyAlertOnce: true,
-                    icon: '@drawable/ic_notification',
-                  ),
-                ),
-              );
-              previousContent = content;
-            }
-          }
-        } else {
-          // 데이터 없음 - 카운트다운/시작 알림만 삭제 후 서비스 종료
-          // vocEndNotificationId는 유지 (사용자가 직접 삭제)
-          await notificationsPlugin.cancel(countdownNotificationId);
-          await notificationsPlugin.cancel(preVoidNotificationId);
-          await notificationsPlugin.cancel(vocStartNotificationId);
-          timer.cancel();
-          service.stopSelf();
-          return;
         }
+      } catch (e) {
+        // 서비스 크래시 방지 - 예외가 발생해도 서비스가 계속 실행되도록 함
+        // (DateTime.parse 실패, 알림 표시 실패 등)
+      } finally {
+        isProcessing = false;
       }
-    } catch (e) {
-      // 서비스 크래시 방지 - 예외가 발생해도 서비스가 계속 실행되도록 함
-      // (DateTime.parse 실패, 알림 표시 실패 등)
-    } finally {
-      isProcessing = false;
-    }
-  });
+    });
+  }
 }
 
 // 2. Pre-Void 시작 전 알림 (삭제 가능, 진동)

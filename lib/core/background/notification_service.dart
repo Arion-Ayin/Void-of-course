@@ -173,6 +173,11 @@ class NotificationService {
           timeoutAfter: timeoutAfter,
           icon: '@drawable/ic_notification',
         ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: !isSilent,
+          presentBadge: !isSilent,
+          presentSound: !isSilent,
+        ),
       ),
       androidScheduleMode:
           canScheduleExact
@@ -218,6 +223,11 @@ class NotificationService {
         enableVibration: !isSilent,
         timeoutAfter: timeoutAfter,
         icon: '@drawable/ic_notification',
+      ),
+      iOS: DarwinNotificationDetails(
+        presentAlert: !isSilent,
+        presentBadge: !isSilent,
+        presentSound: !isSilent,
       ),
     );
     await _notificationsPlugin.show(id, title, body, notificationDetails);

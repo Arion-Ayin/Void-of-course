@@ -75,6 +75,11 @@ class VoidNotificationDelivery {
           autoCancel: true,
           icon: '@drawable/ic_notification',
         ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        ),
       ),
     );
     await showCountdown(prefs);
@@ -98,6 +103,11 @@ class VoidNotificationDelivery {
           autoCancel: true,
           timeoutAfter: 10000,
           icon: '@drawable/ic_notification',
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
         ),
       ),
     );
@@ -124,6 +134,11 @@ class VoidNotificationDelivery {
           priority: Priority.high,
           autoCancel: true,
           icon: '@drawable/ic_notification',
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
         ),
       ),
     );
@@ -182,6 +197,11 @@ class VoidNotificationDelivery {
           enableVibration: false,
           onlyAlertOnce: true,
           icon: '@drawable/ic_notification',
+        ),
+        iOS: DarwinNotificationDetails(
+          presentAlert: false,
+          presentBadge: false,
+          presentSound: false,
         ),
       ),
     );
